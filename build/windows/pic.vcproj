@@ -18,7 +18,7 @@
 	</Platforms>
 	<ToolFiles>
 		<DefaultToolFile
-			FileName="NvCudaRuntimeApi.v3.2.rules"
+			FileName="NvCudaRuntimeApi.rules"
 		/>
 	</ToolFiles>
 	<Configurations>
@@ -37,7 +37,7 @@
 			/>
 			<Tool
 				Name="Cudart Build Rule"
-				Include="$(CUDA_INC);$(NVSDKCOMPUTE_ROOT)\C\common\inc;$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(SolutionDir)\..\..\third_party\thrust_1.3.0;$(SolutionDir)\..\..\third_party\boost_1_43_0;$(SolutionDir)\..\..\third_party\LsbRadixSort_1.0.215\LsbRadixSort;$(SolutionDir)\..\..\third_party\LsbRadixSort_1.0.215\KernelCommon"
+				Include="$(CUDA_INC_PATH);$(NVSDKCOMPUTE_ROOT)\C\common\inc;$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST);"
 				Arch1="0"
 				ExtraNvccOptions="-g"
 				Runtime="3"
@@ -55,7 +55,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(NVSDKCOMPUTE_ROOT)\C\common\inc;$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(SolutionDir)\..\..\third_party\thrust_1.3.0;$(SolutionDir)\..\..\third_party\boost_1_43_0;$(SolutionDir)\..\..\third_party\LsbRadixSort_1.0.215\LsbRadixSort;$(SolutionDir)\..\..\third_party\LsbRadixSort_1.0.215\KernelCommon"
+				AdditionalIncludeDirectories="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST);"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -78,7 +78,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="libboost_thread-vc90-mt-gd.lib libboost_date_time-vc90-mt-gd.lib libboost_filesystem-vc90-mt-gd.lib libboost_program_options-vc90-mt-gd.lib libboost_system-vc90-mt-gd.lib cuda.lib cudart.lib cufft.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(NVSDKCOMPUTE_ROOT)\C\common\lib&quot;;&quot;$(CUDA_LIB_PATH)\..\lib\Win32&quot;;&quot;$(SolutionDir)..\..\third_party\boost_1_43_0\lib\win32&quot;"
+				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\Win32&quot;;&quot;$(CUDA_LIB_PATH)\..\lib\Win32&quot;;&quot;$(BOOST)\lib\win32&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -199,7 +199,7 @@
 			/>
 			<Tool
 				Name="Cudart Build Rule"
-				Include="$(CUDA_INC);$(NVSDKCOMPUTE_ROOT)\C\common\inc;$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(SolutionDir)\..\..\third_party\thrust_1.3.0;$(SolutionDir)\..\..\third_party\boost_1_43_0;$(SolutionDir)\..\..\third_party\LsbRadixSort_1.0.215\LsbRadixSort;$(SolutionDir)\..\..\third_party\LsbRadixSort_1.0.215\KernelCommon"
+				Include="$(CUDA_INC_PATH);$(NVSDKCOMPUTE_ROOT)\C\common\inc;$(SolutionDir)\..\..\inc;$(BOOST)"
 				Arch1="11"
 				ExtraNvccOptions="--optimize 2"
 				Runtime="2"
@@ -218,7 +218,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="$(NVSDKCOMPUTE_ROOT)\C\common\inc;$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(SolutionDir)\..\..\third_party\thrust_1.3.0;$(SolutionDir)\..\..\third_party\boost_1_43_0;$(SolutionDir)\..\..\third_party\LsbRadixSort_1.0.215\LsbRadixSort;$(SolutionDir)\..\..\third_party\LsbRadixSort_1.0.215\KernelCommon"
+				AdditionalIncludeDirectories="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST)"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -239,7 +239,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="libboost_thread-vc90-mt.lib libboost_date_time-vc90-mt.lib libboost_filesystem-vc90-mt.lib libboost_program_options-vc90-mt.lib libboost_system-vc90-mt.lib cuda.lib cudart.lib cufft.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(NVSDKCOMPUTE_ROOT)\C\common\lib&quot;;&quot;$(CUDA_LIB_PATH)\..\lib\Win32&quot;;&quot;$(SolutionDir)..\..\third_party\boost_1_43_0\lib\win32&quot;"
+				AdditionalLibraryDirectories="&quot;$(NVSDKCOMPUTE_ROOT)\C\common\lib&quot;;&quot;$(CUDA_LIB_PATH)\..\lib\Win32&quot;;&quot;$(BOOST)\lib\win32&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -299,7 +299,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="$(NVSDKCOMPUTE_ROOT)\C\common\inc;$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(SolutionDir)\..\..\third_party;$(SolutionDir)\..\..\third_party\boost_1_43_0"
+				AdditionalIncludeDirectories="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(SolutionDir)\..\..\third_party;$(SolutionDir)\..\..\third_party\boost_1_43_0"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -320,7 +320,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="libboost_thread-vc90-mt.lib libboost_date_time-vc90-mt.lib libboost_filesystem-vc90-mt.lib libboost_program_options-vc90-mt.lib libboost_system-vc90-mt.lib cuda.lib cudart.lib cufft.lib cUtil64.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(NVSDKCOMPUTE_ROOT)\C\common\lib;$(CUDA_LIB_PATH);$(SolutionDir)\..\..\third_party\boost_1_43_0\lib\win64;"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH);$(SolutionDir)\..\..\third_party\boost_1_43_0\lib\win64;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -364,7 +364,7 @@
 			/>
 			<Tool
 				Name="Cudart Build Rule"
-				Include="$(CUDA_INC);$(NVSDKCOMPUTE_ROOT)\C\common\inc;$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(SolutionDir)\..\..\third_party\thrust_1.3.0;$(SolutionDir)\..\..\third_party\boost_1_43_0;$(SolutionDir)\..\..\third_party\LsbRadixSort_1.0.215\LsbRadixSort;$(SolutionDir)\..\..\third_party\LsbRadixSort_1.0.215\KernelCommon"
+				Include="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST)"
 				Defines="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 			/>
 			<Tool
@@ -379,7 +379,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(NVSDKCOMPUTE_ROOT)\C\common\inc;$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(SolutionDir)\..\..\third_party\thrust_1.3.0;$(SolutionDir)\..\..\third_party\boost_1_43_0;$(SolutionDir)\..\..\third_party\LsbRadixSort_1.0.215\LsbRadixSort;$(SolutionDir)\..\..\third_party\LsbRadixSort_1.0.215\KernelCommon"
+				AdditionalIncludeDirectories="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST)"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -457,7 +457,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(NVSDKCOMPUTE_ROOT)\C\common\inc;$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(SolutionDir)\..\..\third_party;$(SolutionDir)\..\..\third_party\boost_1_43_0"
+				AdditionalIncludeDirectories="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(SolutionDir)\..\..\third_party;$(SolutionDir)\..\..\third_party\boost_1_43_0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -479,7 +479,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="libboost_thread-vc90-mt-gd.lib libboost_date_time-vc90-mt-gd.lib libboost_filesystem-vc90-mt-gd.lib libboost_program_options-vc90-mt-gd.lib libboost_system-vc90-mt-gd.lib cuda.lib cudart.lib cufft.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(NVSDKCOMPUTE_ROOT)\C\common\lib;$(CUDA_LIB_PATH);$(SolutionDir)..\..\third_party\boost_1_43_0\lib\win64"
+				AdditionalLibraryDirectories="$(CUDA_LIB_PATH);$(SolutionDir)..\..\third_party\boost_1_43_0\lib\win64"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="17"

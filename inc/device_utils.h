@@ -13,11 +13,7 @@
 #include "pic_utils.h"
 #include "global_variables.h"
 
-#ifdef USE_THRUST_SORT
 #include <thrust/sort.h>
-#else
-#include <radixsort_api.h>
-#endif
 
 #ifdef DEVEMU
 #include <vector>
@@ -32,21 +28,8 @@ void picSort(DevMem<KeyType> &keys, int size=-1)
       size = keys.size();
    }
 
-#ifdef USE_THRUST_SORT
    thrust::sort(keys.getThrustPtr(), keys.getThrustPtr() + size);
    checkForCudaError("Radix sort failed");
-#else
-  	// Create storage-management structure
-   b40c::RadixSortStorage<KeyType> device_storage(keys.getPtr());			
-  
-  	// Create and enact sorter
-   b40c::RadixSortingEnactor<KeyType> sorter(size);
-  	sorter.EnactSort(device_storage);
-  
-  	// Re-acquire pointer to sorted keys, free unused/temp storage 
-   keys.setPtr(device_storage.d_keys);
-  	device_storage.CleanupTempStorage();
-#endif
 }
 
 template<class KeyType, class ValType>
@@ -57,25 +40,11 @@ void picSort(DevMem<KeyType> &keys, DevMem<ValType> &values, int size=0)
       size = keys.size();
    }
 
-#ifdef USE_THRUST_SORT
    thrust::sort_by_key(keys.getThrustPtr(),
       keys.getThrustPtr() + size, values.getThrustPtr());
    //thrust::stable_sort_by_key(keys.getThrustPtr(),
    //   keys.getThrustPtr() + size, values.getThrustPtr());
    checkForCudaError("Radix sort failed");
-#else
-  	// Create storage-management structure
-   b40c::RadixSortStorage<KeyType, ValType> device_storage(keys.getPtr(), values.getPtr());			
-  
-  	// Create and enact sorter
-   b40c::RadixSortingEnactor<KeyType, ValType> sorter(size);
-  	sorter.EnactSort(device_storage);
-  
-  	// Re-acquire pointer to sorted keys and values, free unused/temp storage 
-   keys.setPtr(device_storage.d_keys);
-   values.setPtr(device_storage.d_values);
-  	device_storage.CleanupTempStorage();
-#endif
 }
 
 template<class Type>
