@@ -1,0 +1,5 @@
+
+dbg := 1
+CUDACCFLAGS = -G -g
+
+include Makefile

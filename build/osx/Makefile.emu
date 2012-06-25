@@ -1,0 +1,5 @@
+
+dbg := 1
+emu := 1
+
+include Makefile

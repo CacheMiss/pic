@@ -1,0 +1,6 @@
+
+dbg := 1
+CUDACCFLAGS = -g
+COMMONFLAGS = -DDEBUG
+
+include Makefile
