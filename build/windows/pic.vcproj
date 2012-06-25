@@ -76,7 +76,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt-gd.lib libboost_date_time-vc90-mt-gd.lib libboost_filesystem-vc90-mt-gd.lib libboost_program_options-vc90-mt-gd.lib libboost_system-vc90-mt-gd.lib cuda.lib cudart.lib cufft.lib"
+				AdditionalDependencies="libboost_thread-vc90-mt-gd-1_49.lib libboost_date_time-vc90-mt-gd-1_49.lib libboost_filesystem-vc90-mt-gd-1_49.lib libboost_program_options-vc90-mt-gd-1_49.lib libboost_system-vc90-mt-gd-1_49.lib cuda.lib cudart.lib cufft.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\Win32&quot;;&quot;$(CUDA_LIB_PATH)\..\lib\Win32&quot;;&quot;$(BOOST)\lib\win32&quot;"
 				GenerateDebugInformation="true"
@@ -154,7 +154,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt-gd.lib libboost_date_time-vc90-mt-gd.lib libboost_filesystem-vc90-mt-gd.lib libboost_program_options-vc90-mt-gd.lib libboost_system-vc90-mt-gd.lib cuda.lib cudart.lib cufft.lib"
+				AdditionalDependencies="libboost_thread-vc90-mt-gd-1_49.lib libboost_date_time-vc90-mt-gd-1_49.lib libboost_filesystem-vc90-mt-gd-1_49.lib libboost_program_options-vc90-mt-gd-1_49.lib libboost_system-vc90-mt-gd-1_49.lib cuda.lib cudart.lib cufft.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(NVSDKCOMPUTE_ROOT)\C\common\lib;$(CUDA_LIB_PATH);$(SolutionDir)..\..\third_party\boost_1_43_0\lib\win64"
 				GenerateDebugInformation="true"
@@ -237,7 +237,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt.lib libboost_date_time-vc90-mt.lib libboost_filesystem-vc90-mt.lib libboost_program_options-vc90-mt.lib libboost_system-vc90-mt.lib cuda.lib cudart.lib cufft.lib"
+				AdditionalDependencies="libboost_thread-vc90-mt-1_49.lib libboost_date_time-vc90-mt-1_49.lib libboost_filesystem-vc90-mt-1_49.lib libboost_program_options-vc90-mt-1_49.lib libboost_system-vc90-mt-1_49.lib cuda.lib cudart.lib cufft.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(NVSDKCOMPUTE_ROOT)\C\common\lib&quot;;&quot;$(CUDA_LIB_PATH)\..\lib\Win32&quot;;&quot;$(BOOST)\lib\win32&quot;"
 				GenerateDebugInformation="true"
@@ -318,7 +318,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt.lib libboost_date_time-vc90-mt.lib libboost_filesystem-vc90-mt.lib libboost_program_options-vc90-mt.lib libboost_system-vc90-mt.lib cuda.lib cudart.lib cufft.lib cUtil64.lib"
+				AdditionalDependencies="libboost_thread-vc90-mt-1_49.lib libboost_date_time-vc90-mt-1_49.lib libboost_filesystem-vc90-mt-1_49.lib libboost_program_options-vc90-mt-1_49.lib libboost_system-vc90-mt-1_49.lib cuda.lib cudart.lib cufft.lib cUtil64.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(CUDA_LIB_PATH);$(SolutionDir)\..\..\third_party\boost_1_43_0\lib\win64;"
 				GenerateDebugInformation="true"
@@ -477,7 +477,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt-gd.lib libboost_date_time-vc90-mt-gd.lib libboost_filesystem-vc90-mt-gd.lib libboost_program_options-vc90-mt-gd.lib libboost_system-vc90-mt-gd.lib cuda.lib cudart.lib cufft.lib"
+				AdditionalDependencies="libboost_thread-vc90-mt-gd-1_49.lib libboost_date_time-vc90-mt-gd-1_49.lib libboost_filesystem-vc90-mt-gd-1_49.lib libboost_program_options-vc90-mt-gd-1_49.lib libboost_system-vc90-mt-gd-1_49.lib cuda.lib cudart.lib cufft.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(CUDA_LIB_PATH);$(SolutionDir)..\..\third_party\boost_1_43_0\lib\win64"
 				GenerateDebugInformation="true"
