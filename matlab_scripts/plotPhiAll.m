@@ -5,7 +5,7 @@ function ret = plotPhiAll(fName)
 
    if f <= 0
       ret = -1;
-      %printf('Unable to open "%s"\n', fName);
+      fprintf('Unable to open "%s"\n', fName);
       return;
    end
 
