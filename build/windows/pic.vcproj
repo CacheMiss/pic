@@ -76,7 +76,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt-gd-1_49.lib libboost_date_time-vc90-mt-gd-1_49.lib libboost_filesystem-vc90-mt-gd-1_49.lib libboost_program_options-vc90-mt-gd-1_49.lib libboost_system-vc90-mt-gd-1_49.lib cuda.lib cudart.lib cufft.lib"
+				AdditionalDependencies="libboost_thread-vc90-mt-gd-1_49.lib libboost_date_time-vc90-mt-gd-1_49.lib libboost_filesystem-vc90-mt-gd-1_49.lib libboost_program_options-vc90-mt-gd-1_49.lib libboost_system-vc90-mt-gd-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\Win32&quot;;&quot;$(CUDA_LIB_PATH)\..\lib\Win32&quot;;&quot;$(BOOST)\lib\win32&quot;"
 				GenerateDebugInformation="true"
@@ -237,9 +237,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt-1_49.lib libboost_date_time-vc90-mt-1_49.lib libboost_filesystem-vc90-mt-1_49.lib libboost_program_options-vc90-mt-1_49.lib libboost_system-vc90-mt-1_49.lib cuda.lib cudart.lib cufft.lib"
+				AdditionalDependencies="libboost_thread-vc90-mt-1_49.lib libboost_date_time-vc90-mt-1_49.lib libboost_filesystem-vc90-mt-1_49.lib libboost_program_options-vc90-mt-1_49.lib libboost_system-vc90-mt-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(NVSDKCOMPUTE_ROOT)\C\common\lib&quot;;&quot;$(CUDA_LIB_PATH)\..\lib\Win32&quot;;&quot;$(BOOST)\lib\win32&quot;"
+				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\Win32&quot;;&quot;$(BOOST)\lib\win32&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -552,10 +552,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\mersenne_twister.cu"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\movep.cu"
 				>
 			</File>
@@ -639,10 +635,6 @@
 			</File>
 			<File
 				RelativePath="..\..\inc\logging_types.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\inc\mersenne_twister.h"
 				>
 			</File>
 			<File

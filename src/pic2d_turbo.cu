@@ -24,6 +24,7 @@
 #include <vector>
 
 #include <cuda.h>
+#include <curand.h>
 #include <driver_functions.h>
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
@@ -38,7 +39,6 @@
 #include "inject.h"
 #include "logging_thread.h"
 #include "logging_types.h"
-#include "mersenne_twister.h"
 #include "movep.h"
 #include "pic_utils.h"
 #include "potent2.h"
@@ -103,8 +103,7 @@ int main(int argc, char *argv[])
    // 6 rands for cold electrons
    // 6 rands for hot ions
    // 6 rands for cold ions
-   const int neededRands = ((neededParticles * 4 * 6) + MT_RNG_COUNT - 1) /
-      MT_RNG_COUNT;
+   const int neededRands = neededParticles * 4 * 6;
 
    // CUDA Variables
    int sharedMemoryBytes;
@@ -127,35 +126,16 @@ int main(int argc, char *argv[])
    DevMemF dev_rhoi(NX1 * NY);
    //DevMemF dev_xx(X_GRD);
    //DevMemF dev_yy(Y_GRD);
-   DevMemF dev_randTable(neededRands * MT_RNG_COUNT);
+   DevMemF dev_randTable(neededRands);
    // End Device Memory Pointers
 
    int percentComplete = 0; // Used to display progress to the user
    int percentSize = 0;
 
-   // Seed the Mersenne Twister
-   const char *raw_path = "data/MersenneTwister.raw";
-   const char *dat_path = "data/MersenneTwister.dat";
-   if(!fileExists(raw_path))
-   {
-      errExit("data/MersenneTwister.raw not found!");
-   }
-   if(!fileExists(dat_path))
-   {
-      errExit("data/MersenneTwister.dat not found!");
-   }
-   //initMTRef(raw_path);
-   srand(ISEED);
-   unsigned int seeds[MT_RNG_COUNT];
-   for(int i = 0; i < MT_RNG_COUNT; i++)
-   {
-      seeds[i] = rand();
-   }
-   loadMTGPU(dat_path);
-   seedMTGPU(seeds);  
-   initializeGpuTwister<<<32, 128>>>();
-   cudaThreadSynchronize();
-   checkForCudaError("initializeGpuTwister");
+   // Set up the random number generator
+   curandGenerator_t randGenerator;
+   curandCreateGenerator (&randGenerator, CURAND_RNG_PSEUDO_MTGP32);
+   curandSetPseudoRandomGeneratorSeed(randGenerator, ISEED);
 
    nit = static_cast<int>((maxSimTime-TSTART)/DELT + 1); // determine number of iterations
 
@@ -240,8 +220,7 @@ int main(int argc, char *argv[])
 
       // Prepare to call Inject
       // Generate the random numbers inject will need
-      RandomGPU<<<32, 128>>>(dev_randTable.getPtr(), neededRands);
-      //dev_randTable.fill(0.5);
+      curandGenerateUniform(randGenerator, dev_randTable.getPtr(), neededRands);
 
       //injectTimer.start();
       const int injectThreadsPerBlock = MAX_THREADS_PER_BLOCK;
