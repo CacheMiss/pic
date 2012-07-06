@@ -1,5 +1,5 @@
 
-function ret = pmovie(fps)
+function ret = pmovie()
    % get file list
    fileList = ls('phi*');
    tmp = size(fileList);
@@ -24,14 +24,23 @@ function ret = pmovie(fps)
    winsize(1:2) = [0 0];
 
    % Set up movie
-   A=moviein(numFiles,fig1,winsize);
+   A=moviein(numFiles*5,fig1,winsize);
+   fps = 1;
+
    set(fig1,'NextPlot','replacechildren')
 
    for i = 1:numFiles
       phi = loadPhi(fileList(i,:));
+      %surf(xValues, yValues, phi);
+      %A(:,i)=getframe(fig1,winsize);
+      %axis([0, xSize, 0, ySize, minPhi, maxPhi]);
       surf(xValues, yValues, phi);
       axis([0, xSize, 0, ySize, minPhi, maxPhi]);
-      A(:,i)=getframe(fig1,winsize);
+      A(:,(i-1)*5+1)=getframe(fig1,winsize);
+      A(:,(i-1)*5+2)=getframe(fig1,winsize);
+      A(:,(i-1)*5+3)=getframe(fig1,winsize);
+      A(:,(i-1)*5+4)=getframe(fig1,winsize);
+      A(:,(i-1)*5+5)=getframe(fig1,winsize);
    end
    clear phi;
    movie(fig1,A,1,fps,winsize);
