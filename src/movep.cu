@@ -613,8 +613,11 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
          dev_success.getPtr());
       cudaStreamSynchronize(stream);
       dev_success.copyToHost(success);
-      std::cerr << "ERROR: The movep function failed to constrain "
-                << "all particles to the grid!" << std::endl;
+      if(!success)
+      {
+         std::cerr << "ERROR: The movep function failed to constrain "
+                   << "all particles to the grid!" << std::endl;
+      }
       assert(success);
    }
 
