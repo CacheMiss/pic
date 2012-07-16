@@ -1,5 +1,6 @@
 #include "movep.h"
 
+#include "commandline_options.h"
 #include "device_stats.h"
 #include "device_utils.h"
 #include "global_variables.h"
@@ -9,6 +10,22 @@
 
 //texture<float, 1, cudaReadModeElementType > exTex;
 //texture<float, 1, cudaReadModeElementType > eyTex;
+
+__global__
+void checkBoundaryConditions(float2 location[], int numParticles, int height, int width, 
+                             bool *success)
+{
+   int threadId = blockDim.x * blockIdx.x + threadIdx.x;
+   if(threadId >= numParticles)
+   {
+      return;
+   }
+   if(location[threadId].x < 0 || location[threadId].x > width ||
+      location[threadId].y < 0 || location[threadId].y > height)
+   {
+      *success = false;
+   }
+}
 
 __device__
 void writeParticlesBack(float global[], volatile float shared[], 
@@ -580,6 +597,26 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    }
 
    numParticles -= oobIdx;
+
+   if(CommandlineOptions::getRef().getParticleBoundCheck())
+   {
+      DevMem<bool> dev_success;
+      dev_success.fill(true);
+      bool success;
+      numThreads = 256;
+      numBlocks = (numParticles + numThreads - 1) / numThreads;
+      cudaStreamSynchronize(stream);
+      checkBoundaryConditions<<<numBlocks, numThreads, 0, stream>>>(
+         partLoc.getPtr(), 
+         numParticles, 
+         NY1, NX1, 
+         dev_success.getPtr());
+      cudaStreamSynchronize(stream);
+      dev_success.copyToHost(success);
+      std::cerr << "ERROR: The movep function failed to constrain "
+                << "all particles to the grid!" << std::endl;
+      assert(success);
+   }
 
    // DEBUG
    //{

@@ -50,6 +50,8 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
         "File index number for restart point")
        ("restart-dir", po::value<std::string>(&m_restartDir)->default_value("."),
         "The directory the files to restart from are located in. (Ignored if restart-index not used)")
+       ("bound-check", po::bool_switch(&m_particleBoundCheck)->default_value(false),
+        "Debug option to ensure all particles remain in the grid.")
    ;
    try
    {

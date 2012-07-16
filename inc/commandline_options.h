@@ -31,6 +31,7 @@ class CommandlineOptions
    inline float getSigma1() const;
    inline float getSigma2() const;
    inline float getSigma3() const;
+   inline bool  getParticleBoundCheck() const;
    void saveOptions(const char fileName[]) const;
 
    private:
@@ -50,6 +51,7 @@ class CommandlineOptions
    float m_sigma3;
    unsigned int m_restartPoint;
    std::string m_restartDir;
+   bool m_particleBoundCheck;
 };
 
 inline float CommandlineOptions::getMaxSimTime() const
@@ -105,6 +107,11 @@ inline float CommandlineOptions::getSigma3() const
 inline unsigned int CommandlineOptions::getRestartPoint() const
 {
    return m_restartPoint;
+}
+
+inline bool CommandlineOptions::getParticleBoundCheck() const
+{
+   return m_particleBoundCheck;
 }
 
 #endif
