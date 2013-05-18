@@ -33,7 +33,8 @@ LIB_PATHS=-L~/boost/lib
 THIRD_PARTY_LIBS=-lboost_thread -lboost_filesystem -lboost_program_options -lcufft -lcurand
 PRE_PROCESSOR=-DASC -D_DEBUG
 COMMON_FLAGS=-g $(PRE_PROCESSOR)
-CUDA_FLAGS=-arch=sm_20 -m64 $(COMMON_FLAGS)
+SUPPORTED_VIRTUAL_ARCH=-arch=compute_12
+CUDA_FLAGS=$(SUPPORTED_VIRTUAL_ARCH) -m64 $(COMMON_FLAGS)
 CC_FLAGS=-m64 $(COMMON_FLAGS)
 
 all: $(EXE)
