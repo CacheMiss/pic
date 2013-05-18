@@ -123,6 +123,9 @@ int main(int argc, char *argv[])
    // 6 rands for cold ions
    const int neededRands = neededParticles * 4 * 6;
 
+#ifdef DEBUG_TRACE
+   std::cout << "Initializing main storage..." << std::endl;
+#endif
    // CUDA Variables
    int sharedMemoryBytes;
    // Device Memory Pointers
@@ -147,8 +150,16 @@ int main(int argc, char *argv[])
    DevMemF dev_randTable(neededRands);
    // End Device Memory Pointers
 
+#ifdef DEBUG_TRACE
+   std::cout << "Finished main storage" << std::endl;
+#endif
+
    int percentComplete = 0; // Used to display progress to the user
    int percentSize = 0;
+
+#ifdef DEBUG_TRACE
+   std::cout << "Initializing random number generator" << std::endl;
+#endif
 
    // Set up the random number generator
    curandGenerator_t randGenerator;
@@ -166,6 +177,9 @@ int main(int argc, char *argv[])
 
    if(options.getRestartPoint() > 0)
    {
+#ifdef DEBUG_TRACE
+      std::cout << "Loading previous run data..." << std::endl;
+#endif
       loadPrevSimState(options.getRestartPoint(), options.getRestartDir(),
          d_eleHotLoc, d_eleHotVel, d_eleColdLoc, d_eleColdVel,
          d_ionHotLoc, d_ionHotVel, d_ionColdLoc, d_ionColdVel,
@@ -180,6 +194,9 @@ int main(int argc, char *argv[])
       lfd = 0;
       lfdint = 0;
       ind = simState.iterationNum / lfint + 1;
+#ifdef DEBUG_TRACE
+      std::cout << "previous run data loaded" << std::endl;
+#endif
    }
    else
    {
@@ -237,6 +254,10 @@ int main(int argc, char *argv[])
          errExit("Cold Ion array was not large enough");
       }
 
+#ifdef DEBUG_TRACE
+      std::cout << "Inject" << std::endl;
+#endif
+
       // Prepare to call Inject
       // Generate the random numbers inject will need
       curandGenerateUniform(randGenerator, dev_randTable.getPtr(), neededRands);
@@ -282,6 +303,9 @@ int main(int argc, char *argv[])
       //logger.flush();
       // END DEBUG
 
+#ifdef DEBUG_TRACE
+      std::cout << "Dens" << std::endl;
+#endif
       //densTimer.start();
       // determine the charge density at the grid points
       dens(dev_rho, dev_rhoe,dev_rhoi, 
@@ -317,6 +341,9 @@ int main(int argc, char *argv[])
       //cudaThreadSynchronize();
       //potent2Timer.stop();
 
+#ifdef DEBUG_TRACE
+      std::cout << "Field" << std::endl;
+#endif
       //fieldTimer.start();
       // calculate E field at Grid points
       field(dev_ex,dev_ey,dev_phi);
@@ -335,6 +362,9 @@ int main(int argc, char *argv[])
       // logger.flush();
       // END DEBUG
 
+#ifdef DEBUG_TRACE
+      std::cout << "Move" << std::endl;
+#endif
       //movepTimer.start();
       // move ions
       cudaStream_t movepStreams[4];
