@@ -89,6 +89,7 @@ void ParticleAllocator::allocate(T* &ptr, std::size_t nElements)
 
 #ifdef _DEBUG
       std::cout << "ParticleAllocator allocating " << (double)allocatedBytes / 1048576 << " megabytes." << std::endl;
+      std::cout << "There are " << m_freePool.size() + m_usedPool.size() << " blocks allocated." << std::endl;
 #endif
    }
 }
