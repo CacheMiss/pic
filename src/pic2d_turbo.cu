@@ -46,6 +46,19 @@
 #include "simulation_state.h"
 #include "typedefs.h"
 
+#ifndef DEBUG_TRACE
+#define DEBUG_TRACE
+#endif
+
+void printFreeMem()
+{
+   DeviceStats &device(DeviceStats::getRef());
+
+   std::cout << device.getFreeMemMb() << " Mb ("
+             << static_cast<int>(device.getPercentFreeMem() * 100)
+             << "%) of device memory is free." << std::endl;
+}
+
 int main(int argc, char *argv[])
 {
    // Create output directory if necessary
@@ -76,6 +89,7 @@ int main(int argc, char *argv[])
 
    // Init Device
    DeviceStats &ref(DeviceStats::getRef());
+   printFreeMem();
 
 
    PrecisionTimer iterationTimer;
@@ -187,6 +201,7 @@ int main(int argc, char *argv[])
    printf("nit=%d\n",nit);
    for (;simState.iterationNum<nit; simState.iterationNum++) 
    {
+      printFreeMem();
 
       if(percentComplete < 100 &&
          static_cast<int>(simState.iterationNum / percentSize) > percentComplete)
