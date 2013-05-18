@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
    int ind;
    int lfdint;
    int lfd;
-   int nit;
+   unsigned int nit;
 
    maxNumParticles = (int)((ref.totalGlobalMem / (sizeof(float) * 5)) * 0.15);
    simState.maxNumParticles = maxNumParticles;
