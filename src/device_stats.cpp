@@ -33,7 +33,7 @@ DeviceStats & DeviceStats::getRef(int dev)
             fprintf(stderr, "cutil error: device does not support CUDA.\n");
             exit(EXIT_FAILURE);
          }
-         fprintf(stderr, "Using device %d: %s\n", dev, m_ref->name);
+         fprintf(stdout, "Using device %d: %s\n", dev, m_ref->name);
       }
       catch (CudaRuntimeError &e)
       {
