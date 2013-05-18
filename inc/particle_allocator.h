@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cuda_runtime_api.h>
 #include <list>
 #include <map>
@@ -78,12 +79,16 @@ void ParticleAllocator::allocate(T* &ptr, std::size_t nElements)
          checkCuda(cudaFree((*largestAllocation).first));
          m_freePool.erase(largestAllocation);
       }
-      checkCuda(cudaMalloc(&ptr, requiredBytes));
-      m_usedPool.insert(std::make_pair(ptr, requiredBytes));
+      const std::size_t ONE_MB = 1048576;
+      // Always allocate a megabyte. If you don't, the cuda allocator from 2013/05/17 will.
+      // Pad the allocation if it's over 1MB
+      std::size_t allocatedBytes = requiredBytes > ONE_MB ? requiredBytes + ONE_MB : ONE_MB;
+      checkCuda(cudaMalloc(&ptr, allocatedBytes));
+      m_usedPool.insert(std::make_pair(ptr, allocatedBytes));
       m_maxNumConcurrentAlloc = std::max(m_maxNumConcurrentAlloc, m_usedPool.size());
 
 #ifdef _DEBUG
-      std::cout << "ParticleAllocator allocating " << (double)requiredBytes / 1048576 << " megabytes." << std::endl;
+      std::cout << "ParticleAllocator allocating " << (double)allocatedBytes / 1048576 << " megabytes." << std::endl;
 #endif
    }
 }
