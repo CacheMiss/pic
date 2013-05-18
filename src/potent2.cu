@@ -314,24 +314,6 @@ void fixPhiSides(float phi[],
    phi[width * height + y] = phi[y];
 }
 
-#include "array2d.h"
-void dbgLogComplex(DevMem<cufftComplex> &dev_data, int width, int height)
-{
-   Array2d<float> hostVec(height, width);
-   DevMem<float> tmp(width * height);
-
-   int numThreads = MAX_THREADS_PER_BLOCK / 2;
-   int sharedSize = numThreads * sizeof(float2);
-   dim3 blockSize(numThreads);
-   dim3 numBlocks(calcNumBlocks(numThreads, dev_data.size()));
-   complexToReal<<<numBlocks, numThreads, sharedSize>>>(
-      dev_data.getPtr(), tmp.getPtr(), dev_data.size());
-   checkForCudaError("complexToReal");
-
-   hostVec = tmp;
-   out2dr("dbg_",0,height,width,hostVec, true);
-}
-
 //******************************************************************************
 // Name: potent2
 // Purpose: Calculate the electric potential at all of the grid points and
