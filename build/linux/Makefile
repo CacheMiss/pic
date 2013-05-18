@@ -7,16 +7,13 @@ BINDIR=$(ROOT)/bin
 EXE=$(BINDIR)/pic
 OBJDIR=.obj
 OBJ= \
-   $(OBJDIR)/asc-gpulib.o \
    $(OBJDIR)/commandline_options.o \
    $(OBJDIR)/device_stats.o \
    $(OBJDIR)/error_check.o \
    $(OBJDIR)/genmtrand.o \
    $(OBJDIR)/global_variables.o \
-   $(OBJDIR)/load_sim_state.o \
    $(OBJDIR)/logging_thread.o \
    $(OBJDIR)/logging_types.o \
-   $(OBJDIR)/particle_grid_bin.o \
    $(OBJDIR)/pic_utils.o \
    $(OBJDIR)/precisiontimer.o \
    $(OBJDIR)/simulation_state.o \
@@ -29,8 +26,7 @@ CUOBJ= \
    $(OBJDIR)/inject.o \
    $(OBJDIR)/movep.o \
    $(OBJDIR)/pic2d_turbo.o \
-   $(OBJDIR)/potent2.o \
-   $(OBJDIR)/binned_memory_kernels.o
+   $(OBJDIR)/potent2.o
 
 INCLUDE_PATHS=-I$(INC) -I$(CUDADIR)/include -I~/boost/include
 LIB_PATHS=-L~/boost/lib
