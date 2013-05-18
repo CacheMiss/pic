@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
    int lfd;
    unsigned int nit;
 
-   maxNumParticles = (int)((ref.totalGlobalMem / (sizeof(float) * 5)) * 0.15);
+   maxNumParticles = (int)((ref.totalGlobalMem / (sizeof(float) * 5)) * 0.05);
    simState.maxNumParticles = maxNumParticles;
    const int neededParticles = NIJ*NX1; // Need this many particles in each array
    // 6 rands for hot electrons
