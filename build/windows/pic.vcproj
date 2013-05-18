@@ -520,11 +520,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\cuda_allocator.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\dens.cu"
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\dev_mem_reuse.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\device_stats.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\error_check.cpp"
 				>
 			</File>
 			<File
@@ -553,6 +565,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\movep.cu"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\particle_allocator.cpp"
 				>
 			</File>
 			<File
@@ -590,6 +606,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\inc\cuda_allocator.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\inc\d_global_variables.h"
 				>
 			</File>
@@ -606,6 +626,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\inc\dev_mem_reuse.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\inc\device_constants.h"
 				>
 			</File>
@@ -618,11 +642,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\inc\error_check.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\inc\field.h"
 				>
 			</File>
 			<File
 				RelativePath="..\..\inc\global_variables.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\inc\host_mem.h"
 				>
 			</File>
 			<File
@@ -642,7 +674,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\inc\particle_allocator.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\inc\pic_utils.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\inc\pitched_ptr.h"
 				>
 			</File>
 			<File

@@ -1,13 +1,19 @@
-#ifndef DEV_MEM_H
-#define DEV_MEM_H
+class CudaAllocator;
+template<class T, class Allocator=CudaAllocator>
+class DevMem;
+
+#pragma once
 
 #include <assert.h>
 #include <cuda.h>
 #include <stdio.h>
 #include <vector>
 
+#include "cuda_allocator.h"
 #include "d_global_variables.h"
 #include "device_stats.h"
+#include "error_check.h"
+#include "host_mem.h"
 #include "simulation_state.h"
 
 #ifndef NO_THRUST
@@ -16,96 +22,154 @@
 #include <thrust/host_vector.h>
 #endif
 
-template<class Type>
+template<class T>
+class HostMem;
+
+template<class T, class Allocator>
 class DevMem
 {
 public:
    DevMem();
-   DevMem(unsigned int size);
+   DevMem(std::size_t size);
 #ifndef NO_THRUST
-   DevMem(unsigned int size, Type val);
+   DevMem(std::size_t size, T val);
 #endif
-   DevMem(Type *ptr, unsigned int size);
+   DevMem(T *ptr, std::size_t size);
+   DevMem(const HostMem<T> &rhs);
+   DevMem(const std::vector<T> &rhs);
+   DevMem(const DevMem &rhs);
    ~DevMem();
-   void copyToHost(Type &hostType) const;
-   void copyArrayToHost(Type hostType[]) const;
-   void copyArrayToHost(Type hostType[], unsigned int size) const;
-   void copyArrayToDev(Type h_array[], unsigned int numElements);
-   const Type* getPtr() const;
-   Type* getPtr();
-   void setPtr(Type *newPtr);
+   void copyToHost(T &hostType) const;
+   void copyArrayToHost(T hostType[]) const;
+   void copyArrayToHost(T hostType[], std::size_t size) const;
+   void copyArrayToDev(T h_array[], std::size_t numElements);
+   const T* getPtr() const;
+   T* getPtr();
+   void setPtr(T *newPtr);
 #ifndef NO_THRUST
-   const thrust::device_ptr<Type> getThrustPtr() const;
-   thrust::device_ptr<Type> getThrustPtr();
-   void fill(Type val);
+   const thrust::device_ptr<T> getThrustPtr() const;
+   thrust::device_ptr<T> getThrustPtr();
+   void fill(T val);
 #endif
    void freeMem();
-   unsigned int size() const;
-   unsigned int sizeBytes() const;
-   void resize(unsigned int newSize);
+   std::size_t size() const;
+   std::size_t sizeBytes() const;
+   void resize(std::size_t newSize);
+   void clear();
+   void setPadding(std::size_t p);
    void zeroMem();
-   void operator=(const Type &rhs);
+   void operator=(const T &rhs);
 #ifndef NO_THRUST
-   void operator=(const thrust::host_vector<Type> &rhs);
+   void operator=(const thrust::host_vector<T> &rhs);
 #endif
-   void operator=(const std::vector<Type> &rhs);
-   void operator=(const Type * const rhs);
+   void operator=(const std::vector<T> &rhs);
+   void operator=(const T * const rhs);
+   void operator=(const HostMem<T> &rhs);
 
 private:
-   unsigned int sizeAllocated;
-   Type *ptr;
-   bool manageMem;
-   void allocateMem(unsigned int s);
-   void checkForCudaError(cudaError_t error) const;
+   std::size_t m_size;
+   std::size_t m_reserved;
+   std::size_t m_padding;
+   T *m_ptr;
+   // If true, free the mem in the destructor. If false, someone else is freeing it
+   bool m_manageMem;
+
+   void allocateMem(std::size_t s);
 };
 
 
-template<class Type>
-DevMem<Type>::DevMem()
+template<class T, class Allocator>
+DevMem<T, Allocator>::DevMem()
+  :m_ptr(NULL)
+  ,m_size(0)
+  ,m_reserved(0)
+  ,m_padding(0)
 {
-   manageMem = true;
+   m_manageMem = true;
    allocateMem(1);
 }
 
-template<class Type>
-DevMem<Type>::DevMem(unsigned int size)
+template<class T, class Allocator>
+DevMem<T, Allocator>::DevMem(std::size_t size)
+  :m_ptr(NULL)
+  ,m_size(0)
+  ,m_reserved(0)
+  ,m_padding(0)
 {
-   assert(size > 0);
-   manageMem = true;
+   m_manageMem = true;
    allocateMem(size);
 }
 
 #ifndef NO_THRUST
-template<class Type>
-DevMem<Type>::DevMem(unsigned int size, Type val)
+template<class T, class Allocator>
+DevMem<T, Allocator>::DevMem(std::size_t size, T val)
+  :m_ptr(NULL)
+  ,m_size(0)
+  ,m_reserved(0)
+  ,m_padding(0)
 {
    assert(size > 0);
-   manageMem= true;
+   m_manageMem = true;
    allocateMem(size);
    fill(val);
 }
 #endif
 
-template<class Type>
-DevMem<Type>::DevMem(Type *ptr, unsigned int size)
+template<class T, class Allocator>
+DevMem<T, Allocator>::DevMem(T *ptr, std::size_t size)
+  :m_ptr(ptr)
+  ,m_size(size)
+  ,m_reserved(size)
+  ,m_padding(0)
+  ,m_manageMem(false)
 {
-   this->ptr = ptr;
-   sizeAllocated = size;
-   manageMem= false;
 }
 
-template<class Type>
-DevMem<Type>::~DevMem()
+template<class T, class Allocator>
+DevMem<T, Allocator>::DevMem(const HostMem<T> &rhs)
+  :m_ptr(NULL)
+  ,m_size(0)
+  ,m_reserved(0)
+  ,m_padding(0)
 {
-   if(manageMem)
+   allocateMem(rhs.size());
+   checkCuda(cudaMemcpy(m_ptr, rhs.getPtr(), sizeof(T) * rhs.size(), cudaMemcpyHostToDevice));
+}
+
+template<class T, class Allocator>
+DevMem<T, Allocator>::DevMem(const DevMem<T, Allocator> &rhs)
+  :m_ptr(NULL)
+  ,m_size(0)
+  ,m_reserved(0)
+  ,m_padding(rhs.m_padding)
+{
+   allocateMem(rhs.size());
+   checkCuda(cudaMemcpy(m_ptr, rhs.getPtr(), sizeof(T) * rhs.size(), cudaMemcpyDeviceToDevice));
+}
+
+template<class T, class Allocator>
+DevMem<T, Allocator>::DevMem(const std::vector<T> &rhs)
+  :m_ptr(NULL)
+  ,m_size(0)
+  ,m_reserved(0)
+  ,m_padding(0)
+{
+   allocateMem(rhs.size());
+   checkCuda(cudaMemcpy(m_ptr, &rhs[0], sizeof(T) * m_size, cudaMemcpyHostToDevice));
+}
+
+template<class T, class Allocator>
+DevMem<T, Allocator>::~DevMem()
+{
+   if(m_manageMem)
    {
       freeMem();
    }
 }
 
 #ifndef NO_THRUST
-template<class Type>
-void DevMem<Type>::fill(Type val)
+template<class T, class Allocator>
+void DevMem<T, Allocator>::fill(T val)
 {
    thrust::fill(getThrustPtr(),
       getThrustPtr() + size(),
@@ -113,189 +177,184 @@ void DevMem<Type>::fill(Type val)
 }
 #endif
 
-template<class Type>
-void DevMem<Type>::copyToHost(Type &hostType) const
+template<class T, class Allocator>
+void DevMem<T, Allocator>::copyToHost(T &hostType) const
 {
-   cudaError_t error;
-   error = cudaMemcpy((void*)&hostType, ptr, sizeof(Type), cudaMemcpyDeviceToHost);
-   checkForCudaError(error);
+   checkCuda(cudaMemcpy((void*)&hostType, m_ptr, sizeof(T), cudaMemcpyDeviceToHost));
 }
 
-template<class Type>
-void DevMem<Type>::copyArrayToHost(Type hostType[]) const
+template<class T, class Allocator>
+void DevMem<T, Allocator>::copyArrayToHost(T hostType[]) const
 {
-   cudaError_t error;
-   error = cudaMemcpy((void*)hostType, ptr, sizeAllocated * sizeof(Type), 
-      cudaMemcpyDeviceToHost);
-   checkForCudaError(error);
+   checkCuda(cudaMemcpy((void*)hostType, m_ptr, m_size * sizeof(T), 
+                        cudaMemcpyDeviceToHost));
 }
 
-template<class Type>
-void DevMem<Type>::copyArrayToHost(Type hostType[], unsigned int size) const
+template<class T, class Allocator>
+void DevMem<T, Allocator>::copyArrayToHost(T hostType[], std::size_t size) const
 {
    if(size == 0)
    {
       return;
    }
-   assert(size < sizeAllocated);
-   cudaError_t error;
-   error = cudaMemcpy((void*)hostType, ptr, size * sizeof(Type), 
-      cudaMemcpyDeviceToHost);
-   checkForCudaError(error);
+   assert(size < m_size);
+   checkCuda(cudaMemcpy((void*)hostType, m_ptr, size * sizeof(T), 
+                        cudaMemcpyDeviceToHost));
 }
 
-template<class Type>
-void DevMem<Type>::copyArrayToDev(Type h_array[], unsigned int numElements)
+template<class T, class Allocator>
+void DevMem<T, Allocator>::copyArrayToDev(T h_array[], std::size_t numElements)
 {
-   assert(numElements <= sizeAllocated);
-   cudaError_t error;
-   error = cudaMemcpy((void*)ptr, (void*)h_array, numElements * sizeof(Type), 
-      cudaMemcpyHostToDevice);
-   checkForCudaError(error);
+   assert(numElements <= m_size);
+   checkCuda(cudaMemcpy((void*)m_ptr, (void*)h_array, numElements * sizeof(T), 
+                        cudaMemcpyHostToDevice));
 }
 
 #ifndef NO_THRUST
-template<class Type>
-thrust::device_ptr<Type> DevMem<Type>::getThrustPtr()
+template<class T, class Allocator>
+thrust::device_ptr<T> DevMem<T, Allocator>::getThrustPtr()
 {
-   return thrust::device_ptr<Type>(ptr);
+   if(m_ptr == NULL)
+   {
+      throw CudaRuntimeError("DevMem<T, Allocator>::getThrustPtr() was called after the device memory was freed!");
+   }
+   return thrust::device_ptr<T>(m_ptr);
 }
 
-template<class Type>
-const thrust::device_ptr<Type> DevMem<Type>::getThrustPtr() const
+template<class T, class Allocator>
+const thrust::device_ptr<T> DevMem<T, Allocator>::getThrustPtr() const
 {
-   return thrust::device_ptr<Type>(ptr);
+   if(m_ptr == NULL)
+   {
+      throw CudaRuntimeError("DevMem<T, Allocator>::getThrustPtr() was called after the device memory was freed!");
+   }
+   return thrust::device_ptr<T>(m_ptr);
 }
 #endif
 
-template<class Type>
-Type* DevMem<Type>::getPtr()
+template<class T, class Allocator>
+T* DevMem<T, Allocator>::getPtr()
 {
-   return ptr;
-}
-
-template<class Type>
-const Type* DevMem<Type>::getPtr() const
-{
-   return ptr;
-}
-
-template<class Type>
-void DevMem<Type>::setPtr(Type *newPtr)
-{
-   ptr = newPtr;
-}
-
-template<class Type>
-unsigned int DevMem<Type>::size() const
-{
-   return sizeAllocated;
-}
-
-template<class Type>
-unsigned int DevMem<Type>::sizeBytes() const
-{
-   return sizeAllocated * sizeof(Type);
-}
-
-template<class Type>
-void DevMem<Type>::freeMem()
-{
-   if(ptr != NULL)
+   if(m_ptr == NULL)
    {
-      cudaFree(ptr);
+      throw CudaRuntimeError("DevMem<T, Allocator>::getPtr() was called after the device memory was freed!");
    }
-   ptr = NULL;
-   sizeAllocated = 0;
+   return m_ptr;
 }
 
-template<class Type>
-void DevMem<Type>::resize(unsigned int newSize)
+template<class T, class Allocator>
+const T* DevMem<T, Allocator>::getPtr() const
 {
-   if(newSize > sizeAllocated)
+   if(m_ptr == NULL)
    {
-      cudaFree(ptr);
-      allocateMem(newSize);
+      throw CudaRuntimeError("DevMem<T, Allocator>::getPtr() was called after the device memory was freed!");
    }
+   return m_ptr;
 }
 
-template<class Type>
-void DevMem<Type>::zeroMem()
+template<class T, class Allocator>
+void DevMem<T, Allocator>::setPtr(T *newPtr)
 {
-#ifdef NO_THRUST
-   cudaMemset((void*)ptr, 0, sizeAllocated * sizeof(Type));
-#else
-   thrust::fill(getThrustPtr(),
-      getThrustPtr() + size(),
-      (Type)0);
-#endif
+   m_ptr = newPtr;
 }
 
-template<class Type>
-void DevMem<Type>::operator=(const Type &rhs)
+template<class T, class Allocator>
+std::size_t DevMem<T, Allocator>::size() const
 {
-   cudaError_t error;
+   return m_size;
+}
 
-   error = cudaMemcpy(ptr, &rhs, sizeof(Type), cudaMemcpyHostToDevice);
-   checkForCudaError(error);
+template<class T, class Allocator>
+std::size_t DevMem<T, Allocator>::sizeBytes() const
+{
+   return m_size * sizeof(T);
+}
+
+template<class T, class Allocator>
+void DevMem<T, Allocator>::freeMem()
+{
+   Allocator &a(Allocator::getRef());
+   if(m_ptr != NULL)
+   {
+      a.free(m_ptr);
+   }
+   m_ptr = NULL;
+   m_size = 0;
+   m_reserved = 0;
+}
+
+template<class T, class Allocator>
+void DevMem<T, Allocator>::resize(std::size_t newSize)
+{
+   allocateMem(newSize);
+}
+
+template<class T, class Allocator>
+void DevMem<T, Allocator>::clear()
+{
+   m_size = 0;
+}
+
+template<class T, class Allocator>
+void DevMem<T, Allocator>::zeroMem()
+{
+   cudaMemset((void*)m_ptr, 0, m_size * sizeof(T));
+}
+
+template<class T, class Allocator>
+void DevMem<T, Allocator>::operator=(const T &rhs)
+{
+   checkCuda(cudaMemcpy(m_ptr, &rhs, sizeof(T), cudaMemcpyHostToDevice));
 }
 
 #ifndef NO_THRUST
-template<class Type>
-void DevMem<Type>::operator=(const thrust::host_vector<Type> &rhs)
+template<class T, class Allocator>
+void DevMem<T, Allocator>::operator=(const thrust::host_vector<T> &rhs)
 {
-   cudaError_t error;
-   assert(sizeAllocated == rhs.size());
-
-   error = cudaMemcpy(ptr, &rhs[0], sizeof(Type) * sizeAllocated, 
-                      cudaMemcpyHostToDevice);
-   checkForCudaError(error);
+   resize(rhs.size());
+   checkCuda(cudaMemcpy(m_ptr, &rhs[0], sizeof(T) * m_size, 
+                        cudaMemcpyHostToDevice));
 }
 #endif
 
-template<class Type>
-void DevMem<Type>::operator=(const std::vector<Type> &rhs)
+template<class T, class Allocator>
+void DevMem<T, Allocator>::operator=(const std::vector<T> &rhs)
 {
-   cudaError_t error;
-   assert(sizeAllocated == rhs.size());
-
-   error = cudaMemcpy(ptr, &rhs[0], sizeof(Type) * sizeAllocated, 
-      cudaMemcpyHostToDevice);
-   checkForCudaError(error);
+   resize(rhs.size());
+   checkCuda(cudaMemcpy(m_ptr, &rhs[0], sizeof(T) * m_size, 
+                        cudaMemcpyHostToDevice));
 }
 
-template<class Type>
-void DevMem<Type>::operator=(const Type * const rhs)
+template<class T, class Allocator>
+void DevMem<T, Allocator>::operator=(const T * const rhs)
 {
-   cudaError_t error;
-
-   error = cudaMemcpy(ptr, rhs, sizeof(Type) * sizeAllocated, 
-      cudaMemcpyHostToDevice);
-   checkForCudaError(error);
+   checkCuda(cudaMemcpy(m_ptr, rhs, sizeof(T) * m_size, 
+                        cudaMemcpyHostToDevice));
 }
 
-template<class Type>
-void DevMem<Type>::allocateMem(unsigned int s)
+template<class T, class Allocator>
+void DevMem<T, Allocator>::operator=(const HostMem<T> &rhs)
 {
-   cudaError_t error;
-
-   sizeAllocated = s;
-   error = cudaMalloc(&ptr, sizeof(Type) * sizeAllocated);
-   checkForCudaError(error);
+   resize(rhs.size());
+   cudaMemcpy(m_ptr, &rhs[0], sizeof(T) * m_size, cudaMemcpyHostToDevice);
 }
 
-template<class Type>
-void DevMem<Type>::checkForCudaError(cudaError_t error) const
+template<class T, class Allocator>
+void DevMem<T, Allocator>::allocateMem(std::size_t s)
 {
-   if(error != cudaSuccess)
+   Allocator &a(Allocator::getRef());
+   m_manageMem = true;
+   m_size = s;
+   if(m_size > m_reserved)
    {
-      SimulationState &simState(SimulationState::getRef());
-      fprintf(stderr,"ERROR on iteration %u: %s\n", simState.iterationNum,
-         cudaGetErrorString(error) );
-      assert(error == cudaSuccess);
-      exit(1);
+      a.free(m_ptr);
+      m_reserved = m_size + m_padding;
+      a.allocate(m_ptr, m_reserved);
    }
 }
 
-#endif
-
+template<class T, class Allocator>
+void DevMem<T, Allocator>::setPadding(std::size_t p)
+{
+   m_padding = p;
+}
