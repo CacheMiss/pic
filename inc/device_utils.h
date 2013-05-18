@@ -10,6 +10,7 @@
 #include <thrust/device_vector.h>
 #endif
 
+#include "cuda_allocator.h"
 #include "pic_utils.h"
 #include "global_variables.h"
 
@@ -19,8 +20,8 @@
 #include <vector>
 #endif
 
-template<class KeyType>
-void picSort(DevMem<KeyType> &keys, int size=-1)
+template<class KeyType, class AllocatorType>
+void picSort(DevMem<KeyType, AllocatorType> &keys, int size=-1)
 {
    assert(size != 0);
    if(size == -1)
@@ -32,8 +33,8 @@ void picSort(DevMem<KeyType> &keys, int size=-1)
    checkForCudaError("Radix sort failed");
 }
 
-template<class KeyType, class ValType>
-void picSort(DevMem<KeyType> &keys, DevMem<ValType> &values, int size=0)
+template<class KeyType, class KeyAllocatorType, class ValType, class ValAllocatorType>
+void picSort(DevMem<KeyType, KeyAllocatorType> &keys, DevMem<ValType, ValAllocatorType> &values, int size=0)
 {
    if(size == 0)
    {

@@ -1,11 +1,13 @@
 #include "movep.h"
 
 #include "commandline_options.h"
+#include "dev_mem_reuse.h"
 #include "device_stats.h"
 #include "device_utils.h"
 #include "global_variables.h"
 #include "logging_thread.h"
 #include "logging_types.h"
+#include "particle_allocator.h"
 #include "pic_utils.h"
 
 //texture<float, 1, cudaReadModeElementType > exTex;
@@ -470,15 +472,15 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    SimulationState &simState(SimulationState::getRef());
 
    unsigned int maxOobBuffer = simState.maxNumParticles/10;
-   DevMem<unsigned int> dev_oobIdx;
+   DevMem<unsigned int, DevMemReuse> dev_oobIdx;
    assert(dev_oobIdx.getPtr() != NULL);
    dev_oobIdx.zeroMem();
-   DevMem<unsigned int> dev_moveCandIdx;
+   DevMem<unsigned int, DevMemReuse> dev_moveCandIdx;
    dev_moveCandIdx.zeroMem();
-   DevMem<unsigned int> dev_oobArry(maxOobBuffer);
-   DevMem<unsigned int> dev_moveCandidates(maxOobBuffer);
-   unsigned int oobIdx;
-   unsigned int moveCandIdx;
+   DevMem<unsigned int, ParticleAllocator> dev_oobArry(maxOobBuffer);
+   DevMem<unsigned int, ParticleAllocator> dev_moveCandidates(maxOobBuffer);
+   HostMem<unsigned int> oobIdx(1);
+   HostMem<unsigned int> moveCandIdx(1);
 
    // DEBUG
    //{
@@ -547,21 +549,21 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    cudaStreamSynchronize(stream);
    checkForCudaError("Before copy oobIdx to host");
    // Get the number of particles that are outside of the y bounds
-   dev_oobIdx.copyToHost(oobIdx);
-   if(numParticles == oobIdx)
+   oobIdx = dev_oobIdx;
+   if(numParticles == oobIdx[0])
    {
-      printf("WARNING: %d of %d particles eliminated\n", oobIdx, numParticles);
+      printf("WARNING: %d of %d particles eliminated\n", oobIdx[0], numParticles);
       numParticles = 0;
       return;
    }
    // There are no out of bounds particles
-   else if(oobIdx == 0)
+   else if(oobIdx[0] == 0)
    {
       printf("WARNING: No out of bounds particles were detected.\n");
       return;
    }
-   assert(numParticles > oobIdx + 1);
-   unsigned int alignedStart = ((numParticles - oobIdx) / (16)) * 16;
+   assert(numParticles > oobIdx[0] + 1);
+   unsigned int alignedStart = ((numParticles - oobIdx[0]) / (16)) * 16;
 
    numThreads = MAX_THREADS_PER_BLOCK / 4;
    resizeDim3(blockSize, numThreads);
@@ -571,38 +573,38 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    findGoodIndicies<<<numBlocks, blockSize, sharedMemoryBytes, stream>>>(
       partLoc.getPtr(), numParticles,
       dev_moveCandIdx.getPtr(), dev_moveCandidates.getPtr(),
-      alignedStart, oobIdx, NY1);
+      alignedStart, oobIdx[0], NY1);
    checkForCudaError("findGoodIndices");
 
    cudaStreamSynchronize(stream);
    checkForCudaError("Before sorting oobArry");
-   dev_moveCandIdx.copyToHost(moveCandIdx);
+   moveCandIdx = dev_moveCandIdx;
    
    // If there are good particles in the top portion of the array,
    // find them so they can be moved down
-   if(moveCandIdx > 0)
+   if(moveCandIdx[0] > 0)
    {
-      picSort(dev_oobArry, oobIdx);
-      picSort(dev_moveCandidates, moveCandIdx);
+      picSort(dev_oobArry, oobIdx[0]);
+      picSort(dev_moveCandidates, moveCandIdx[0]);
 
       numThreads = MAX_THREADS_PER_BLOCK / 4;
       resizeDim3(blockSize, numThreads);
-      resizeDim3(numBlocks, calcNumBlocks(numThreads, moveCandIdx));
+      resizeDim3(numBlocks, calcNumBlocks(numThreads, moveCandIdx[0]));
       cudaStreamSynchronize(stream);
       checkForCudaError("Before killParticles");
       killParticles<<<numBlocks, blockSize, 0, stream>>>(
          partLoc.getPtr(), partVel.getPtr(),
-         dev_oobArry.getPtr(), dev_moveCandidates.getPtr(), moveCandIdx);
+         dev_oobArry.getPtr(), dev_moveCandidates.getPtr(), moveCandIdx[0]);
       checkForCudaError("killParticles");
    }
 
-   numParticles -= oobIdx;
+   numParticles -= oobIdx[0];
 
    if(CommandlineOptions::getRef().getParticleBoundCheck())
    {
-      DevMem<bool> dev_success;
+      DevMem<bool, DevMemReuse> dev_success;
       dev_success.fill(true);
-      bool success;
+      static HostMem<bool> success(1);
       numThreads = 256;
       numBlocks = (numParticles + numThreads - 1) / numThreads;
       cudaStreamSynchronize(stream);
@@ -612,13 +614,13 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
          NY1, NX1, 
          dev_success.getPtr());
       cudaStreamSynchronize(stream);
-      dev_success.copyToHost(success);
-      if(!success)
+      success = dev_success;
+      if(!success[0])
       {
          std::cerr << "ERROR: The movep function failed to constrain "
                    << "all particles to the grid!" << std::endl;
       }
-      assert(success);
+      assert(success[0]);
    }
 
    // DEBUG

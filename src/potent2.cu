@@ -1,7 +1,9 @@
 #include "potent2.h"
 #include "dev_mem.h"
+#include "dev_mem_reuse.h"
 #include "device_utils.h"
 #include "global_variables.h"
+#include "particle_allocator.h"
 #include "pic_utils.h"
 
 #include <cufft.h>
@@ -344,17 +346,18 @@ void dbgLogComplex(DevMem<cufftComplex> &dev_data, int width, int height)
 //******************************************************************************
 void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
 {
+   static bool first = true;
+
    unsigned int numThreads;
    dim3 blockSize;
    dim3 numBlocks;
    int sharedSize;
-   DevMem<cufftComplex> dev_c(NX1 * NY);
-   DevMem<cufftComplex> dev_pb(NX1);
-   DevMem<float> dev_cokx(NX1);
-   DevMem<cufftComplex> dev_phif(NY * NX1);
-   DevMem<float> dev_z(NY1 * NX1);
-   DevMem<cufftComplex> dev_yyy(NY1 * NX1);
-   cufftResult cufftStatus;
+   DevMem<cufftComplex, ParticleAllocator> dev_c(NX1 * NY);
+   DevMem<cufftComplex, ParticleAllocator> dev_pb(NX1);
+   DevMem<float, DevMemReuse> dev_cokx(NX1);
+   DevMem<cufftComplex, ParticleAllocator> dev_phif(NY * NX1);
+   DevMem<float, DevMemReuse> dev_z(NY1 * NX1);
+   DevMem<cufftComplex, ParticleAllocator> dev_yyy(NY1 * NX1);
 
    resizeDim3(blockSize, MAX_THREADS_PER_BLOCK / 2);
    resizeDim3(numBlocks, calcNumBlocks(256, NX1 * NY));
@@ -364,13 +367,14 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
       dev_rho.size());
    cudaThreadSynchronize();
    checkForCudaError("realToComplex");
-   cufftHandle rhoTransform;
-   cufftStatus = cufftPlan1d(&rhoTransform, NX1, CUFFT_C2C, NY);
-   checkCufftStatus(cufftStatus);
-   cufftStatus = cufftExecC2C(rhoTransform, dev_c.getPtr(), 
-      dev_c.getPtr(), CUFFT_FORWARD);
-   checkCufftStatus(cufftStatus);
-   cufftDestroy(rhoTransform);
+   static cufftHandle rhoTransform;
+   if(first)
+   {
+      checkCufftStatus(cufftPlan1d(&rhoTransform, NX1, CUFFT_C2C, NY));
+   }
+   checkCufftStatus(cufftExecC2C(rhoTransform, dev_c.getPtr(), 
+      dev_c.getPtr(), CUFFT_FORWARD));
+   //cufftDestroy(rhoTransform);
 
    //ccccccccccccccccccccccccccccccccccccccccccccccccccccccc
    //           the poisson equation begins
@@ -384,14 +388,16 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
    initPb<<<numBlocks, blockSize>>>(dev_pb.getPtr(), P0, dev_pb.size());
    checkForCudaError("initPb");
 
-   cufftHandle pbTransform;
-   cufftPlan1d(&pbTransform, NX1, CUFFT_C2C, 1);
+   static cufftHandle pbTransform;
+   if(first)
+   {
+      checkCufftStatus(cufftPlan1d(&pbTransform, NX1, CUFFT_C2C, 1));
+   }
    cudaThreadSynchronize();
    checkForCudaError("Before cufft on dev_pb");
-   cufftStatus = cufftExecC2C(pbTransform, dev_pb.getPtr(), dev_pb.getPtr(),
-      CUFFT_FORWARD);
-   checkCufftStatus(cufftStatus);
-   cufftDestroy(pbTransform);
+   checkCufftStatus(cufftExecC2C(pbTransform, dev_pb.getPtr(), dev_pb.getPtr(),
+      CUFFT_FORWARD));
+   //cufftDestroy(pbTransform);
 
    // loading harmonics
    numThreads = MAX_THREADS_PER_BLOCK / 4;
@@ -411,14 +417,16 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
       dev_c.getPtr(), NX1, NY1, DX, DY);
    checkForCudaError("calcPhif");
 
-   cufftHandle phifTransform;
-   cufftStatus = cufftPlan1d(&phifTransform, NX1, CUFFT_C2C, NY);
-   checkCufftStatus(cufftStatus);
+   static cufftHandle phifTransform;
+   if(first)
+   {
+      checkCufftStatus(cufftPlan1d(&phifTransform, NX1, CUFFT_C2C, NY));
+   }
    cudaThreadSynchronize();
    checkForCudaError("Before inverse cufft on phif");
    cufftExecC2C(phifTransform, dev_phif.getPtr(), 
       dev_phif.getPtr(), CUFFT_INVERSE);
-   cufftDestroy(phifTransform);
+   //cufftDestroy(phifTransform);
 
    // Make space for transpose
    dev_yyy.freeMem();
@@ -439,4 +447,6 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
    // Normalize the inverse transform
    divVector(dev_phi, float(NX1));
    checkForCudaError("potent2::divVector");
+
+   first = true;
 }

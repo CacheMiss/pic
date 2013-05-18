@@ -1,7 +1,9 @@
 #include "array2d.h"
 #include "dev_mem.h"
+#include "dev_mem_reuse.h"
 #include "device_utils.h"
 #include "global_variables.h"
+#include "particle_allocator.h"
 #include "pic_utils.h"
 #include "typedefs.h"
 
@@ -885,8 +887,10 @@ void findUpperLowerBound(const unsigned int binList[],
    }
 }
 
-void findBounds(const DevMem<unsigned int> &dev_binList,
-                DevMem<unsigned int> &dev_beg, DevMem<unsigned int> &dev_end,
+template<class BinListAllocator, class BegEndAllocator>
+void findBounds(const DevMem<unsigned int, BinListAllocator> &dev_binList,
+                DevMem<unsigned int, BegEndAllocator> &dev_beg, 
+                DevMem<unsigned int, BegEndAllocator> &dev_end,
                 unsigned int numParticles, unsigned int numBins, 
                 cudaStream_t stream
                 )
@@ -922,11 +926,11 @@ void calcIntermediateRho(DevMemF &dev_rho,
                          cudaStream_t stream)
 {
    DeviceStats &dev(DeviceStats::getRef());
-   DevMem<float2> dev_particleLocations(numParticles);
+   DevMem<float2, ParticleAllocator> dev_particleLocations(numParticles);
    // A vector which maps grid buckets back to particle indices
-   DevMem<unsigned int> dev_gridBuckets(numParticles);
-   DevMem<unsigned int> dev_bucketBegin(NY * NX1);
-   DevMem<unsigned int> dev_bucketEnd(NY * NX1);
+   DevMem<unsigned int, ParticleAllocator> dev_gridBuckets(numParticles);
+   DevMem<unsigned int, DevMemReuse> dev_bucketBegin(NY * NX1);
+   DevMem<unsigned int, DevMemReuse> dev_bucketEnd(NY * NX1);
    dev_bucketBegin.zeroMem();
    dev_bucketEnd.zeroMem();
    dim3 *numBlocks;
@@ -982,7 +986,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
    // Once all particles are loaded and have buckets; sort 
    // the buckets so that I can find all particles within a 
    // certain bucket
-   picSort<unsigned int, float2>(dev_gridBuckets, dev_particleLocations);
+   picSort(dev_gridBuckets, dev_particleLocations);
    checkForCudaError("Before findBounds");
 
    /*
@@ -1025,14 +1029,14 @@ void calcIntermediateRho(DevMemF &dev_rho,
    // this it can sometimes read more data than it needs. The extra
    // 31 elements in each array exist to ensure that no uninitialized
    // memory is read
-   DevMem<float> dev_a1(numParticles + dev.warpSize-1);
-   DevMem<float> dev_a2(numParticles + dev.warpSize-1);
-   DevMem<float> dev_a3(numParticles + dev.warpSize-1);
-   DevMem<float> dev_a4(numParticles + dev.warpSize-1);
-   DevMem<float> dev_a1Sum(NX1 * NY);
-   DevMem<float> dev_a2Sum(NX1 * NY);
-   DevMem<float> dev_a3Sum(NX1 * NY);
-   DevMem<float> dev_a4Sum(NX1 * NY);
+   DevMem<float, ParticleAllocator> dev_a1(numParticles + dev.warpSize-1);
+   DevMem<float, ParticleAllocator> dev_a2(numParticles + dev.warpSize-1);
+   DevMem<float, ParticleAllocator> dev_a3(numParticles + dev.warpSize-1);
+   DevMem<float, ParticleAllocator> dev_a4(numParticles + dev.warpSize-1);
+   DevMem<float, DevMemReuse> dev_a1Sum(NX1 * NY);
+   DevMem<float, DevMemReuse> dev_a2Sum(NX1 * NY);
+   DevMem<float, DevMemReuse> dev_a3Sum(NX1 * NY);
+   DevMem<float, DevMemReuse> dev_a4Sum(NX1 * NY);
 
    dev_a1Sum.zeroMem();
    dev_a2Sum.zeroMem();
@@ -1068,9 +1072,9 @@ void calcIntermediateRho(DevMemF &dev_rho,
    tmpVal.x = numParticles;
    tmpVal.y = 0;
 #ifndef NO_THRUST
-   DevMem<uint2> dev_maxMinArray(numBlocks->x, tmpVal);
+   DevMem<uint2, ParticleAllocator> dev_maxMinArray(numBlocks->x, tmpVal);
 #else
-   DevMem<uint2> dev_maxMinArray(numBlocks->x);
+   DevMem<uint2, ParticleAllocator> dev_maxMinArray(numBlocks->x);
    setDeviceArray(dev_maxMinArray.getPtr(), dev_maxMinArray.size(), tmpVal);
 #endif
    cudaStreamSynchronize(stream);
@@ -1104,11 +1108,11 @@ void calcIntermediateRho(DevMemF &dev_rho,
    tmpUint2.x = numParticles;
    tmpUint2.y = 0;
 #ifndef NO_THRUST
-   DevMem<uint2> topRowBlockBoundaries(numBlocks->x * numBlocks->y, tmpUint2);
-   DevMem<uint2> bottomRowBlockBoundaries(numBlocks->x * numBlocks->y, tmpUint2);
+   DevMem<uint2, ParticleAllocator> topRowBlockBoundaries(numBlocks->x * numBlocks->y, tmpUint2);
+   DevMem<uint2, ParticleAllocator> bottomRowBlockBoundaries(numBlocks->x * numBlocks->y, tmpUint2);
 #else
-   DevMem<uint2> topRowBlockBoundaries(numBlocks->x * numBlocks->y);
-   DevMem<uint2> bottomRowBlockBoundaries(numBlocks->x * numBlocks->y);
+   DevMem<uint2, ParticleAllocator> topRowBlockBoundaries(numBlocks->x * numBlocks->y);
+   DevMem<uint2, ParticleAllocator> bottomRowBlockBoundaries(numBlocks->x * numBlocks->y);
    setDeviceArray(topRowBlockBoundaries.getPtr(), topRowBlockBoundaries.size(), tmpUint2);
    setDeviceArray(bottomRowBlockBoundaries.getPtr(), bottomRowBlockBoundaries.size(), tmpUint2);
 #endif

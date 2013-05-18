@@ -32,6 +32,7 @@
 #include "array2d.h"
 #include "commandline_options.h"
 #include "dens.h"
+#include "dev_mem_reuse.h"
 #include "device_stats.h"
 #include "device_utils.h"
 #include "field.h"
@@ -77,6 +78,9 @@ int main(int argc, char *argv[])
    // Init Device
    DeviceStats &ref(DeviceStats::getRef());
 
+   DevMemReuse &reuseAllocator(DevMemReuse::getRef());
+   reuseAllocator.setSizeX(NX1);
+   reuseAllocator.setSizeY(NY);
 
    PrecisionTimer iterationTimer;
    //PrecisionTimer injectTimer;
