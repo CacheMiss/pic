@@ -148,7 +148,9 @@ template<class Allocator>
 const HostMem<T>& HostMem<T>::operator=(const DevMem<T, Allocator> &rhs)
 {
    resize(rhs.size());
-   cudaMemcpy(rhs.getPtr(), m_ptr, sizeof(T) * m_size, cudaMemcpyDeviceToHost);
+   cudaMemcpy(reinterpret_cast<void*>(m_ptr), 
+      reinterpret_cast<const void*>(rhs.getPtr()), 
+      sizeof(T) * m_size, cudaMemcpyDeviceToHost);
 
    return *this;
 }
