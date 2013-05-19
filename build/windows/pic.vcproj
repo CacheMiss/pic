@@ -528,6 +528,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\error_check.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\field.cu"
 				>
 			</File>
