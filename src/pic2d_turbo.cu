@@ -89,6 +89,7 @@ int main(int argc, char *argv[])
 
    // Init Device
    DeviceStats &ref(DeviceStats::getRef());
+   std::cout << "Memory usage before any allocations:" << std::endl;
    printFreeMem();
 
 
@@ -198,10 +199,12 @@ int main(int argc, char *argv[])
    //   logger.flush();
    // END DEBUG
 
+   std::cout << "Memory usage at start of simulation loop:" << std::endl;
+   printFreeMem();
+
    printf("nit=%d\n",nit);
    for (;simState.iterationNum<nit; simState.iterationNum++) 
    {
-      printFreeMem();
 
       if(percentComplete < 100 &&
          static_cast<int>(simState.iterationNum / percentSize) > percentComplete)
