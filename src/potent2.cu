@@ -430,5 +430,5 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
    divVector(dev_phi, float(NX1));
    checkForCudaError("potent2::divVector");
 
-   first = true;
+   first = false;
 }
