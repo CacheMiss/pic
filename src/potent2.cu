@@ -102,7 +102,7 @@ void initPb(cufftComplex pb[], const float P0, const unsigned int size)
 // Parameters:
 // ----------------
 // cokx - TBD
-// size - Should be set to NX, which is 1 more than the number of elements
+// size - Should be set to NX1
 //******************************************************************************
 __global__
 void loadHarmonics(float cokx[], const unsigned int size)
@@ -110,7 +110,7 @@ void loadHarmonics(float cokx[], const unsigned int size)
    unsigned int threadX = blockDim.x * blockIdx.x + threadIdx.x;
    float num;
 
-   if(threadX < size-1)
+   if(threadX < size)
    {
       num = sin(D_PI * threadX / size);
       cokx[threadX]=4*(num*num);
