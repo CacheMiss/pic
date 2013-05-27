@@ -8,6 +8,7 @@
 #include <stdio.h>
 
 #include "commandline_options.h"
+#include "host_mem.h"
 #include "simulation_state.h"
 
 void checkForCudaError(const char *errorMsg)
@@ -216,14 +217,14 @@ void loadPrevSimState(unsigned int loadIndex, const std::string &loadDir,
    infoFile.close();
    simState.iterationNum *= D_LF;
 
-   std::vector<float2> h_eleHotLoc(dev_eleHotLoc.size());
-   std::vector<float3> h_eleHotVel(dev_eleHotVel.size());
-   std::vector<float2> h_eleColdLoc(dev_eleColdLoc.size());
-   std::vector<float3> h_eleColdVel(dev_eleColdVel.size());
-   std::vector<float2> h_ionHotLoc(dev_ionHotLoc.size());
-   std::vector<float3> h_ionHotVel(dev_ionHotVel.size());
-   std::vector<float2> h_ionColdLoc(dev_ionColdLoc.size());
-   std::vector<float3> h_ionColdVel(dev_ionColdVel.size());
+   HostMem<float2> h_eleHotLoc(dev_eleHotLoc.size());
+   HostMem<float3> h_eleHotVel(dev_eleHotVel.size());
+   HostMem<float2> h_eleColdLoc(dev_eleColdLoc.size());
+   HostMem<float3> h_eleColdVel(dev_eleColdVel.size());
+   HostMem<float2> h_ionHotLoc(dev_ionHotLoc.size());
+   HostMem<float3> h_ionHotVel(dev_ionHotVel.size());
+   HostMem<float2> h_ionColdLoc(dev_ionColdLoc.size());
+   HostMem<float3> h_ionColdVel(dev_ionColdVel.size());
 
    numEleHot = 0;
    numEleCold = 0;
@@ -281,12 +282,12 @@ void loadPrevSimState(unsigned int loadIndex, const std::string &loadDir,
    }
    fclose(ionFile);
 
-   dev_eleHotLoc.copyArrayToDev(&h_eleHotLoc[0], numEleHot);
-   dev_eleHotVel.copyArrayToDev(&h_eleHotVel[0], numEleHot);
-   dev_eleColdLoc.copyArrayToDev(&h_eleColdLoc[0], numEleCold);
-   dev_eleColdVel.copyArrayToDev(&h_eleColdVel[0], numEleCold);
-   dev_ionHotLoc.copyArrayToDev(&h_ionHotLoc[0], numIonHot);
-   dev_ionHotVel.copyArrayToDev(&h_ionHotVel[0], numIonHot);
-   dev_ionColdLoc.copyArrayToDev(&h_ionColdLoc[0], numIonCold);
-   dev_ionColdVel.copyArrayToDev(&h_ionColdVel[0], numIonCold);
+   dev_eleHotLoc = h_eleHotLoc;
+   dev_eleHotVel = h_eleHotVel;
+   dev_eleColdLoc = h_eleColdLoc;
+   dev_eleColdVel = h_eleColdVel;
+   dev_ionHotLoc = h_ionHotLoc;
+   dev_ionHotVel = h_ionHotVel;
+   dev_ionColdLoc = h_ionColdLoc;
+   dev_ionColdVel = h_ionColdVel;
 }

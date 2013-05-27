@@ -471,7 +471,7 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    DeviceStats &dev(DeviceStats::getRef());
    SimulationState &simState(SimulationState::getRef());
 
-   unsigned int maxOobBuffer = simState.maxNumParticles/10;
+   unsigned int maxOobBuffer = std::max(partLoc.size()/10, static_cast<std::size_t>(NX1 * NIJ));
    DevMem<unsigned int, DevMemReuse> dev_oobIdx;
    assert(dev_oobIdx.getPtr() != NULL);
    dev_oobIdx.zeroMem();

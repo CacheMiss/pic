@@ -87,7 +87,6 @@ void executePic(int argc, char *argv[])
    SIGMA1 = options.getSigma1();
    SIGMA2 = options.getSigma2();
    SIGMA3 = options.getSigma3();
-   unsigned int maxNumParticles = 0;
 
    // Init Device
    DeviceStats &ref(DeviceStats::getRef());
@@ -108,15 +107,13 @@ void executePic(int argc, char *argv[])
    time_t startTime = time(0);
    time_t stopTime;
    SimulationState &simState(SimulationState::getRef());
-   simState.maxNumParticles = maxNumParticles;
    float maxSimTime = options.getMaxSimTime();
    int ind;
    int lfdint;
    int lfd;
    unsigned int nit;
 
-   maxNumParticles = (int)((ref.totalGlobalMem / (sizeof(float) * 5)) * 0.05);
-   simState.maxNumParticles = maxNumParticles;
+   const std::size_t initialAllocSize = 5000000;
    const int neededParticles = NIJ*NX1; // Need this many particles in each array
    // 6 rands for hot electrons
    // 6 rands for cold electrons
@@ -130,14 +127,14 @@ void executePic(int argc, char *argv[])
    // CUDA Variables
    int sharedMemoryBytes;
    // Device Memory Pointers
-   DevMem<float2> d_eleHotLoc(maxNumParticles);
-   DevMem<float3> d_eleHotVel(maxNumParticles);
-   DevMem<float2> d_eleColdLoc(maxNumParticles);
-   DevMem<float3> d_eleColdVel(maxNumParticles);
-   DevMem<float2> d_ionHotLoc(maxNumParticles);
-   DevMem<float3> d_ionHotVel(maxNumParticles);
-   DevMem<float2> d_ionColdLoc(maxNumParticles);
-   DevMem<float3> d_ionColdVel(maxNumParticles);
+   DevMem<float2> d_eleHotLoc(initialAllocSize);
+   DevMem<float3> d_eleHotVel(initialAllocSize);
+   DevMem<float2> d_eleColdLoc(initialAllocSize);
+   DevMem<float3> d_eleColdVel(initialAllocSize);
+   DevMem<float2> d_ionHotLoc(initialAllocSize);
+   DevMem<float3> d_ionHotVel(initialAllocSize);
+   DevMem<float2> d_ionColdLoc(initialAllocSize);
+   DevMem<float3> d_ionColdVel(initialAllocSize);
    DevMemF dev_phi(NY * NX1);
    DevMemF dev_ex((NY+1) * NX1); // An extra row is added to pad with zeros
    dev_ex.zeroMem();
@@ -237,21 +234,74 @@ void executePic(int argc, char *argv[])
       lfd++;
 
       // Make sure I'm not out of memory
-      if(simState.numEleHot + neededParticles > maxNumParticles)
+      const std::size_t ALLOC_INCREMENT = 1000000;
+      if(simState.numEleHot + neededParticles > d_eleHotLoc.size())
       {
-         errExit("Hot Electron array was not large enough");
+         std::cout << "Adding storage for hot electrons." << std::endl;
+         // Scope these to keep the total required memory size lower
+         {
+            HostMem<float2> pos;
+            pos = d_eleHotLoc;
+            d_eleHotLoc.resize(d_eleHotLoc.size() + ALLOC_INCREMENT);
+            d_eleHotLoc = pos;
+         }
+         {
+            HostMem<float3> vel;
+            vel = d_eleHotVel;
+            d_eleHotVel.resize(d_eleHotVel.size() + ALLOC_INCREMENT);
+            d_eleHotVel = vel;
+         }
       }
-      if(simState.numEleCold + neededParticles > maxNumParticles)
+      if(simState.numEleCold + neededParticles > d_eleColdLoc.size())
       {
-         errExit("Cold Electron array was not large enough");
+         std::cout << "Adding storage for cold electrons." << std::endl;
+         // Scope these to keep the total required memory size lower
+         {
+            HostMem<float2> pos;
+            pos = d_eleColdLoc;
+            d_eleColdLoc.resize(d_eleColdLoc.size() + ALLOC_INCREMENT);
+            d_eleColdLoc = pos;
+         }
+         {
+            HostMem<float3> vel;
+            vel = d_eleColdVel;
+            d_eleColdVel.resize(d_eleColdVel.size() + ALLOC_INCREMENT);
+            d_eleColdVel = vel;
+         }
       }
-      if(simState.numIonHot + neededParticles > maxNumParticles)
+      if(simState.numIonHot + neededParticles > d_ionHotLoc.size())
       {
-         errExit("Hot Ion array was not large enough");
+         std::cout << "Adding storage for hot ions." << std::endl;
+         // Scope these to keep the total required memory size lower
+         {
+            HostMem<float2> pos;
+            pos = d_ionHotLoc;
+            d_ionHotLoc.resize(d_ionHotLoc.size() + ALLOC_INCREMENT);
+            d_ionHotLoc = pos;
+         }
+         {
+            HostMem<float3> vel;
+            vel = d_ionHotVel;
+            d_ionHotVel.resize(d_ionHotVel.size() + ALLOC_INCREMENT);
+            d_ionHotVel = vel;
+         }
       }
-      if(simState.numIonCold + neededParticles > maxNumParticles)
+      if(simState.numIonCold + neededParticles > d_ionColdLoc.size())
       {
-         errExit("Cold Ion array was not large enough");
+         std::cout << "Adding storage for cold ions." << std::endl;
+         // Scope these to keep the total required memory size lower
+         {
+            HostMem<float2> pos;
+            pos = d_ionColdLoc;
+            d_ionColdLoc.resize(d_ionColdLoc.size() + ALLOC_INCREMENT);
+            d_ionColdLoc = pos;
+         }
+         {
+            HostMem<float3> vel;
+            vel = d_ionColdVel;
+            d_ionColdVel.resize(d_ionColdVel.size() + ALLOC_INCREMENT);
+            d_ionColdVel = vel;
+         }
       }
 
 #ifdef DEBUG_TRACE
