@@ -58,13 +58,13 @@ public:
    void clear();
    void setPadding(std::size_t p);
    void zeroMem();
-   void operator=(const T &rhs);
+   const DevMem<T, Allocator>& operator=(const T &rhs);
 #ifndef NO_THRUST
-   void operator=(const thrust::host_vector<T> &rhs);
+   const DevMem<T, Allocator>& operator=(const thrust::host_vector<T> &rhs);
 #endif
-   void operator=(const std::vector<T> &rhs);
-   void operator=(const T * const rhs);
-   void operator=(const HostMem<T> &rhs);
+   const DevMem<T, Allocator>& operator=(const std::vector<T> &rhs);
+   const DevMem<T, Allocator>& operator=(const T * const rhs);
+   const DevMem<T, Allocator>& operator=(const HostMem<T> &rhs);
 
 private:
    std::size_t m_size;
@@ -302,41 +302,47 @@ void DevMem<T, Allocator>::zeroMem()
 }
 
 template<class T, class Allocator>
-void DevMem<T, Allocator>::operator=(const T &rhs)
+const DevMem<T, Allocator>& DevMem<T, Allocator>::operator=(const T &rhs)
 {
+   resize(sizeof(T));
    checkCuda(cudaMemcpy(m_ptr, &rhs, sizeof(T), cudaMemcpyHostToDevice));
+   return *this;
 }
 
 #ifndef NO_THRUST
 template<class T, class Allocator>
-void DevMem<T, Allocator>::operator=(const thrust::host_vector<T> &rhs)
+const DevMem<T, Allocator>& DevMem<T, Allocator>::operator=(const thrust::host_vector<T> &rhs)
 {
    resize(rhs.size());
    checkCuda(cudaMemcpy(m_ptr, &rhs[0], sizeof(T) * m_size, 
                         cudaMemcpyHostToDevice));
+   return *this;
 }
 #endif
 
 template<class T, class Allocator>
-void DevMem<T, Allocator>::operator=(const std::vector<T> &rhs)
+const DevMem<T, Allocator>& DevMem<T, Allocator>::operator=(const std::vector<T> &rhs)
 {
    resize(rhs.size());
    checkCuda(cudaMemcpy(m_ptr, &rhs[0], sizeof(T) * m_size, 
                         cudaMemcpyHostToDevice));
+   return *this;
 }
 
 template<class T, class Allocator>
-void DevMem<T, Allocator>::operator=(const T * const rhs)
+const DevMem<T, Allocator>& DevMem<T, Allocator>::operator=(const T * const rhs)
 {
    checkCuda(cudaMemcpy(m_ptr, rhs, sizeof(T) * m_size, 
                         cudaMemcpyHostToDevice));
+   return *this;
 }
 
 template<class T, class Allocator>
-void DevMem<T, Allocator>::operator=(const HostMem<T> &rhs)
+const DevMem<T, Allocator>& DevMem<T, Allocator>::operator=(const HostMem<T> &rhs)
 {
    resize(rhs.size());
    cudaMemcpy(m_ptr, &rhs[0], sizeof(T) * m_size, cudaMemcpyHostToDevice);
+   return *this;
 }
 
 template<class T, class Allocator>
