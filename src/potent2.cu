@@ -336,7 +336,7 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
    int sharedSize;
    DevMem<cufftComplex, ParticleAllocator> dev_c(NX1 * NY);
    DevMem<cufftComplex, ParticleAllocator> dev_pb(NX1);
-   DevMem<float, DevMemReuse> dev_cokx(NX1);
+   static DevMem<float> dev_cokx(NX1);
    DevMem<cufftComplex, ParticleAllocator> dev_phif(NY * NX1);
    DevMem<float, DevMemReuse> dev_z(NY1 * NX1);
    DevMem<cufftComplex, ParticleAllocator> dev_yyy(NY1 * NX1);
@@ -381,13 +381,16 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
       CUFFT_FORWARD));
    //cufftDestroy(pbTransform);
 
-   // loading harmonics
-   numThreads = MAX_THREADS_PER_BLOCK / 4;
-   resizeDim3(blockSize, numThreads);
-   resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1));
-   loadHarmonics<<<numBlocks, blockSize>>>(
-      dev_cokx.getPtr(), dev_cokx.size()+1);
-   checkForCudaError("loadHarmonics");
+   if(first)
+   {
+      // loading harmonics
+      numThreads = MAX_THREADS_PER_BLOCK / 4;
+      resizeDim3(blockSize, numThreads);
+      resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1));
+      loadHarmonics<<<numBlocks, blockSize>>>(
+         dev_cokx.getPtr(), dev_cokx.size());
+      checkForCudaError("loadHarmonics");
+   }
 
    numThreads = MAX_THREADS_PER_BLOCK / 8;
    resizeDim3(blockSize, numThreads);
