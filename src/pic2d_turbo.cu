@@ -48,15 +48,17 @@
 #include "simulation_state.h"
 #include "typedefs.h"
 
+#ifdef _DEBUG
 #ifndef DEBUG_TRACE
 //#define DEBUG_TRACE
+#endif
 #endif
 
 void printFreeMem()
 {
    DeviceStats &device(DeviceStats::getRef());
 
-   std::cout << device.getFreeMb() << " Mb ("
+   std::cout << device.getFreeMemMb() << " Mb ("
              << static_cast<int>(device.getPercentFreeMem() * 100)
              << "%) of device memory is free." << std::endl;
 }
@@ -216,6 +218,9 @@ void executePic(int argc, char *argv[])
    //   }
    //   logger.flush();
    // END DEBUG
+
+   std::cout << "Free mem after initial allocations:" << std::endl;
+   printFreeMem();
 
    printf("nit=%d\n",nit);
    for (;simState.iterationNum<nit; simState.iterationNum++) 
