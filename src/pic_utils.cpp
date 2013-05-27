@@ -282,12 +282,12 @@ void loadPrevSimState(unsigned int loadIndex, const std::string &loadDir,
    }
    fclose(ionFile);
 
-   dev_eleHotLoc = h_eleHotLoc;
-   dev_eleHotVel = h_eleHotVel;
-   dev_eleColdLoc = h_eleColdLoc;
-   dev_eleColdVel = h_eleColdVel;
-   dev_ionHotLoc = h_ionHotLoc;
-   dev_ionHotVel = h_ionHotVel;
-   dev_ionColdLoc = h_ionColdLoc;
-   dev_ionColdVel = h_ionColdVel;
+   dev_eleHotLoc.copyArrayToDev(h_eleHotLoc);
+   dev_eleHotVel.copyArrayToDev(h_eleHotVel);
+   dev_eleColdLoc.copyArrayToDev(h_eleColdLoc);
+   dev_eleColdVel.copyArrayToDev(h_eleColdVel);
+   dev_ionHotLoc.copyArrayToDev(h_ionHotLoc);
+   dev_ionHotVel.copyArrayToDev(h_ionHotVel);
+   dev_ionColdLoc.copyArrayToDev(h_ionColdLoc);
+   dev_ionColdVel.copyArrayToDev(h_ionColdVel);
 }

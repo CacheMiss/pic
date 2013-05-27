@@ -43,6 +43,7 @@ public:
    void copyArrayToHost(T hostType[]) const;
    void copyArrayToHost(T hostType[], std::size_t size) const;
    void copyArrayToDev(T h_array[], std::size_t numElements);
+   void copyArrayToDev(const HostMem<T> &h_array);
    const T* getPtr() const;
    T* getPtr();
    void setPtr(T *newPtr);
@@ -203,9 +204,23 @@ void DevMem<T, Allocator>::copyArrayToHost(T hostType[], std::size_t size) const
 }
 
 template<class T, class Allocator>
+void DevMem<T, Allocator>::copyArrayToDev(const HostMem<T> &h_array)
+{
+   if(m_size < h_array.size())
+   {
+      resize(h_array.size());
+   }
+   checkCuda(cudaMemcpy((void*)m_ptr, (void*)&h_array[0], h_array.size() * sizeof(T), 
+                        cudaMemcpyHostToDevice));
+}
+
+template<class T, class Allocator>
 void DevMem<T, Allocator>::copyArrayToDev(T h_array[], std::size_t numElements)
 {
-   assert(numElements <= m_size);
+   if(m_size < numElements)
+   {
+      resize(numElements);
+   }
    checkCuda(cudaMemcpy((void*)m_ptr, (void*)h_array, numElements * sizeof(T), 
                         cudaMemcpyHostToDevice));
 }

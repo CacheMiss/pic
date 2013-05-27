@@ -248,13 +248,13 @@ void executePic(int argc, char *argv[])
             HostMem<float2> pos;
             pos = d_eleHotLoc;
             d_eleHotLoc.resize(d_eleHotLoc.size() + ALLOC_INCREMENT);
-            d_eleHotLoc = pos;
+            d_eleHotLoc.copyArrayToDev(pos);
          }
          {
             HostMem<float3> vel;
             vel = d_eleHotVel;
             d_eleHotVel.resize(d_eleHotVel.size() + ALLOC_INCREMENT);
-            d_eleHotVel = vel;
+            d_eleHotVel.copyArrayToDev(vel);
          }
       }
       if(simState.numEleCold + neededParticles > d_eleColdLoc.size())
@@ -265,13 +265,13 @@ void executePic(int argc, char *argv[])
             HostMem<float2> pos;
             pos = d_eleColdLoc;
             d_eleColdLoc.resize(d_eleColdLoc.size() + ALLOC_INCREMENT);
-            d_eleColdLoc = pos;
+            d_eleColdLoc.copyArrayToDev(pos);
          }
          {
             HostMem<float3> vel;
             vel = d_eleColdVel;
             d_eleColdVel.resize(d_eleColdVel.size() + ALLOC_INCREMENT);
-            d_eleColdVel = vel;
+            d_eleColdVel.copyArrayToDev(vel);
          }
       }
       if(simState.numIonHot + neededParticles > d_ionHotLoc.size())
@@ -282,13 +282,13 @@ void executePic(int argc, char *argv[])
             HostMem<float2> pos;
             pos = d_ionHotLoc;
             d_ionHotLoc.resize(d_ionHotLoc.size() + ALLOC_INCREMENT);
-            d_ionHotLoc = pos;
+            d_ionHotLoc.copyArrayToDev(pos);
          }
          {
             HostMem<float3> vel;
             vel = d_ionHotVel;
             d_ionHotVel.resize(d_ionHotVel.size() + ALLOC_INCREMENT);
-            d_ionHotVel = vel;
+            d_ionHotVel.copyArrayToDev(vel);
          }
       }
       if(simState.numIonCold + neededParticles > d_ionColdLoc.size())
@@ -299,13 +299,13 @@ void executePic(int argc, char *argv[])
             HostMem<float2> pos;
             pos = d_ionColdLoc;
             d_ionColdLoc.resize(d_ionColdLoc.size() + ALLOC_INCREMENT);
-            d_ionColdLoc = pos;
+            d_ionColdLoc.copyArrayToDev(pos);
          }
          {
             HostMem<float3> vel;
             vel = d_ionColdVel;
             d_ionColdVel.resize(d_ionColdVel.size() + ALLOC_INCREMENT);
-            d_ionColdVel = vel;
+            d_ionColdVel.copyArrayToDev(vel);
          }
       }
 
