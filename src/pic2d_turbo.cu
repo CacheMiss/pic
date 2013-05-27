@@ -41,6 +41,7 @@
 #include "logging_thread.h"
 #include "logging_types.h"
 #include "movep.h"
+#include "particle_allocator.h"
 #include "pic_utils.h"
 #include "potent2.h"
 #include "precisiontimer.h"
@@ -48,19 +49,19 @@
 #include "typedefs.h"
 
 #ifndef DEBUG_TRACE
-#define DEBUG_TRACE
+//#define DEBUG_TRACE
 #endif
 
 void printFreeMem()
 {
    DeviceStats &device(DeviceStats::getRef());
 
-   std::cout << device.getFreeMemMb() << " Mb ("
+   std::cout << device.getFreeMb() << " Mb ("
              << static_cast<int>(device.getPercentFreeMem() * 100)
              << "%) of device memory is free." << std::endl;
 }
 
-int main(int argc, char *argv[])
+void executePic(int argc, char *argv[])
 {
    // Create output directory if necessary
    createOutputDir("run_output");
@@ -222,13 +223,12 @@ int main(int argc, char *argv[])
    printf("nit=%d\n",nit);
    for (;simState.iterationNum<nit; simState.iterationNum++) 
    {
-      printFreeMem();
-
       if(percentComplete < 100 &&
          static_cast<int>(simState.iterationNum / percentSize) > percentComplete)
       {
          percentComplete = (int) simState.iterationNum / percentSize;
          printf("%d%% Complete\n", percentComplete);
+         printFreeMem();
       }
 
       iterationTimer.start();
@@ -476,4 +476,36 @@ int main(int argc, char *argv[])
    FILE *f = fopen(runStatisticsFn.c_str(), "w");
    fprintf(f, "nit %u reached at %u min %u sec\n", nit, timeMin, timeSec);
    fclose(f);
+
+}
+
+int main(int argc, char *argv[])
+{
+   try
+   {
+      DeviceStats &ref(DeviceStats::getRef());
+   }
+   catch(CudaRuntimeError e)
+   {
+      std::cout << e.what() << std::endl;
+      throw;
+   }
+   try
+   {
+      executePic(argc, argv);
+   }
+   catch(CudaRuntimeError e)
+   {
+      std::cout << e.what() << std::endl;
+      ParticleAllocator::getRef().cleanup();
+      DevMemReuse::getRef().cleanup();
+      cudaDeviceReset();
+      throw;
+   }
+
+   ParticleAllocator::getRef().cleanup();
+   DevMemReuse::getRef().cleanup();
+   cudaDeviceReset();
+
+   return 0;
 }

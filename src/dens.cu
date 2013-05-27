@@ -986,6 +986,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
    // Once all particles are loaded and have buckets; sort 
    // the buckets so that I can find all particles within a 
    // certain bucket
+   assert(dev_gridBuckets.size() == dev_particleLocations.size());
    picSort(dev_gridBuckets, dev_particleLocations);
    checkForCudaError("Before findBounds");
 

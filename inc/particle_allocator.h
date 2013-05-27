@@ -22,6 +22,8 @@ public:
    template<class T>
    void free(T* m);
 
+   void cleanup();
+
 private:
    ParticleAllocator();
    ~ParticleAllocator();

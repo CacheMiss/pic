@@ -9,10 +9,7 @@ ParticleAllocator::ParticleAllocator()
 
 ParticleAllocator::~ParticleAllocator()
 {
-   for(MemList_t::iterator i = m_freePool.begin(); i != m_freePool.end(); i++)
-   {
-      cudaFree((*i).first);
-   }
+   cleanup();
 }
 
 ParticleAllocator& ParticleAllocator::getRef()
@@ -23,4 +20,19 @@ ParticleAllocator& ParticleAllocator::getRef()
    }
 
    return *m_ref;
+}
+
+void ParticleAllocator::cleanup()
+{
+   for(MemList_t::iterator i = m_freePool.begin();
+       i != m_freePool.end(); i++)
+   {
+      cudaFree((*i).first);
+   }
+
+   for(MemMap_t::iterator i = m_usedPool.begin();
+       i != m_usedPool.end(); i++)
+   {
+      cudaFree((*i).first);
+   }
 }

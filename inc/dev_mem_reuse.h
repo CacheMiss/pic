@@ -27,6 +27,8 @@ public:
    template<class T>
    void free(PitchedPtr<T> &m);
 
+   void cleanup();
+
 private:
    DevMemReuse();
    static DevMemReuse *m_ref;

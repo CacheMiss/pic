@@ -82,3 +82,18 @@ PitchedPtr<void> DevMemReuse::getBlock()
 
    return p;
 }
+
+void DevMemReuse::cleanup()
+{
+   for(MemPool_t::iterator i = m_memPool.begin();
+       i != m_memPool.end(); i++)
+   {
+      cudaFree((*i).ptr);
+   }
+
+   for(UsedPool_t::iterator i = m_usedPool.begin();
+       i != m_usedPool.end(); i++)
+   {
+      cudaFree((*i).first);
+   }
+}
