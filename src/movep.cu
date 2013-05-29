@@ -10,8 +10,10 @@
 #include "particle_allocator.h"
 #include "pic_utils.h"
 
-//texture<float, 1, cudaReadModeElementType > exTex;
-//texture<float, 1, cudaReadModeElementType > eyTex;
+// Texture reference for 2D float texture
+texture<float, 2, cudaReadModeElementType> texEx;
+texture<float, 2, cudaReadModeElementType> texEy;
+
 
 __global__
 void checkBoundaryConditions(float2 location[], int numParticles, int height, int width, 
@@ -106,7 +108,6 @@ void reconflictBanks(volatile float conflicted[],
 //******************************************************************************
 __global__ 
 void moveParticles(float2 d_partLoc[], float3 d_partVel[],
-                   const float ex[], const float ey[],
                    const unsigned int numParticles,
                    const float mass,
                    const unsigned int NX1, const unsigned int NY1)
@@ -167,14 +168,14 @@ void moveParticles(float2 d_partLoc[], float3 d_partVel[],
          a2=D_DX * delb - a1;
          a3=D_DY * dela - a1;
          a4=D_DX * D_DY-(a1+a2+a3);
-         local_expf=(a1*ex[NX1 * (nii+1) + nj1] + 
-            a2*ex[NX1 * (nii+1) + nj] +
-            a3*ex[NX1 * nii + nj1] + 
-            a4*ex[NX1 * nii + nj])/D_TOTA;
-         local_eypf=(a1*ey[NX1 * (nii+1) + nj1] +
-            a2*ey[NX1 * (nii+1) + nj] +
-            a3*ey[NX1 * nii + nj1]+
-            a4*ey[NX1 * nii + nj])/D_TOTA;
+         local_expf=(a1*tex2D(texEx, nj1, nii+1) + 
+            a2*tex2D(texEx, nj, nii+1) +
+            a3*tex2D(texEx, nj1, nii) + 
+            a4*tex2D(texEx, nj, nii))/D_TOTA;
+         local_eypf=(a1*tex2D(texEy, nj1, nii+1) +
+            a2*tex2D(texEy, nj, nii+1) +
+            a3*tex2D(texEy, nj1, nii) +
+            a4*tex2D(texEy, nj, nii))/D_TOTA;
          c1= D_DELT * mass;
          c2=0.5f;
          c3=c1*0.5f;
@@ -463,6 +464,8 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
            const DevMemF &ex, const DevMemF &ey,
            cudaStream_t &stream)
 {
+   static bool first = true;
+
    int numThreads;
    dim3 blockSize;
    dim3 numBlocks;
@@ -497,6 +500,58 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    //}
    // END DEBUG
 
+   // Allocate array and copy image data
+   cudaChannelFormatDesc channelDesc =
+      cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
+   static cudaArray *cuArrayEx = NULL;
+   static cudaArray *cuArrayEy = NULL;
+   if(first)
+   {
+      checkCuda(cudaMallocArray(&cuArrayEx,
+         &channelDesc,
+         NX1,
+         NY+1));
+      checkCuda(cudaMallocArray(&cuArrayEy,
+         &channelDesc,
+         NX1,
+         NY+1));
+   }
+
+   assert(NX1 * (NY+1) == ex.size());
+   assert(NX1 * (NY+1) == ey.size());
+
+   //cudaMemset(const_cast<float*>(ex.getPtr()), 0, ex.size() * sizeof(float));
+   checkCuda(cudaMemcpyToArray(cuArrayEx,
+      0,
+      0,
+      ex.getPtr(),
+      ex.size() * sizeof(float),
+      cudaMemcpyDeviceToDevice));
+   checkCuda(cudaMemcpyToArray(cuArrayEy,
+      0,
+      0,
+      ey.getPtr(),
+      ey.size() * sizeof(float),
+      cudaMemcpyDeviceToDevice));
+
+   if(first)
+   {
+      // Set texture parameters
+      texEx.addressMode[0] = cudaAddressModeClamp;
+      texEx.addressMode[1] = cudaAddressModeClamp;
+      texEx.filterMode = cudaFilterModePoint;
+      texEx.normalized = false;
+
+      texEy.addressMode[0] = cudaAddressModeClamp;
+      texEy.addressMode[1] = cudaAddressModeClamp;
+      texEy.filterMode = cudaFilterModePoint;
+      texEy.normalized = false;
+
+      // Bind the array to the texture
+      checkCuda(cudaBindTextureToArray(texEx, cuArrayEx, channelDesc));
+      checkCuda(cudaBindTextureToArray(texEy, cuArrayEy, channelDesc));
+   }
+
    numThreads = dev.maxThreadsPerBlock / 4;
    resizeDim3(blockSize, numThreads);
    resizeDim3(numBlocks, calcNumBlocks(numThreads, numParticles));
@@ -504,7 +559,6 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    checkForCudaError("Before moveParticles");
    moveParticles<<<numBlocks, blockSize, 0, stream>>>(
       partLoc.getPtr(), partVel.getPtr(),
-      ex.getPtr(), ey.getPtr(),
       numParticles, mass, NX1, NY1);
    checkForCudaError("moveParticles");
 
@@ -637,5 +691,7 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    //   logger.flush();
    //}
    // END DEBUG
+
+   first = false;
 }
 
