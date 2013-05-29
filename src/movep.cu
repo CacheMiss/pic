@@ -552,7 +552,7 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
       checkCuda(cudaBindTextureToArray(texEy, cuArrayEy, channelDesc));
    }
 
-   numThreads = dev.maxThreadsPerBlock / 4;
+   numThreads = dev.maxThreadsPerBlock / 2;
    resizeDim3(blockSize, numThreads);
    resizeDim3(numBlocks, calcNumBlocks(numThreads, numParticles));
    cudaStreamSynchronize(stream);
