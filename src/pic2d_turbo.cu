@@ -50,7 +50,7 @@
 
 #ifdef _DEBUG
 #ifndef DEBUG_TRACE
-//#define DEBUG_TRACE
+#define DEBUG_TRACE
 #endif
 #endif
 
@@ -417,9 +417,6 @@ void executePic(int argc, char *argv[])
       // logger.flush();
       // END DEBUG
 
-#ifdef DEBUG_TRACE
-      std::cout << "Move" << std::endl;
-#endif
       //movepTimer.start();
       // move ions
       cudaStream_t movepStreams[4];
@@ -428,14 +425,26 @@ void executePic(int argc, char *argv[])
          cudaStreamCreate(&movepStreams[streamIdx]);
       }
       cudaThreadSynchronize();
+#ifdef DEBUG_TRACE
+      std::cout << "MoveHi" << std::endl;
+#endif
       movep(d_ionHotLoc, d_ionHotVel, simState.numIonHot, 
          RATO, dev_ex, dev_ey, movepStreams[0]);
+#ifdef DEBUG_TRACE
+      std::cout << "MoveCi" << std::endl;
+#endif
       movep(d_ionColdLoc, d_ionColdVel, simState.numIonCold, 
          RATO, dev_ex, dev_ey, movepStreams[1]);
 
       // move electrons
+#ifdef DEBUG_TRACE
+      std::cout << "MoveHe" << std::endl;
+#endif
       movep(d_eleHotLoc, d_eleHotVel, simState.numEleHot, 
          (float) -1.0, dev_ex, dev_ey, movepStreams[2]);
+#ifdef DEBUG_TRACE
+      std::cout << "MoveCe" << std::endl;
+#endif
       movep(d_eleColdLoc, d_eleColdVel, simState.numEleCold, 
          (float) -1.0, dev_ex, dev_ey, movepStreams[3]);
       for(int streamIdx = 0; streamIdx < 4; streamIdx++)

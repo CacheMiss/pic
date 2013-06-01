@@ -199,8 +199,10 @@
 			/>
 			<Tool
 				Name="Cudart Build Rule"
+				AdditionalOptions="--ptxas-options=-v"
 				Include="$(CUDA_INC_PATH);$(NVSDKCOMPUTE_ROOT)\C\common\inc;$(SolutionDir)\..\..\inc;$(BOOST)"
-				Arch1="11"
+				Arch1="20"
+				Arch2="0"
 				ExtraNvccOptions="--optimize 2"
 				Runtime="2"
 				Defines="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"

@@ -249,6 +249,29 @@ void moveParticles(float2 d_partLoc[], float3 d_partVel[],
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// @brief
+/// Find the indices of all of the particles which are out of bounds. I very
+/// important assumption here is that MAX_OOB_BUFFER is equal to the number of
+/// particles which are out of bounds. This has to be inforced by the caller.
+///
+/// @param[in] d_partLoc
+///    The locations of the particles being examined
+/// @param[in] numParticles
+///    The size of d_partLoc
+/// @param[in,out] oobIdx
+///    Aa 4 byte segment of global memory initially initialized to zero. It is
+///    used by the kernel to write to oobArry in an orderly fashion
+/// @param[in] oobArry
+///    An array storing the indices of all of the particles which are out
+///    of bounds
+/// @param[in] NX1
+///    The width of the grid
+/// @param[in] NY1
+///    The height of the grid
+/// @param[in] MAX_OOB_BUFFER
+///    The size of oobArry and the number of out of bound particles
+////////////////////////////////////////////////////////////////////////////////
 __global__ 
 void findOobParticles(float2 d_partLoc[], 
                       const unsigned int numParticles,
@@ -261,25 +284,17 @@ void findOobParticles(float2 d_partLoc[],
    const unsigned int threadX = blockDim.x * blockIdx.x + threadIdx.x;
 
    // Beg Shared Memory
-#if (__CUDA_ARCH__ >= 200)
    __shared__ int blockOobStartIdx;
    if(threadIdx.x == 0) blockOobStartIdx = 0;
    __syncthreads();
-#endif
    extern __shared__ char sharedBeg[];
    volatile float2 *pLoc = (float2*)sharedBeg;
    //volatile unsigned int *sharedWork = 
    //   (volatile unsigned int*)(sharedBeg + ((sizeof(float2) + sizeof(float3)) * blockDim.x));
    //volatile unsigned int *warpBegIdx = 
    //   const_cast<unsigned int*>(&sharedWork[blockDim.x * 16] + warpId);
-#if (__CUDA_ARCH__ < 200)
-   volatile unsigned int *sharedWork = 
-      (volatile unsigned int*)(sharedBeg + (sizeof(float2) * blockDim.x));
-   volatile unsigned int *warpBegIdx = sharedWork + blockDim.x + warpId;
-#else
    volatile unsigned int *warpOobStartIdx = 
       (volatile unsigned int*)(sharedBeg + sizeof(float2) * blockDim.x) + warpId;
-#endif
    // End Shared Memory
 
    // Load the particles into shared memory
@@ -291,53 +306,10 @@ void findOobParticles(float2 d_partLoc[],
 
    if(threadX < numParticles)
    {
-#if (__CUDA_ARCH__ < 200)
-      // Get a block of shared memory for this warp
-      sharedWork += warpId * warpSize;
-
-      // The first thread in the warp will find how many particles within
-      // the warp have left the boundary condition on the top or bottom
-      if(threadInWarp == 0)
-      {
-         // Each warp will reserve between 0 and warpSize elements out of the
-         // oobArry for out of bounds particles. numOobInWarp is used to help
-         // the threads in a warp coordinate which locations in the reserved
-         // space they can write to
-         unsigned int numOobInWarp = 0;
-         // For all particles in warp
-         for(unsigned int i = 0; (i < warpSize) && 
-             ((blockDim.x*blockIdx.x + warpSize*warpId + i) < numParticles); i++)
-         {
-            // If this particle is out of bounds
-            if(pLoc[warpId * warpSize + i].y > D_DY * (NY1-1) ||
-               pLoc[warpId * warpSize + i].y < D_DY)
-            {
-               // The thread associated with this particle will use this value
-               // as an offset combined with the warpBegIdx to write into the
-               // out of bounds array (oobArry) so that this particle can be
-               // removed
-               sharedWork[i] = numOobInWarp;
-               ++numOobInWarp;
-            }
-         }
-         if(numOobInWarp > 0)
-         {
-            *warpBegIdx = atomicAdd(oobIdx, numOobInWarp);
-         }
-      }
-      if(pLoc[threadIdx.x].y > D_DY * (NY1-1) ||
-         pLoc[threadIdx.x].y < D_DY)
-      {
-         int idx = *warpBegIdx + sharedWork[threadInWarp];
-         if(idx < MAX_OOB_BUFFER)
-         {
-            oobArry[idx] = threadX;
-         }
-      }
-#else
       const unsigned int oobBallot = 
-         __ballot(pLoc[threadIdx.x].y > D_DY * (NY1-1) ||
-                  pLoc[threadIdx.x].y < D_DY);
+         __ballot(threadX < (numParticles - MAX_OOB_BUFFER) &&
+                  (pLoc[threadIdx.x].y > D_DY * (NY1-1) ||
+                   pLoc[threadIdx.x].y < D_DY));
       unsigned int threadBit = 1 << threadInWarp;
       // DEBUG
       if(oobBallot & threadBit)
@@ -386,7 +358,6 @@ void findOobParticles(float2 d_partLoc[],
             oobArry[blockOobStartIdx + *warpOobStartIdx + oobIdxWarpOffset] = threadX;
          }
       }
-#endif
    }
 }
 
@@ -449,10 +420,40 @@ void killParticles(float2 partLoc[], float3 partVel[], const unsigned int oobArr
 
    if(threadX < numMoves)
    {
-      unsigned int rcvIndex = oobArry[threadX];
-      unsigned int origIndex = moveCandidates[threadX];
-      partLoc[rcvIndex] = partLoc[origIndex];
-      partVel[rcvIndex] = partVel[origIndex];
+      unsigned int dstIndex = oobArry[threadX];
+      unsigned int srcIndex = moveCandidates[threadX];
+      partLoc[dstIndex] = partLoc[srcIndex];
+      partVel[dstIndex] = partVel[srcIndex];
+   }
+}
+
+__global__
+void countOobParticles(float2 position[], 
+                       unsigned int* numOob, 
+                       const unsigned int numParticles,
+                       const unsigned int NY1,
+                       const unsigned int DY)
+{
+   const unsigned int threadX = blockDim.x * blockIdx.x + threadIdx.x;
+   const unsigned int threadInWarp = threadIdx.x % warpSize;
+   unsigned int ballotResults;
+   float2 pos;
+
+   if(threadX < numParticles)
+   {
+      pos = position[threadX];
+      // Find all the threads with particles out of bounds
+      ballotResults = __ballot(pos.y > D_DY * (NY1-1) || pos.y < D_DY);
+
+      if(threadInWarp == 0)
+      {
+         // Find the Hamming weight of the ballot
+         unsigned int localNumOob = __popc(ballotResults);
+         if(localNumOob)
+         {
+            atomicAdd(numOob, localNumOob);
+         }
+      }
    }
 }
 
@@ -474,14 +475,11 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    DeviceStats &dev(DeviceStats::getRef());
    SimulationState &simState(SimulationState::getRef());
 
-   unsigned int maxOobBuffer = std::max(partLoc.size()/10, static_cast<std::size_t>(NX1 * NIJ));
    DevMem<unsigned int, DevMemReuse> dev_oobIdx;
    assert(dev_oobIdx.getPtr() != NULL);
    dev_oobIdx.zeroMem();
    DevMem<unsigned int, DevMemReuse> dev_moveCandIdx;
    dev_moveCandIdx.zeroMem();
-   DevMem<unsigned int, ParticleAllocator> dev_oobArry(maxOobBuffer);
-   DevMem<unsigned int, ParticleAllocator> dev_moveCandidates(maxOobBuffer);
    HostMem<unsigned int> oobIdx(1);
    HostMem<unsigned int> moveCandIdx(1);
 
@@ -562,27 +560,46 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
       numParticles, mass, NX1, NY1);
    checkForCudaError("moveParticles");
 
+   numThreads = dev.maxThreadsPerBlock / 2;
+   resizeDim3(blockSize, numThreads);
+   resizeDim3(numBlocks, calcNumBlocks(numThreads, numParticles));
+   cudaStreamSynchronize(stream);
+   checkForCudaError("Before countOobParticles");
+   countOobParticles<<<numBlocks, blockSize, 0, stream>>>(
+      partLoc.getPtr(), dev_oobIdx.getPtr(), numParticles, NY1, DY);
+   checkForCudaError("countOobParticles");
+
+   checkCuda(cudaStreamSynchronize(stream));
+   // Get the number of particles that are outside of the y bounds
+   oobIdx = dev_oobIdx;
+   dev_oobIdx.zeroMem();
+   if(numParticles == oobIdx[0])
+   {
+      printf("WARNING: %d of %d particles eliminated\n", oobIdx[0], numParticles);
+      numParticles = 0;
+      return;
+   }
+   // There are no out of bounds particles
+   else if(oobIdx[0] == 0)
+   {
+      printf("WARNING: No out of bounds particles were detected.\n");
+      return;
+   }
+   assert(numParticles > oobIdx[0] + 1);
+   DevMem<unsigned int, ParticleAllocator> dev_oobArry(oobIdx[0]);
+
    numThreads = dev.maxThreadsPerBlock / 4;
    resizeDim3(blockSize, numThreads);
    resizeDim3(numBlocks, calcNumBlocks(numThreads, numParticles));
-   //sharedMemoryBytes = numThreads * (sizeof(float2) + sizeof(float3)) +
-   //   numThreads * 16 * sizeof(float) + numThreads/dev.warpSize * sizeof(unsigned int);
-   if(dev.major < 2)
-   {
-      sharedMemoryBytes = numThreads * sizeof(float2) +
-         numThreads * sizeof(unsigned int) + sizeof(unsigned int) * numThreads/dev.warpSize;
-   }
-   else
-   {
-      sharedMemoryBytes = numThreads * sizeof(float2) + 
-         sizeof(unsigned int) * numThreads/dev.warpSize;
-   }
+   sharedMemoryBytes = numThreads * sizeof(float2) + 
+      sizeof(unsigned int) * numThreads/dev.warpSize;
+   DevMem<unsigned int, ParticleAllocator> dev_moveCandidates(oobIdx[0]);
    cudaStreamSynchronize(stream);
    checkForCudaError("Before findOobParticles");
    findOobParticles<<<numBlocks, blockSize, sharedMemoryBytes, stream>>>(
       partLoc.getPtr(), 
       numParticles, dev_oobIdx.getPtr(), dev_oobArry.getPtr(),
-      NX1, NY1, maxOobBuffer);
+      NX1, NY1, dev_oobArry.size());
    checkForCudaError("moveParticles");
 
    // DEBUG
@@ -601,22 +618,6 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    // END DEBUG
 
    cudaStreamSynchronize(stream);
-   checkForCudaError("Before copy oobIdx to host");
-   // Get the number of particles that are outside of the y bounds
-   oobIdx = dev_oobIdx;
-   if(numParticles == oobIdx[0])
-   {
-      printf("WARNING: %d of %d particles eliminated\n", oobIdx[0], numParticles);
-      numParticles = 0;
-      return;
-   }
-   // There are no out of bounds particles
-   else if(oobIdx[0] == 0)
-   {
-      printf("WARNING: No out of bounds particles were detected.\n");
-      return;
-   }
-   assert(numParticles > oobIdx[0] + 1);
    unsigned int alignedStart = ((numParticles - oobIdx[0]) / (16)) * 16;
 
    numThreads = MAX_THREADS_PER_BLOCK / 4;
@@ -624,6 +625,8 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    resizeDim3(numBlocks, calcNumBlocks(numThreads, 
       numParticles-(alignedStart)));
    sharedMemoryBytes = numThreads * sizeof(float2);
+   // If there are good particles in the top portion of the array,
+   // find them so they can be moved down
    findGoodIndicies<<<numBlocks, blockSize, sharedMemoryBytes, stream>>>(
       partLoc.getPtr(), numParticles,
       dev_moveCandIdx.getPtr(), dev_moveCandidates.getPtr(),
@@ -634,12 +637,10 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    checkForCudaError("Before sorting oobArry");
    moveCandIdx = dev_moveCandIdx;
    
-   // If there are good particles in the top portion of the array,
-   // find them so they can be moved down
    if(moveCandIdx[0] > 0)
    {
-      picSort(dev_oobArry, oobIdx[0]);
-      picSort(dev_moveCandidates, moveCandIdx[0]);
+      //picSort(dev_oobArry, oobIdx[0]);
+      //picSort(dev_moveCandidates, moveCandIdx[0]);
 
       numThreads = MAX_THREADS_PER_BLOCK / 4;
       resizeDim3(blockSize, numThreads);
