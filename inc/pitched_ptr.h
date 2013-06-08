@@ -75,8 +75,8 @@ void CudaPitchedAllocator::allocate(PitchedPtr_t<T> &ptr, size_t sizeX, size_t s
 {
    ptr.widthBytes = sizeX * sizeof(T);
    checkCuda(cudaMallocPitch(reinterpret_cast<void**>(&ptr.ptr), &ptr.pitch, ptr.widthBytes, sizeY));
-   ptr.x = x;
-   ptr.y = y;
+   ptr.x = sizeX;
+   ptr.y = sizeY;
 }
 
 template<class T>
@@ -106,8 +106,8 @@ public:
    std::size_t getPitch() const;
    std::size_t getWidthBytes() const;
 
-   PitchedPtr<T, Allocator>& getPtr();
-   const PitchedPtr<T, Allocator>& getPtr() const;
+   PitchedPtr_t<T>& getPtr();
+   const PitchedPtr_t<T>& getPtr() const;
 
    template<class rhsAlloc>
    const PitchedPtr<T, Allocator>& operator=(const PitchedPtr<T, rhsAlloc> &rhs);
@@ -173,13 +173,13 @@ std::size_t PitchedPtr<T, Allocator>::getWidthBytes() const
 }
 
 template<class T, class Allocator>
-PitchedPtr<T, Allocator>& PitchedPtr<T, Allocator>::getPtr()
+PitchedPtr_t<T>& PitchedPtr<T, Allocator>::getPtr()
 {
    return m_ptr;
 }
 
 template<class T, class Allocator>
-const PitchedPtr<T, Allocator>& PitchedPtr<T, Allocator>::getPtr() const
+const PitchedPtr_t<T>& PitchedPtr<T, Allocator>::getPtr() const
 {
    return m_ptr;
 }
@@ -203,7 +203,7 @@ void PitchedPtr<T, Allocator>::free()
 template<class T, class Allocator>
 void PitchedPtr<T, Allocator>::alloc(std::size_t x, std::size_t y)
 {
-   Allocator::getRef().allocatePitched(m_ptr, x, y);
+   Allocator::getRef().allocate(m_ptr, x, y);
 
 #ifdef _DEBUG
    checkCuda(cudaMemset2D(m_ptr.ptr, m_ptr.pitch, 0, m_ptr.widthBytes, m_ptr.y));
