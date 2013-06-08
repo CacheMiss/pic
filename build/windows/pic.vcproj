@@ -435,6 +435,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\pitched_ptr.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\potent2.cu"
 				>
 			</File>

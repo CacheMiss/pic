@@ -60,18 +60,18 @@ void DevMemReuse::setDataSize(std::size_t s)
    m_dataSize = s;
 }
 
-PitchedPtr<void> DevMemReuse::getBlock()
+PitchedPtr_t<void> DevMemReuse::getBlock()
 {
-   PitchedPtr<void> p;
+   PitchedPtr_t<void> p;
    if(m_memPool.empty())
    {
 #ifdef _DEBUG
       std::cout << "DevMemReuse is allocating a block." << std::endl;
 #endif
       checkCuda(cudaMallocPitch(&p.ptr, &p.pitch, m_sizeX * m_dataSize, m_sizeY));
-      p.width = m_sizeX;
-      p.height = m_sizeY;
-      p.widthBytes = p.width * m_dataSize;
+      p.x = m_sizeX;
+      p.y = m_sizeY;
+      p.widthBytes = p.x * m_dataSize;
    }
    else
    {

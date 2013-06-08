@@ -21,25 +21,25 @@ public:
    template<class T>
    void allocate(T* &ptr, std::size_t nElements);
    template<class T>
-   void allocatePitched(PitchedPtr<T> &ptr, std::size_t sizeX, std::size_t sizeY);
+   void allocatePitched(PitchedPtr_t<T> &ptr, std::size_t sizeX, std::size_t sizeY);
    template<class T>
    void free(T* m);
    template<class T>
-   void free(PitchedPtr<T> &m);
+   void free(PitchedPtr_t<T> &m);
 
    void cleanup();
 
 private:
    DevMemReuse();
    static DevMemReuse *m_ref;
-   PitchedPtr<void> getBlock();
+   PitchedPtr_t<void> getBlock();
 
    std::size_t m_sizeX;
    std::size_t m_sizeY;
    std::size_t m_dataSize;
-   typedef std::deque<PitchedPtr<void> >MemPool_t;
+   typedef std::deque<PitchedPtr_t<void> >MemPool_t;
    MemPool_t m_memPool;
-   typedef std::map<void*, PitchedPtr<void> > UsedPool_t;
+   typedef std::map<void*, PitchedPtr_t<void> > UsedPool_t;
    UsedPool_t m_usedPool;
 };
 
@@ -52,10 +52,10 @@ void DevMemReuse::allocate(T* &ptr, std::size_t nElements)
       s << "Attempted to use DevMemReuse to allocate a data type larger than it was configured for.";
       throw std::runtime_error(s.str());
    }
-   PitchedPtr<void> p = getBlock();
+   PitchedPtr_t<void> p = getBlock();
 
    // If more elements were asked for than have been allocated
-   if(nElements > (p.pitch * (p.height -1) + p.widthBytes) / m_dataSize)
+   if(nElements > (p.pitch * (p.y -1) + p.widthBytes) / m_dataSize)
    {
       std::stringstream s;
       s << "DevMemReuse was asked to allocate something too large.";
@@ -66,7 +66,7 @@ void DevMemReuse::allocate(T* &ptr, std::size_t nElements)
 }
 
 template<class T>
-void DevMemReuse::allocatePitched(PitchedPtr<T> &ptr, std::size_t sizeX, std::size_t sizeY)
+void DevMemReuse::allocatePitched(PitchedPtr_t<T> &ptr, std::size_t sizeX, std::size_t sizeY)
 {
    if(sizeof(T) > m_dataSize)
    {
@@ -74,7 +74,7 @@ void DevMemReuse::allocatePitched(PitchedPtr<T> &ptr, std::size_t sizeX, std::si
       s << "Attempted to use DevMemReuse to allocate a data type larger than it was configured for.";
       throw std::runtime_error(s.str());
    }
-   PitchedPtr<void> p;
+   PitchedPtr_t<void> p;
    p = getBlock();
 
    ptr.ptr = reinterpret_cast<T*>(p.ptr);
@@ -83,14 +83,14 @@ void DevMemReuse::allocatePitched(PitchedPtr<T> &ptr, std::size_t sizeX, std::si
    ptr.widthBytes = sizeX * sizeof(T);
    ptr.pitch = p.pitch;
 
-   if(ptr.height > p.height)
+   if(ptr.y > p.y)
    {
       std::stringstream s;
       s << "DevMemReuse was asked to create a pitched ptr with height " << ptr.height
         << " but it was only configured to create heights of " << m_sizeY;
       throw std::runtime_error(s.str());
    }
-   if(ptr.width > p.width)
+   if(ptr.x > p.x)
    {
       std::stringstream s;
       s << "DevMemReuse was asked to create a pitched ptr with width " << ptr.width
@@ -123,7 +123,7 @@ void DevMemReuse::free(T* m)
 }
 
 template<class T>
-void DevMemReuse::free(PitchedPtr<T> &m)
+void DevMemReuse::free(PitchedPtr_t<T> &m)
 {
    if(NULL == m.ptr)
    {

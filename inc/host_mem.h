@@ -75,12 +75,13 @@ HostMem<T>::HostMem(std::size_t size, int val)
 template<class T>
 HostMem<T>::HostMem(const PitchedPtr<T> &rhs)
 {
-   m_size = rhs.width * rhs.height;
+   PitchedPtr_t<T> &rhsPtr = rhs.getPtr();
+   m_size = rhsPtr.width * rhsPtr.height;
    m_reserved = m_size;
    checkCuda(cudaMallocHost(reinterpret_cast<void**>(&m_ptr), sizeof(T) * m_size));
-   checkCuda(cudaMemcpy2D(m_ptr, rhs.widthBytes, 
-                          rhs.ptr, rhs.pitch, 
-                          rhs.widthBytes, rhs.height, 
+   checkCuda(cudaMemcpy2D(m_ptr, rhsPtr.widthBytes, 
+                          rhsPtr.ptr, rhsPtr.pitch, 
+                          rhsPtr.widthBytes, rhsPtr.height, 
                           cudaMemcpyDeviceToHost));
 }
 
@@ -158,10 +159,11 @@ const HostMem<T>& HostMem<T>::operator=(const DevMem<T, Allocator> &rhs)
 template<class T>
 const HostMem<T>& HostMem<T>::operator=(const PitchedPtr<T> &rhs)
 {
-   resize(rhs.width * rhs.height);
-   checkCuda(cudaMemcpy2D(m_ptr, rhs.widthBytes, 
-                          rhs.ptr, rhs.pitch, 
-                          rhs.widthBytes, rhs.height, 
+   PitchedPtr_t<T> &rhsPtr = rhs.m_ptr;
+   resize(rhsPtr.width * rhsPtr.height);
+   checkCuda(cudaMemcpy2D(m_ptr, rhsPtr.widthBytes, 
+                          rhsPtr.ptr, rhsPtr.pitch, 
+                          rhsPtr.widthBytes, rhsPtr.height, 
                           cudaMemcpyDeviceToHost));
 
    return *this;
