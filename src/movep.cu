@@ -35,7 +35,7 @@ void calcBxm(PitchedPtr_t<float> bxm,
    result = 2 * b0;
    result *= (y / yYMax) * (y / yYMax);
    result /= yYMax;
-   result *= x - (xMax / 2);
+   result *= static_cast<int>(x) - static_cast<int>((xMax / 2));
 
    resolvePitchedPtr(bxm, x, y) = result;
 }
