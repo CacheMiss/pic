@@ -13,7 +13,46 @@
 // Texture reference for 2D float texture
 texture<float, 2, cudaReadModeElementType> texEx;
 texture<float, 2, cudaReadModeElementType> texEy;
+texture<float, 2, cudaReadModeElementType> texBxm;
+texture<float, 1, cudaReadModeElementType> texBym;
 
+__global__
+void calcBxm(PitchedPtr_t<float> bxm,
+             const float b0, 
+             const unsigned int xMax, 
+             const unsigned int yMax)
+{
+   const unsigned int x = blockDim.x * blockIdx.x + threadIdx.x;
+   const unsigned int y = blockDim.y * blockIdx.y + threadIdx.y;
+
+   if(x >= xMax || y >= yMax)
+   {
+      return;
+   }
+   // bxm = 2 * b0 * ((y / (y + NY1))^2 * (1 / (y + NY1)) * (x - NX1/2)
+   float result;
+   float yYMax = y + yMax;
+   result = 2 * b0;
+   result *= (y / yYMax) * (y / yYMax);
+   result /= yYMax;
+   result *= x - (xMax / 2);
+
+   resolvePitchedPtr(bxm, x, y) = result;
+}
+
+__global__
+void calcBym(float *bym, 
+             const float b0, 
+             const unsigned int yMax)
+{
+   unsigned int y = blockIdx.x * blockDim.x + threadIdx.x;
+   if(y < yMax)
+   {
+      // bym = b0 * (y / (y + yf)^2)
+      float tmp = y / (y + yMax);
+      bym[y] = b0 * tmp * tmp;
+   }
+}
 
 __global__
 void checkBoundaryConditions(float2 location[], int numParticles, int height, int width, 
@@ -28,60 +67,6 @@ void checkBoundaryConditions(float2 location[], int numParticles, int height, in
       location[threadId].y < 0 || location[threadId].y > height)
    {
       *success = false;
-   }
-}
-
-__device__
-void writeParticlesBack(float global[], volatile float shared[], 
-                        const unsigned int startingIndex,
-                        const unsigned int numParticles,
-                        const int warpId, const int threadInWarp)
-{
-   unsigned int storeIndex = warpId * warpSize * 5 + threadInWarp;
-
-   #pragma unroll 5
-   for(int i = 0; i < 5; ++i)
-   {
-      if(startingIndex + storeIndex < numParticles * 5)
-      {
-         global[startingIndex + storeIndex] = 
-            shared[storeIndex];
-      }
-      storeIndex += warpSize;
-   }
-}
-
-__device__
-void deconflictBanks(volatile float conflicted[], 
-                     volatile float fixed[],
-                     const int warpId, const int threadInWarp)
-{
-   unsigned int end = (warpId+1) * warpSize * 5;
-
-   #pragma unroll 5
-   for(int currentIndex = warpId * warpSize * 5 + threadInWarp;
-       currentIndex < end;
-       currentIndex += warpSize)
-   {
-      fixed[blockDim.x * (currentIndex % 5) + currentIndex / 5] =
-         conflicted[currentIndex];
-   }
-}
-
-__device__
-void reconflictBanks(volatile float conflicted[], 
-                     volatile const float fixed[],
-                     const int warpId, const int threadInWarp)
-{
-   unsigned int end = (warpId+1) * warpSize * 5;
-
-   #pragma unroll 5
-   for(int currentIndex = warpId * warpSize * 5 + threadInWarp;
-       currentIndex < end;
-       currentIndex += warpSize)
-   {
-      conflicted[currentIndex] = 
-         fixed[blockDim.x * (currentIndex % 5) + currentIndex / 5];
    }
 }
 
@@ -143,6 +128,8 @@ void moveParticles(float2 d_partLoc[], float3 d_partVel[],
    float det1;
    float det2;
    float det3;
+   float bxm;
+   float bym;
    int nii;
    int nj;
    int nj1;
@@ -162,24 +149,32 @@ void moveParticles(float2 d_partLoc[], float3 d_partVel[],
          {
             nj1 = nj + 1;
          }
-         dela=(float)(fabs((float) (pLoc.x-(D_DX * nj))));
-         delb=(float)(fabs((float) (pLoc.y-(D_DY * nii))));
-         a1=dela*delb;
-         a2=D_DX * delb - a1;
-         a3=D_DY * dela - a1;
-         a4=D_DX * D_DY-(a1+a2+a3);
-         local_expf=(a1*tex2D(texEx, nj1, nii+1) + 
+         dela = (float)(fabs((float) (pLoc.x-(D_DX * nj))));
+         delb = (float)(fabs((float) (pLoc.y-(D_DY * nii))));
+         a1 = dela*delb;
+         a2 = D_DX * delb - a1;
+         a3 = D_DY * dela - a1;
+         a4 = D_DX * D_DY-(a1+a2+a3);
+         local_expf = (a1*tex2D(texEx, nj1, nii+1) + 
             a2*tex2D(texEx, nj, nii+1) +
             a3*tex2D(texEx, nj1, nii) + 
             a4*tex2D(texEx, nj, nii))/D_TOTA;
-         local_eypf=(a1*tex2D(texEy, nj1, nii+1) +
+         local_eypf = (a1*tex2D(texEy, nj1, nii+1) +
             a2*tex2D(texEy, nj, nii+1) +
             a3*tex2D(texEy, nj1, nii) +
             a4*tex2D(texEy, nj, nii))/D_TOTA;
-         c1= D_DELT * mass;
-         c2=0.5f;
-         c3=c1*0.5f;
-         c4=c1*c2;
+         bxm = a1 * tex2D(texBxm, nj+1, nii+1) +
+            a2 * tex2D(texBxm, nj, nii+1) +
+            a3 * tex2D(texBxm, nj+1, nii) +
+            a4 * tex2D(texBxm, nj, nii) / D_TOTA;
+         bym = (a1 * tex1D(texBym, nii+1) +
+            a2 * tex1D(texBym, nii+1) +
+            a3 * tex1D(texBym, nii) +
+            a4 * tex1D(texBym, nii)) / D_TOTA;
+         c1 = D_DELT * mass;
+         c2 = 0.5f;
+         c3 = c1*0.5f;
+         c4 = c1*c2;
          a[0] = 1.0f;         // a[0, 0]
          a[1] = -c3*D_BZM;    // a[0, 1]
          a[2] = c3*D_BYM;     // a[0, 2]
@@ -189,31 +184,31 @@ void moveParticles(float2 d_partLoc[], float3 d_partVel[],
          a[6] = -c3*D_BYM;    // a[2, 0]
          a[7] = c3*D_BXM;     // a[2, 1]
          a[8] = 1.0f;         // a[2, 2]
-         b[0]=pVel.x + pVel.y*c4*D_BZM - 
-            pVel.z*c4*D_BYM + c1*local_expf;
-         b[1]=pVel.y + pVel.z*c4*D_BXM - 
+         b[0] = pVel.x + pVel.y*c4*D_BZM - 
+            pVel.z*c4*bym + c1*local_expf;
+         b[1] = pVel.y + pVel.z*c4*bxm - 
             pVel.x*c4*D_BZM + c1*local_eypf;
-         b[2]=pVel.z + pVel.x*c4*D_BYM - 
-            pVel.y*c4*D_BXM;
-         det=a[0]*(a[4]*a[8] - 
+         b[2] = pVel.z + pVel.x*c4*bym - 
+            pVel.y*c4*bxm;
+         det = a[0]*(a[4]*a[8] - 
             a[5]*a[7])-
             a[1]*(a[3]*a[8] - 
             a[5]*a[6])+
             a[2]*(a[3]*a[7] - 
             a[4]*a[6]);
-         det1=b[0]*(a[4]*a[8] - 
+         det1 = b[0]*(a[4]*a[8] - 
             a[5]*a[7]) -
             a[1]*(b[1]*a[8] - 
             b[2]*a[5]) +
             a[2]*(b[1]*a[7] - 
             b[2]*a[4]);
-         det2=a[0]*(b[1]*a[8] - 
+         det2 = a[0]*(b[1]*a[8] - 
             b[2]*a[5]) -
             b[0]*(a[3]*a[8] - 
             a[5]*a[6]) +
             a[2]*(b[2]*a[3] - 
             b[1]*a[6]);
-         det3=a[0]*(a[4]*b[2] - 
+         det3 = a[0]*(a[4]*b[2] - 
             b[1]*a[7]) -
             a[1]*(a[3]*b[2] - 
             b[1]*a[6])+
@@ -431,8 +426,7 @@ __global__
 void countOobParticles(float2 position[], 
                        unsigned int* numOob, 
                        const unsigned int numParticles,
-                       const unsigned int NY1,
-                       const unsigned int DY)
+                       const unsigned int NY1)
 {
    const unsigned int threadX = blockDim.x * blockIdx.x + threadIdx.x;
    const unsigned int threadInWarp = threadIdx.x % warpSize;
@@ -503,6 +497,8 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
       cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
    static cudaArray *cuArrayEx = NULL;
    static cudaArray *cuArrayEy = NULL;
+   static cudaArray *cuArrayBxm = NULL;
+   static cudaArray *cuArrayBym = NULL;
    if(first)
    {
       checkCuda(cudaMallocArray(&cuArrayEx,
@@ -513,10 +509,66 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
          &channelDesc,
          NX1,
          NY+1));
+      checkCuda(cudaMallocArray(&cuArrayBxm,
+         &channelDesc,
+         NX1,
+         NY+1));
+      checkCuda(cudaMallocArray(&cuArrayBym,
+         &channelDesc,
+         NY+1));
    }
 
    assert(NX1 * (NY+1) == ex.size());
    assert(NX1 * (NY+1) == ey.size());
+
+   if(first)
+   {
+      PitchedPtr<float> d_bxm(NX1, NY+1);
+      DevMem<float> d_bym(NY+1);
+
+      resizeDim3(blockSize, 256);
+      resizeDim3(numBlocks, calcNumBlocks(256, NX1),
+         calcNumBlocks(1, NY+1));
+      calcBxm<<<numBlocks, blockSize, 0, stream>>>(
+         d_bxm.getPtr(), B0, d_bxm.getX(), d_bxm.getY());
+      checkForCudaError("calcBxm");
+
+      resizeDim3(blockSize, 256);
+      resizeDim3(numBlocks, calcNumBlocks(256, NX1));
+      calcBym<<<numBlocks, blockSize, 0, stream>>>(
+         d_bym.getPtr(), B0, d_bym.size());
+      checkForCudaError("calcBxm");
+
+      checkCuda(cudaStreamSynchronize(stream));
+      checkCuda(cudaMemcpy2DToArray(cuArrayBxm,
+         0,
+         0,
+         d_bxm.getPtr().ptr,
+         d_bxm.getPtr().pitch,
+         d_bxm.getPtr().widthBytes,
+         d_bxm.getPtr().y,
+         cudaMemcpyDeviceToDevice));
+      checkCuda(cudaMemcpyToArray(cuArrayBym,
+         0,
+         0,
+         d_bym.getPtr(),
+         d_bym.size() * sizeof(float),
+         cudaMemcpyDeviceToDevice));
+
+      texBxm.addressMode[0] = cudaAddressModeWrap;
+      texBxm.addressMode[1] = cudaAddressModeClamp;
+      texBxm.filterMode = cudaFilterModePoint;
+      texBxm.normalized = false;
+
+      texBym.addressMode[0] = cudaAddressModeClamp;
+      texBym.filterMode = cudaFilterModePoint;
+      texBym.normalized = false;
+
+      // Bind the array to the texture
+      checkCuda(cudaBindTextureToArray(texBxm, cuArrayBxm, channelDesc));
+      checkCuda(cudaBindTextureToArray(texBym, cuArrayBym, channelDesc));
+   }
+
 
    //cudaMemset(const_cast<float*>(ex.getPtr()), 0, ex.size() * sizeof(float));
    checkCuda(cudaMemcpyToArray(cuArrayEx,
@@ -535,12 +587,12 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    if(first)
    {
       // Set texture parameters
-      texEx.addressMode[0] = cudaAddressModeClamp;
+      texEx.addressMode[0] = cudaAddressModeWrap;
       texEx.addressMode[1] = cudaAddressModeClamp;
       texEx.filterMode = cudaFilterModePoint;
       texEx.normalized = false;
 
-      texEy.addressMode[0] = cudaAddressModeClamp;
+      texEy.addressMode[0] = cudaAddressModeWrap;
       texEy.addressMode[1] = cudaAddressModeClamp;
       texEy.filterMode = cudaFilterModePoint;
       texEy.normalized = false;
@@ -566,7 +618,7 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    cudaStreamSynchronize(stream);
    checkForCudaError("Before countOobParticles");
    countOobParticles<<<numBlocks, blockSize, 0, stream>>>(
-      partLoc.getPtr(), dev_oobIdx.getPtr(), numParticles, NY1, DY);
+      partLoc.getPtr(), dev_oobIdx.getPtr(), numParticles, NY1);
    checkForCudaError("countOobParticles");
 
    checkCuda(cudaStreamSynchronize(stream));

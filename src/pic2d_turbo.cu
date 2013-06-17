@@ -77,18 +77,6 @@ void executePic(int argc, char *argv[])
    CommandlineOptions &options(CommandlineOptions::getRef());
    options.parseArguments(argc, argv);
    lfint = options.getLogInterval();
-   NX1 = options.getNx1();
-   NX12 = NX1 / 2;
-   NX = NX1 + 1;
-   X_GRD = NX + 1;
-   NY1 = options.getNy1();
-   NY12 = NY1 / 2;
-   NY = NY1 + 1;
-   Y_GRD = NY + 1;
-   SIGMA = options.getSigma();
-   SIGMA1 = options.getSigma1();
-   SIGMA2 = options.getSigma2();
-   SIGMA3 = options.getSigma3();
 
    // Init Device
    DeviceStats &ref(DeviceStats::getRef());

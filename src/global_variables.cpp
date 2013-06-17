@@ -1,5 +1,7 @@
 #include "d_global_variables.h"
 
+float B0 = 10;
+
 int X_GRD = D_X_GRD;           // number of x grid points + 1
 int Y_GRD = D_Y_GRD;          // number of y grid points + 1
 

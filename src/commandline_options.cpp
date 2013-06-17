@@ -46,6 +46,7 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
        ("sigma-ce", po::value<float>(&m_sigma)->default_value(10.0), "Sigma Cold Electrons")
        ("sigma-hi", po::value<float>(&m_sigma2)->default_value((float)0.3), "Sigma Hot Ions")
        ("sigma-ci", po::value<float>(&m_sigma1)->default_value(10.0), "Sigma Cold Ions")
+       ("b0", po::value<float>(&m_b0)->default_value(10), "B0")
        ("restart-index", po::value<unsigned int>(&m_restartPoint)->default_value(0), 
         "File index number for restart point")
        ("restart-dir", po::value<std::string>(&m_restartDir)->default_value("."),
@@ -77,7 +78,21 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
    {
       errExit("y is not a power of 2!");
    }
-   
+
+   NX1 = getNx1();
+   NX12 = NX1 / 2;
+   NX = NX1 + 1;
+   X_GRD = NX + 1;
+   NY1 = getNy1();
+   NY12 = NY1 / 2;
+   NY = NY1 + 1;
+   Y_GRD = NY + 1;
+   SIGMA = getSigma();
+   SIGMA1 = getSigma1();
+   SIGMA2 = getSigma2();
+   SIGMA3 = getSigma3();
+   B0 = getB0();
+
    return returnVal;
 }
 

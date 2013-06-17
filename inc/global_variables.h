@@ -16,6 +16,7 @@ const float PI = static_cast<float>(D_PI);
 const float TPI = static_cast<float>(D_TPI);
 const unsigned int ISEED = static_cast<unsigned int>(D_ISEED);
 
+extern float B0;
 const float P0 = static_cast<float>(D_P0);
 const float SCALE = static_cast<float>(D_SCALE);
 const float RATO = static_cast<float>(D_RATO);
