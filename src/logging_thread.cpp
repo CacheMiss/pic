@@ -110,11 +110,12 @@ void LoggingThread::logForPerformance(unsigned int iter, float sTime,
         unsigned int nIonHot, unsigned int nIonCold,
         unsigned int iterTInMs, unsigned int injectTInMs,
         unsigned int densTInMs, unsigned int potent2TInMs,
-        unsigned int fieldTInMs, unsigned int movepTInMs)
+        unsigned int fieldTInMs, unsigned int movepTInMs,
+        bool resumeRun)
 {
    LogForPerformance *tmp = new LogForPerformance(iter, sTime, nEleHot,
       nEleCold, nIonHot, nIonCold, iterTInMs, injectTInMs,
-      densTInMs, potent2TInMs, fieldTInMs, movepTInMs);
+      densTInMs, potent2TInMs, fieldTInMs, movepTInMs, resumeRun);
    pushLogItem(tmp);
 }
 

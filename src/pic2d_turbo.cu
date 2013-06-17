@@ -479,7 +479,8 @@ void executePic(int argc, char *argv[])
             simState.numEleHot, simState.numEleCold, 
             simState.numIonHot, simState.numIonCold, 
             (unsigned int) iterationTimer.intervalInMilliS(),
-            0, 0, 0, 0, 0);
+            0, 0, 0, 0, 0,
+            options.getRestartPoint() > 0 ? true : false);
             //(unsigned int) injectTimer.intervalInMilliS(),
             //(unsigned int) densTimer.intervalInMilliS(),
             //(unsigned int) potent2Timer.intervalInMilliS(),

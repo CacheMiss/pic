@@ -192,7 +192,7 @@ void LogForPerformance::logData()
               "NumElectrons Cold,Num Ions Hot,Num IonsCold,"
               "Iteration Time (ms)");
       fclose(fp);
-      fp = fopen(fname.c_str(), "w");
+      fp = fopen(fname.c_str(), resume ? "a" : "w");
    }
    else
    {

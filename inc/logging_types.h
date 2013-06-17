@@ -205,6 +205,7 @@ class LogForPerformance : public LoggingBase
    unsigned int potent2TimeInMs;
    unsigned int fieldTimeInMs;
    unsigned int movepTimeInMs;
+   bool         resume;
    static bool first;
 
    public:
@@ -213,12 +214,22 @@ class LogForPerformance : public LoggingBase
       unsigned int nIonHot, unsigned int nIonCold,
       unsigned int iterTInMs, unsigned int injectTInMs,
       unsigned int densTInMs, unsigned int potent2TInMs,
-      unsigned int fieldTInMs, unsigned int movepTInMs)
-     :LoggingBase(), iteration(iter), simTime(sTime), numEleHot(nEleHot),
-      numEleCold(nEleCold), numIonHot(nIonHot), numIonCold(nIonCold),
-      iterTimeInMs(iterTInMs), injectTimeInMs(injectTInMs),
-      densTimeInMs(densTInMs), potent2TimeInMs(potent2TInMs),
-      fieldTimeInMs(fieldTInMs), movepTimeInMs(movepTInMs)
+      unsigned int fieldTInMs, unsigned int movepTInMs,
+      bool resumeRun=false)
+     :LoggingBase()
+     ,iteration(iter)
+     ,simTime(sTime)
+     ,numEleHot(nEleHot)
+     ,numEleCold(nEleCold)
+     ,numIonHot(nIonHot)
+     ,numIonCold(nIonCold)
+     ,iterTimeInMs(iterTInMs)
+     ,injectTimeInMs(injectTInMs)
+     ,densTimeInMs(densTInMs)
+     ,potent2TimeInMs(potent2TInMs)
+     ,fieldTimeInMs(fieldTInMs)
+     ,movepTimeInMs(movepTInMs)
+     ,resume(resumeRun)
    {
    }
 

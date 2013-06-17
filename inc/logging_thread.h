@@ -38,7 +38,8 @@ class LoggingThread
            unsigned int nIonHot, unsigned int nIonCold,
            unsigned int iterTInMs, unsigned int injectTInMs,
            unsigned int densTInMs, unsigned int potent2TInMs,
-           unsigned int fieldTInMs, unsigned int movepTInMs);
+           unsigned int fieldTInMs, unsigned int movepTInMs,
+           bool resumeRun);
    void pushLogItem(LoggingBase *item);
    void flush();
    LoggingBase* popLogItem();
