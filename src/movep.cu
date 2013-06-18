@@ -29,12 +29,12 @@ void calcBxm(PitchedPtr_t<float> bxm,
    {
       return;
    }
-   // bxm = 2 * b0 * ((y / (y + NY1))^2 * (1 / (y + NY1)) * (x - NX1/2)
+   // bxm = 2 * b0 * ((NY1 / (NY1 + y))^2 * (1 / (NY1 + y)) * (x - NX1/2)
    float result;
-   float yYMax = y + yMax;
+   float yMaxY = yMax + y;
    result = 2 * b0;
-   result *= (y / yYMax) * (y / yYMax);
-   result /= yYMax;
+   result *= (yMax / yMaxY) * (yMax / yMaxY);
+   result /= yMaxY;
    result *= static_cast<int>(x) - static_cast<int>((xMax / 2));
 
    resolvePitchedPtr(bxm, x, y) = result;
@@ -48,8 +48,8 @@ void calcBym(float *bym,
    unsigned int y = blockIdx.x * blockDim.x + threadIdx.x;
    if(y < yMax)
    {
-      // bym = b0 * (y / (y + yf)^2)
-      float tmp = y / (y + yMax);
+      // bym = b0 * (yf / (yf + y)^2)
+      float tmp = yMax / (yMax + y);
       bym[y] = b0 * tmp * tmp;
    }
 }
