@@ -181,7 +181,7 @@ void executePic(int argc, char *argv[])
       simState.simTime += DELT;
       lfd = 0;
       lfdint = 0;
-      ind = simState.iterationNum / lfint + 1;
+      ind = simState.iterationNum / LF + 1;
 #ifdef DEBUG_TRACE
       std::cout << "previous run data loaded" << std::endl;
 #endif
