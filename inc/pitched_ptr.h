@@ -91,6 +91,9 @@ void CudaPitchedAllocator::free(PitchedPtr_t<T> &m)
    cudaFree(m.ptr);
 }
 
+template<class T>
+class HostMem;
+
 template<class T, class Allocator=CudaPitchedAllocator>
 class PitchedPtr
 {
@@ -111,6 +114,8 @@ public:
 
    template<class rhsAlloc>
    const PitchedPtr<T, Allocator>& operator=(const PitchedPtr<T, rhsAlloc> &rhs);
+
+   friend HostMem<T>;
 
 private:
    PitchedPtr_t<T> m_ptr;
