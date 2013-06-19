@@ -19,8 +19,8 @@ texture<float, 1, cudaReadModeElementType> texBym;
 __global__
 void calcBxm(PitchedPtr_t<float> bxm,
              const float b0, 
-             const unsigned int xMax, 
-             const unsigned int yMax)
+             const float xMax, 
+             const float yMax)
 {
    const unsigned int x = blockDim.x * blockIdx.x + threadIdx.x;
    const unsigned int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -31,11 +31,11 @@ void calcBxm(PitchedPtr_t<float> bxm,
    }
    // bxm = 2 * b0 * ((NY1 / (NY1 + y))^2 * (1 / (NY1 + y)) * (x - NX1/2)
    float result;
-   float yMaxY = yMax + y;
+   float yMaxY = yMax + static_cast<float>(y);
    result = 2 * b0;
    result *= (yMax / yMaxY) * (yMax / yMaxY);
    result /= yMaxY;
-   result *= static_cast<int>(x) - static_cast<int>((xMax / 2));
+   result *= static_cast<float>(x) - (xMax / 2);
 
    resolvePitchedPtr(bxm, x, y) = result;
 }
@@ -43,13 +43,13 @@ void calcBxm(PitchedPtr_t<float> bxm,
 __global__
 void calcBym(float *bym, 
              const float b0, 
-             const unsigned int yMax)
+             const float yMax)
 {
    unsigned int y = blockIdx.x * blockDim.x + threadIdx.x;
    if(y < yMax)
    {
       // bym = b0 * (yf / (yf + y)^2)
-      float tmp = yMax / (yMax + y);
+      float tmp = yMax / (yMax + static_cast<float>(y));
       bym[y] = b0 * tmp * tmp;
    }
 }
@@ -527,16 +527,21 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
       DevMem<float> d_bym(NY+1);
 
       resizeDim3(blockSize, 256);
-      resizeDim3(numBlocks, calcNumBlocks(256, NX1),
-         calcNumBlocks(1, NY+1));
+      resizeDim3(numBlocks, calcNumBlocks(256, d_bxm.getX()),
+         calcNumBlocks(1, d_bxm.getY()));
       calcBxm<<<numBlocks, blockSize, 0, stream>>>(
-         d_bxm.getPtr(), B0, d_bxm.getX(), d_bxm.getY());
+         d_bxm.getPtr(), 
+         B0, 
+         static_cast<float>(d_bxm.getX()), 
+         static_cast<float>(d_bxm.getY()));
       checkForCudaError("calcBxm");
 
       resizeDim3(blockSize, 256);
-      resizeDim3(numBlocks, calcNumBlocks(256, NX1));
+      resizeDim3(numBlocks, calcNumBlocks(256, d_bym.size()));
       calcBym<<<numBlocks, blockSize, 0, stream>>>(
-         d_bym.getPtr(), B0, d_bym.size());
+         d_bym.getPtr(), 
+         B0, 
+         static_cast<float>(d_bym.size()));
       checkForCudaError("calcBxm");
 
       checkCuda(cudaStreamSynchronize(stream));
