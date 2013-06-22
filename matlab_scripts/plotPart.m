@@ -9,20 +9,20 @@ function ret = plotPart(fName, sliceSize)
    end
 
    numParticles = fread(f, 1, 'int32');
-   particles = fread(f, [6, numParticles], 'float');
-   fclose(f);
+   numHot = fread(f, 1, 'int32');
+   numCold = fread(f, 1, 'int32');
+   hotP = fread(f, [5, numHot], 'float');
    % Remove velocity to save memory
-   particles(3:5,:) = [];
-   xMax = 2^nextpow2(max(particles(1,:)));
-   yMax = 2^nextpow2(max(particles(2,:)));
+   hotP(3:5,:) = [];
+   coldP = fread(f, [5, numCold], 'float');
+   % Remove velocity to save memory
+   coldP(3:5,:) = [];
+   fclose(f);
+   xMax = 2^nextpow2(max(hotP(1,:)));
+   xMax = max(xMax, 2^nextpow2(max(coldP(1,:))));
+   yMax = 2^nextpow2(max(hotP(2,:)));
+   yMax = max(yMax, 2^nextpow2(max(coldP(2,:))));
    
-   particles = particles(:, 1:sliceSize:end);
-   hotEnd =  find(particles(3,:), 1, 'last');
-   coldBeg = hotEnd + 1;
-   hotP = particles(1:2, 1:hotEnd);
-   coldP = particles(1:2, coldBeg:end);
-   particles = [];
-
    figure;
    scatter(hotP(1,:), hotP(2,:), 0.1) % o means no line between points
    title('Hot');

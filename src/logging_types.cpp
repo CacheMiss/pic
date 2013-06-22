@@ -129,21 +129,19 @@ void LogParticlesBinary::logParticles(const char *fileName,
 {
    FILE *f = fopen(fileName, "wb");
    int numPart = numHot + numCold;
-   const float hot = 1.0;
-   const float cold = 0.0;
 
    fwrite(&numPart, sizeof(int), 1, f);
+   fwrite(&numHot, sizeof(int), 1, f);
+   fwrite(&numCold, sizeof(int), 1, f);
    for(int i = 0; i < numHot; i++)
    {
       fwrite(hotLoc + i, sizeof(float2), 1, f);
       fwrite(hotVel + i, sizeof(float3), 1, f);
-      fwrite(&hot, sizeof(float), 1, f);
    }
    for(int i = 0; i < numCold; i++)
    {
       fwrite(coldLoc + i, sizeof(float2), 1, f);
       fwrite(coldVel + i, sizeof(float3), 1, f);
-      fwrite(&cold, sizeof(float), 1, f);
    }
    fclose(f);
 }
