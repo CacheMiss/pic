@@ -33,6 +33,7 @@ class CommandlineOptions
    inline float getSigma3() const;
    inline bool  getParticleBoundCheck() const;
    inline float getB0() const;
+   inline unsigned int getInjectWidth() const;
    void saveOptions(const char fileName[]) const;
 
    private:
@@ -51,6 +52,7 @@ class CommandlineOptions
    float m_sigma2;
    float m_sigma3;
    float m_b0;
+   unsigned int m_injectWidth;
    unsigned int m_restartPoint;
    std::string m_restartDir;
    bool m_particleBoundCheck;
@@ -119,6 +121,11 @@ inline bool CommandlineOptions::getParticleBoundCheck() const
 inline float CommandlineOptions::getB0() const
 {
    return m_b0;
+}
+
+inline unsigned int CommandlineOptions::getInjectWidth() const
+{
+   return m_injectWidth;
 }
 
 #endif

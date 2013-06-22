@@ -94,6 +94,7 @@ void inject(float2 eleHotLoc[], float3 eleHotVel[],
             float2 eleColdLoc[], float3 eleColdVel[],
             float2 ionHotLoc[], float3 ionHotVel[], 
             float2 ionColdLoc[], float3 ionColdVel[],
+            const int botXStart, const int injectWidth,
             const float DX, const float DY,
             const int numElectronsHot, const int numElectronsCold, 
             const int numIonsHot, const int numIonsCold,
@@ -151,7 +152,7 @@ void inject(float2 eleHotLoc[], float3 eleHotVel[],
    //---------------------------------------------------------
    if(hasWork)
    {
-      posX[threadIdx.x] = (float)(DX*NX1*randPool[randOffset+6]);
+      posX[threadIdx.x] = (float)(DX*injectWidth*randPool[randOffset+6]+botXStart);
       posY[threadIdx.x] = (float)(DY*randPool[randOffset+7]);
       vpar = (float)((1.414f*rsqrtf(D_SIGMA))*
          sqrtf(-logf(1-randPool[randOffset+8] + FLT_MIN)));
@@ -202,7 +203,7 @@ void inject(float2 eleHotLoc[], float3 eleHotVel[],
    //-------------------------------------------------------
    if(hasWork)
    {
-      posX[threadIdx.x] = (float)(DX*NX1*randPool[randOffset+18]);
+      posX[threadIdx.x] = (float)(DX*injectWidth*randPool[randOffset+6]+botXStart);
       posY[threadIdx.x] = (float)(DY*randPool[randOffset+19]);
       vpar = (float)((1.414f*rsqrtf(D_SIGMA1*velmass))*
          sqrtf(-logf(1.0f-randPool[randOffset+20] + FLT_MIN)));

@@ -305,6 +305,8 @@ void executePic(int argc, char *argv[])
       // Generate the random numbers inject will need
       curandGenerateUniform(randGenerator, dev_randTable.getPtr(), neededRands);
 
+      const unsigned injectWidth = options.getInjectWidth();
+      const unsigned injectStartX = (NX1 / 2) - (injectWidth / 2);
       //injectTimer.start();
       const int injectThreadsPerBlock = MAX_THREADS_PER_BLOCK;
       dim3 injectNumBlocks(calcNumBlocks(injectThreadsPerBlock, neededParticles));
@@ -318,6 +320,7 @@ void executePic(int argc, char *argv[])
          d_eleColdLoc.getPtr(), d_eleColdVel.getPtr(), 
          d_ionHotLoc.getPtr(), d_ionHotVel.getPtr(), 
          d_ionColdLoc.getPtr(), d_ionColdVel.getPtr(), 
+         injectStartX, injectWidth,
          DX, DY,
          simState.numEleHot, simState.numEleCold, 
          simState.numIonHot, simState.numIonCold,

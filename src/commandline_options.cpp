@@ -47,6 +47,7 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
        ("sigma-hi", po::value<float>(&m_sigma2)->default_value((float)0.3), "Sigma Hot Ions")
        ("sigma-ci", po::value<float>(&m_sigma1)->default_value(10.0), "Sigma Cold Ions")
        ("b0", po::value<float>(&m_b0)->default_value(10), "B0")
+       ("inject-width", po::value<unsigned int>(&m_injectWidth)->default_value(0), "The width of the injection area for cold particles")
        ("restart-index", po::value<unsigned int>(&m_restartPoint)->default_value(0), 
         "File index number for restart point")
        ("restart-dir", po::value<std::string>(&m_restartDir)->default_value("."),
@@ -77,6 +78,12 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
    else if((m_ny1 & (m_ny1 - 1)) != 0) // Not a power of two
    {
       errExit("y is not a power of 2!");
+   }
+
+   // Inject across the entire bottom of the grid if left unspecified
+   if(m_injectWidth == 0)
+   {
+      m_injectWidth = getNx1();
    }
 
    NX1 = getNx1();
