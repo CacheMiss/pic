@@ -65,10 +65,10 @@ void LogParticlesAscii::logData()
    char name[100];
    assert(m_index < 1000000);
 
-   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ele_", m_index);
+   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ele", m_index);
    logParticles(name, &m_eleHotLoc[0], &m_eleHotVel[0], &m_eleColdLoc[0], &m_eleColdVel[0], 
       m_numEleHot, m_numEleCold);
-   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ion_", m_index);
+   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ion", m_index);
    logParticles(name, &m_ionHotLoc[0], &m_ionHotVel[0], &m_ionColdLoc[0], &m_ionColdVel[0], 
       m_numIonHot, m_numIonCold);
 }
@@ -163,12 +163,12 @@ void LogRhoBinary::logData()
 {
     out2drBin("rhoi",m_index,NY,NX1,*m_rhoi, true);
     out2drBin("rhoe",m_index,NY,NX1,*m_rhoe, true);
-    out2drBin("rho_",m_index,NY,NX1,*m_rho, true);
+    out2drBin("rho",m_index,NY,NX1,*m_rho, true);
 }
 
 void LogPhiBinary::logData()
 {
-    out2drBin("phi_",m_index,NY,NX1,*m_phi, true);
+    out2drBin("phi",m_index,NY,NX1,*m_phi, true);
 }
 
 void LogInfo::logData()
