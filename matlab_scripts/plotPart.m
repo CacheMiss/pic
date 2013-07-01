@@ -11,12 +11,32 @@ function ret = plotPart(fName, sliceSize)
    numParticles = fread(f, 1, 'int32');
    numHot = fread(f, 1, 'int32');
    numCold = fread(f, 1, 'int32');
-   hotP = fread(f, [5, numHot], 'float');
+   finalHot = floor(numHot / sliceSize);
+   finalCold = floor(numCold / sliceSize);
+   hotP = zeros(2, finalHot);
+   coldP = zeros(2, finalCold);
+   for i=1:finalHot
+       hotP(:,i) = fread(f, 2, 'float');
+       sizeOfFloat = 4;
+       % Skip the velocity plus whatever else I need to reach
+       % the next particle I care about
+       skipBytes = sizeOfFloat * 3 + sizeOfFloat * 5 * (sliceSize-1);
+       fseek(f, skipBytes, 'cof');
+   end
+   for i=1:finalCold
+       coldP(:,i) = fread(f, 2, 'float');
+       sizeOfFloat = 4;
+       % Skip the velocity plus whatever else I need to reach
+       % the next particle I care about
+       skipBytes = sizeOfFloat * 3 + sizeOfFloat * 5 * (sliceSize-1);
+       fseek(f, skipBytes, 'cof');
+   end
+   %hotP = fread(f, [5, numHot], 'float');
    % Remove velocity to save memory
-   hotP(3:5,:) = [];
-   coldP = fread(f, [5, numCold], 'float');
+   %hotP(3:5,:) = [];
+   %coldP = fread(f, [5, numCold], 'float');
    % Remove velocity to save memory
-   coldP(3:5,:) = [];
+   %coldP(3:5,:) = [];
    fclose(f);
    xMax = 2^nextpow2(max(hotP(1,:)));
    xMax = max(xMax, 2^nextpow2(max(coldP(1,:))));
