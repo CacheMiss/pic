@@ -13,6 +13,7 @@ function ret = plotPhiAll(fName)
    numColumns = fread(f, 1, 'int32');
    columnOrder = fread(f, 1, 'int32');
    phi = fread(f, [numRows,numColumns], 'float');
+   fclose(f);
 
    xValues = [0:numColumns-1];
    yValues = [0:numRows-1];
@@ -24,7 +25,5 @@ function ret = plotPhiAll(fName)
 
    figure;
    surf(xValues, yValues, phi);
-
-   fclose(f);
 
 end
