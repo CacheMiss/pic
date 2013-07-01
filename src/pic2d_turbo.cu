@@ -182,6 +182,7 @@ void executePic(int argc, char *argv[])
       lfd = 0;
       lfdint = 0;
       ind = simState.iterationNum / LF + 1;
+      percentComplete = (int) simState.iterationNum / percentSize;
 #ifdef DEBUG_TRACE
       std::cout << "previous run data loaded" << std::endl;
 #endif
