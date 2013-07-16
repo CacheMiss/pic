@@ -40,6 +40,7 @@
 				Include="$(CUDA_INC_PATH);$(NVSDKCOMPUTE_ROOT)\C\common\inc;$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST);"
 				Arch1="0"
 				ExtraNvccOptions="-g"
+				Optimization="0"
 				Runtime="3"
 				Defines="WIN32;DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 			/>
