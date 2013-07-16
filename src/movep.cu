@@ -130,25 +130,18 @@ void moveParticles(float2 d_partLoc[], float3 d_partVel[],
    float det3;
    float bxm;
    float bym;
-   int nii;
-   int nj;
-   int nj1;
 
    if(threadX < numParticles)
    {
       if (pLoc.x <= D_DX * NX1 && 
           pLoc.x >= 0)
       {
-         nii=(int) (pLoc.y/D_DY);  // Y Position of pBuficle
-         nj=(int) ((pLoc.x)/D_DX); // X Position of pBuficle
-         if(nj == NX1-1)
-         {
-            nj1 = 0;
-         }
-         else
-         {
-            nj1 = nj + 1;
-         }
+         const int nii = static_cast<int>(pLoc.y/D_DY);  // Y Position of pBuficle
+         const int nj = static_cast<int>((pLoc.x)/D_DX); // X Position of pBuficle
+         // I can't simply add 1 to nj because if I wrap off the edge of the grid I
+         // need to account for that. In that case, nj + 1 should actually be 0.
+         const int nj1 = (nj == NX1-1) ? 0 : nj + 1;
+
          dela = (float)(fabs((float) (pLoc.x-(D_DX * nj))));
          delb = (float)(fabs((float) (pLoc.y-(D_DY * nii))));
          a1 = dela*delb;
