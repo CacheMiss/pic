@@ -20,6 +20,8 @@ class HostMem
    HostMem(std::size_t size);
    HostMem(std::size_t size, int val);
    HostMem(const PitchedPtr<T> &rhs);
+   template<class Allocator>
+   HostMem(const DevMem<T, Allocator> &rhs);
    HostMem();
    ~HostMem();
 
@@ -76,14 +78,24 @@ HostMem<T>::HostMem(std::size_t size, int val)
 template<class T>
 HostMem<T>::HostMem(const PitchedPtr<T> &rhs)
 {
-   PitchedPtr_t<T> &rhsPtr = rhs.getPtr();
-   m_size = rhsPtr.width * rhsPtr.height;
+   const PitchedPtr_t<T> &rhsPtr = rhs.getPtr();
+   m_size = rhsPtr.x * rhsPtr.y;
    m_reserved = m_size;
    checkCuda(cudaMallocHost(reinterpret_cast<void**>(&m_ptr), sizeof(T) * m_size));
    checkCuda(cudaMemcpy2D(m_ptr, rhsPtr.widthBytes, 
                           rhsPtr.ptr, rhsPtr.pitch, 
-                          rhsPtr.widthBytes, rhsPtr.height, 
+                          rhsPtr.widthBytes, rhsPtr.y, 
                           cudaMemcpyDeviceToHost));
+}
+
+template<class T>
+template<class Allocator>
+HostMem<T>::HostMem(const DevMem<T, Allocator> &rhs)
+  :m_ptr(NULL)
+  , m_size(0)
+  , m_reserved(0)
+{
+   operator=(rhs);
 }
 
 template<class T>
