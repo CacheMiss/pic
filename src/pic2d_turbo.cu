@@ -126,10 +126,10 @@ void executePic(int argc, char *argv[])
    DevMem<float2> d_ionColdLoc(initialAllocSize);
    DevMem<float3> d_ionColdVel(initialAllocSize);
    DevMemF dev_phi(NY * NX1);
-   DevMemF dev_ex((NY+1) * NX1); // An extra row is added to pad with zeros
-   dev_ex.zeroMem();
-   DevMemF dev_ey((NY+1) * NX1); // An extra row is added to pad with zeros
-   dev_ey.zeroMem();
+   PitchedPtr<float> dev_ex(NX1, NY+1); // An extra row is added to pad with zeros
+   dev_ex.memset(0);
+   PitchedPtr<float> dev_ey(NX1, NY+1); // An extra row is added to pad with zeros
+   dev_ey.memset(0);
    DevMemF dev_rho(NX1 * NY);
    DevMemF dev_rhoe(NX1 * NY);
    DevMemF dev_rhoi(NX1 * NY);

@@ -449,7 +449,7 @@ void countOobParticles(float2 position[],
 **************************************************************/
 void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
            unsigned int &numParticles, float mass,
-           const DevMemF &ex, const DevMemF &ey,
+           const PitchedPtr<float> &ex, const PitchedPtr<float> &ey,
            cudaStream_t &stream)
 {
    static bool first = true;
@@ -511,9 +511,6 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
          NY+1));
    }
 
-   assert(NX1 * (NY+1) == ex.size());
-   assert(NX1 * (NY+1) == ey.size());
-
    if(first)
    {
       PitchedPtr<float> d_bxm(NX1, NY+1);
@@ -569,17 +566,21 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
 
 
    //cudaMemset(const_cast<float*>(ex.getPtr()), 0, ex.size() * sizeof(float));
-   checkCuda(cudaMemcpyToArray(cuArrayEx,
+   checkCuda(cudaMemcpy2DToArray(cuArrayEx,
       0,
       0,
-      ex.getPtr(),
-      ex.size() * sizeof(float),
+      ex.getPtr().ptr,
+      ex.getPtr().pitch,
+      ex.getPtr().widthBytes,
+      ex.getPtr().y,
       cudaMemcpyDeviceToDevice));
-   checkCuda(cudaMemcpyToArray(cuArrayEy,
+   checkCuda(cudaMemcpy2DToArray(cuArrayEy,
       0,
       0,
-      ey.getPtr(),
-      ey.size() * sizeof(float),
+      ey.getPtr().ptr,
+      ey.getPtr().pitch,
+      ey.getPtr().widthBytes,
+      ey.getPtr().y,
       cudaMemcpyDeviceToDevice));
 
    if(first)

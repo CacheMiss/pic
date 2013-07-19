@@ -6,7 +6,7 @@
 namespace Field
 {
    __global__
-   void calcEy(float ey[], const float phi[],
+   void calcEy(PitchedPtr_t<float> ey, const float phi[],
                const unsigned int NX1, const unsigned int NY1,
                const float DY)
    {
@@ -25,12 +25,12 @@ namespace Field
       bottomPhi = phi[NX1 * threadY + threadX];
 
       // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
-      ey[NX1 * (threadY + 1) + threadX] = 
+      resolvePitchedPtr(ey, threadX, threadY + 1) =
          __fdividef(-(topPhi - bottomPhi), (float)2.0 * DY);
    }
 
    __global__
-   void calcEx(float ex[], const float phi[], const unsigned int NX1,
+   void calcEx(PitchedPtr_t<float> ex, const float phi[], const unsigned int NX1,
                const unsigned int NY, const float DX)
    {
       extern __shared__ float begShared[];
@@ -90,11 +90,11 @@ namespace Field
          fieldVal = -__fdividef((sharedPhi[2] - sharedPhi[1]), DX);
       }
 
-      ex[gIndex] = fieldVal;
+      resolvePitchedPtr(ex, threadX, threadY) = fieldVal;
    }
 
    __global__
-   void fixEyBoundaries(float ey[], const float phi[], 
+   void fixEyBoundaries(PitchedPtr_t<float> ey, const float phi[], 
                         const unsigned int NX1, const unsigned int NY1, 
                         const float DY)
    {
@@ -106,13 +106,13 @@ namespace Field
       phiTop = phi[NX1 + threadX];
       phiBottom = phi[threadX];
       // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
-      ey[threadX] = __fdividef(-(phiTop - phiBottom), DY);
+      resolvePitchedPtr(ey, threadX, 0) = __fdividef(-(phiTop - phiBottom), DY);
 
       phiTop = phi[NX1 * NY1 + threadX];
       phiBottom = phi[NX1 * (NY1 - 1) + threadX];
 
       // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
-      ey[NX1 * NY1 + threadX] = __fdividef(-(phiTop - phiBottom), DY);
+      resolvePitchedPtr(ey, threadX, NY1) = __fdividef(-(phiTop - phiBottom), DY);
    }
 
 }
@@ -120,8 +120,8 @@ namespace Field
 /****************************************************************
          subroutine field
  ***************************************************************/
-void field(DevMemF &ex,
-           DevMemF &ey,
+void field(PitchedPtr<float> &ex,
+           PitchedPtr<float> &ey,
            const DevMemF &phi)
 {
    unsigned int numThreads;

@@ -28,10 +28,10 @@ __device__
 T& resolvePitchedPtr(PitchedPtr_t<T> &p, std::size_t x, std::size_t y)
 {
 #ifdef _DEBUG
-   if(p.width <= x || p.height <= y)
+   if(p.x <= x || p.y <= y)
    {
       printf("ERROR: resolvePitchedPtr attempted to resolve x=%u y=%u when size_x=%u and size_y=%u\n",
-         x, y, p.width, p.height);
+         x, y, p.x, p.y);
    }
 #endif
    return reinterpret_cast<T*>(&reinterpret_cast<char*>(p.ptr)[y * p.pitch])[x];
@@ -45,10 +45,10 @@ __device__
 T const & resolvePitchedPtr(const PitchedPtr_t<T> &p, std::size_t x, std::size_t y)
 {
 #ifdef _DEBUG
-   if(p.width <= x || p.height <= y)
+   if(p.x <= x || p.y <= y)
    {
       printf("ERROR: resolvePitchedPtr(const) attempted to resolve x=%u y=%u when size_x=%u and size_y=%u\n",
-         x, y, p.width, p.height);
+         x, y, p.x, p.y);
    }
 #endif
    return reinterpret_cast<T*>(&reinterpret_cast<char*>(p.ptr)[y * p.pitch])[x];

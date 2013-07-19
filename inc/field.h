@@ -2,9 +2,10 @@
 #define FIELD_H
 
 #include "typedefs.h"
+#include "pitched_ptr.h"
 
-void field(DevMemF &ex,
-           DevMemF &ey,
+void field(PitchedPtr<float> &ex,
+           PitchedPtr<float> &ey,
            const DevMemF &phi);
 
 #endif
