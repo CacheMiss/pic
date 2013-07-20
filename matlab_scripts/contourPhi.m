@@ -1,5 +1,5 @@
 
-function ret = plotPhiAll(fName)
+function ret = contourPhi(fName)
 
    f = fopen(fName, 'rb');
 
@@ -22,10 +22,9 @@ function ret = plotPhiAll(fName)
    phi = phi(1:sliceSize:end, 1:sliceSize:end);
    xValues = xValues(1:sliceSize:end);
    yValues = yValues(1:sliceSize:end);
-
+   
    figure;
-   surf(xValues, yValues, phi);
+   contour(xValues, yValues, phi);
    colorbar;
-   axis([0 max(xValues) 0 max(yValues)]);
 
 end
