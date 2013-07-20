@@ -151,10 +151,10 @@ void LogParticlesBinary::logData()
    char name[100];
    assert(m_index < 1000000);
 
-   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ele_", m_index);
+   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ele", m_index);
    logParticles(name, &m_eleHotLoc[0], &m_eleHotVel[0], &m_eleColdLoc[0], &m_eleColdVel[0], 
       m_numEleHot, m_numEleCold);
-   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ion_", m_index);
+   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ion", m_index);
    logParticles(name, &m_ionHotLoc[0], &m_ionHotVel[0], &m_ionColdLoc[0], &m_ionColdVel[0], 
       m_numIonHot, m_numIonCold);
 }
