@@ -1,4 +1,4 @@
-function ret = plotPart(fName, sliceSize)
+function ret = plotPart(fName, titleStr, sliceSize)
 
    f = fopen(fName, 'rb');
 
@@ -55,15 +55,14 @@ function ret = plotPart(fName, sliceSize)
    
    figure;
    scatter(hotP(1,:), hotP(2,:), 0.4)
-   title('Hot');
+   title(strcat([titleStr ' Hot']));
    xlabel('vy');
    ylabel('y');
-   %axis([0 max(hotP(1,:)) 0 yMax]);
    axis([xMinHot xMaxHot 0 yMax]);
 
    figure;
    scatter(coldP(1,:), coldP(2,:), 0.4)
-   title('Cold');
+   title(strcat([titleStr ' Cold']));
    xlabel('vy');
    ylabel('v');
    axis([xMinCold xMaxHot 0 yMax]);

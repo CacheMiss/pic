@@ -1,5 +1,5 @@
 
-function ret = plotPhiAll(fName)
+function ret = plotPhiAll(fName, titleStr)
 
    f = fopen(fName, 'rb');
 
@@ -26,6 +26,7 @@ function ret = plotPhiAll(fName)
    figure;
    surf(xValues, yValues, phi);
    colorbar;
+   title(titleStr);
    axis([0 max(xValues) 0 max(yValues)]);
 
 end

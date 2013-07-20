@@ -1,4 +1,4 @@
-function ret = plotPart(fName, y)
+function ret = plotPart(fName, titleStr, y)
 
    f = fopen(fName, 'rb');
 
@@ -65,14 +65,14 @@ function ret = plotPart(fName, y)
    
    figure;
    scatter(hotP(1,:), hotP(2,:), 4)
-   title('Hot');
+   title(strcat([titleStr ' Hot y=' int2str(y)]));
    xlabel('vx');
    ylabel('vy');
    axis([xMinHot xMaxHot yMinHot yMaxHot]);
 
    figure;
    scatter(coldP(1,:), coldP(2,:), 4)
-   title('Cold');
+   title(strcat([titleStr ' Cold y=' int2str(y)]));
    xlabel('vx');
    ylabel('vy');
    axis([xMinCold xMaxCold yMinCold yMaxCold]);

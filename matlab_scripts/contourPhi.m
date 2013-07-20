@@ -1,5 +1,5 @@
 
-function ret = contourPhi(fName)
+function ret = contourPhi(fName, titleStr)
 
    f = fopen(fName, 'rb');
 
@@ -26,5 +26,6 @@ function ret = contourPhi(fName)
    figure;
    contour(xValues, yValues, phi);
    colorbar;
+   title(titleStr);
 
 end
