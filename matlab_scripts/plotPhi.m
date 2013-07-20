@@ -1,5 +1,5 @@
 
-function ret = plotPhi(fName)
+function ret = plotPhi(fName, column)
 
    f = fopen(fName, 'rb');
 
@@ -13,13 +13,15 @@ function ret = plotPhi(fName)
    numColumns = fread(f, 1, 'int32');
    columnOrder = fread(f, 1, 'int32');
    phi = fread(f, [numRows,numColumns], 'float');
+   phi = phi(:,column);
 
-   yValues = [0:numRows-1];
+   yValues = 0:numRows-1;
    figure;
-   plot(yValues, phi(:,1));
+   plot(yValues, phi);
    title(fName);
    xlabel('y');
    ylabel('phi');
+   axis([0 max(yValues) 0 max(phi)])
 
    fclose(f);
 
