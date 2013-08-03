@@ -75,10 +75,12 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
    {
       errExit("x is not a power of 2!");
    }
+   /*
    else if((m_ny1 & (m_ny1 - 1)) != 0) // Not a power of two
    {
       errExit("y is not a power of 2!");
    }
+   */
 
    // Inject across the entire bottom of the grid if left unspecified
    if(m_injectWidth == 0)
