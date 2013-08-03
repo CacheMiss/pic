@@ -554,6 +554,9 @@ int main(int argc, char *argv[])
    catch(CudaRuntimeError e)
    {
       std::cout << e.what() << std::endl;
+      std::ofstream f("caught_exception.txt");
+      f << e.what() << std::endl;
+      f.close();
       ParticleAllocator::getRef().cleanup();
       DevMemReuse::getRef().cleanup();
       cudaDeviceReset();
