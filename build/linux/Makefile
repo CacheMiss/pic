@@ -10,25 +10,27 @@ EXE=$(BINDIR)/pic
 OBJDIR=.obj
 OBJ= \
    $(OBJDIR)/commandline_options.o \
+   $(OBJDIR)/cuda_allocator.o \
    $(OBJDIR)/device_stats.o \
+   $(OBJDIR)/dev_mem_reuse.o \
    $(OBJDIR)/error_check.o \
    $(OBJDIR)/genmtrand.o \
    $(OBJDIR)/global_variables.o \
    $(OBJDIR)/logging_thread.o \
    $(OBJDIR)/logging_types.o \
+   $(OBJDIR)/particle_allocator.o \
    $(OBJDIR)/pic_utils.o \
+   $(OBJDIR)/pitched_ptr.o \
    $(OBJDIR)/precisiontimer.o \
    $(OBJDIR)/simulation_state.o \
-   $(OBJDIR)/dev_mem_reuse.o \
-   $(OBJDIR)/cuda_allocator.o \
-   $(OBJDIR)/particle_allocator.o
+
 CUOBJ= \
    $(OBJDIR)/dens.o \
    $(OBJDIR)/field.o \
    $(OBJDIR)/inject.o \
    $(OBJDIR)/movep.o \
    $(OBJDIR)/pic2d_turbo.o \
-   $(OBJDIR)/potent2.o
+   $(OBJDIR)/potent2.o \
 
 INCLUDE_PATHS=-I$(INC) -I$(CUDADIR)/include -I$(BOOSTDIR)/include
 LIB_PATHS=-L$(BOOSTDIR)/lib
