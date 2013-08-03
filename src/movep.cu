@@ -48,7 +48,7 @@ void calcBym(float *bym,
    unsigned int y = blockIdx.x * blockDim.x + threadIdx.x;
    if(y < yMax)
    {
-      // bym = b0 * (yf / (yf + y)^2)
+      // bym = b0 * (yf / (yf + y))^2
       float tmp = yMax / (yMax + static_cast<float>(y));
       bym[y] = b0 * tmp * tmp;
    }
