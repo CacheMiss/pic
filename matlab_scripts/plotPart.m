@@ -33,23 +33,29 @@ function ret = plotPart(fName, titleStr, sliceSize)
    end
 
    fclose(f);
-   xMax = 2^nextpow2(max(hotP(1,:)));
-   xMax = max(xMax, 2^nextpow2(max(coldP(1,:))));
-   yMax = 2^nextpow2(max(hotP(2,:)));
-   yMax = max(yMax, 2^nextpow2(max(coldP(2,:))));
    
-   figure;
-   scatter(hotP(1,:), hotP(2,:), 0.1)
-   title(strcat([titleStr ' Hot']));
-   xlabel('x');
-   ylabel('y');
-   axis([0 xMax 0 yMax]);
-
-   figure;
-   scatter(coldP(1,:), coldP(2,:), 0.1)
-   title(strcat([titleStr ' Cold']));
-   xlabel('x');
-   ylabel('y');
-   axis([0 xMax 0 yMax]);
+   if ~ isempty(hotP)
+       xMax = 2^nextpow2(max(hotP(1,:)));
+       yMax = 2^nextpow2(max(hotP(2,:)));
+       
+       figure;
+       scatter(hotP(1,:), hotP(2,:), 0.1)
+       title(strcat([titleStr ' Hot']));
+       xlabel('x');
+       ylabel('y');
+       axis([0 xMax 0 yMax]);
+   end
+   
+   if ~ isempty(coldP)
+       xMax = max(xMax, 2^nextpow2(max(coldP(1,:))));
+       yMax = max(yMax, 2^nextpow2(max(coldP(2,:))));
+       
+       figure;
+       scatter(coldP(1,:), coldP(2,:), 0.1)
+       title(strcat([titleStr ' Cold']));
+       xlabel('x');
+       ylabel('y');
+       axis([0 xMax 0 yMax]);
+   end
 
 end
