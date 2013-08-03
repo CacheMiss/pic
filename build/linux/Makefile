@@ -40,7 +40,7 @@ THIRD_PARTY_LIBS=-lboost_thread -lboost_system -lboost_filesystem -lboost_progra
 OPTIMIZATION=-O2
 PRE_PROCESSOR=
 COMMON_FLAGS=$(PRE_PROCESSOR) $(DEBUG_FLAGS) $(OPTIMIZATION)
-SUPPORTED_VIRTUAL_ARCH=-arch=compute_20 -code=compute_20,sm_20
+SUPPORTED_VIRTUAL_ARCH=-arch=compute_30 -code=compute_30,sm_30
 CUDA_FLAGS=-G $(SUPPORTED_VIRTUAL_ARCH) -m64 $(COMMON_FLAGS)
 CC_FLAGS=-m64 $(COMMON_FLAGS)
 
