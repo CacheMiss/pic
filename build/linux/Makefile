@@ -1,5 +1,7 @@
 ROOT=../..
-CUDADIR=/opt/asn/apps/cuda_5.0
+CUDADIR=/opt/apps/cuda/5.0
+#BOOSTDIR=/opt/apps/intel13/boost/1.51.0
+BOOSTDIR=/home1/02498/sewells/boost
 #CUDADIR=/usr/local/cuda
 SRC=$(ROOT)/src
 INC=$(ROOT)/inc
@@ -28,9 +30,9 @@ CUOBJ= \
    $(OBJDIR)/pic2d_turbo.o \
    $(OBJDIR)/potent2.o
 
-INCLUDE_PATHS=-I$(INC) -I$(CUDADIR)/include -I~/boost/include
-LIB_PATHS=-L~/boost/lib
-THIRD_PARTY_LIBS=-lboost_thread -lboost_filesystem -lboost_program_options -lcufft -lcurand
+INCLUDE_PATHS=-I$(INC) -I$(CUDADIR)/include -I$(BOOSTDIR)/include
+LIB_PATHS=-L$(BOOSTDIR)/lib
+THIRD_PARTY_LIBS=-lboost_thread -lboost_system -lboost_filesystem -lboost_program_options -lcufft -lcurand
 #DEBUG_FLAGS=-g -D_DEBUG
 #CUDA_DEBUG_FLAGS=-G
 OPTIMIZATION=-O2
