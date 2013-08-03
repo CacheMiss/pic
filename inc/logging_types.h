@@ -183,8 +183,11 @@ class LogInfo : public LoggingBase
    public:
    LogInfo(unsigned int idx, float sTime, 
            unsigned int nmElectrons, unsigned int nmIons)
-     : LoggingBase(), index(idx), simTime(sTime), 
-       numElectrons(nmElectrons), numIons(nmIons)
+     :LoggingBase()
+     ,index(idx)
+     ,simTime(sTime)
+     ,numElectrons(nmElectrons)
+     ,numIons(nmIons)
    {}
 
    virtual void logData();
