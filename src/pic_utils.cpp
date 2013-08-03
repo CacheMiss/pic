@@ -82,12 +82,12 @@ void outinfo(const std::string &fname,int idx_nm,float time,int need,int niid)
 {
    char name[100];
    FILE *fp;
-   sprintf(name,"%s/%s_%04d",outputDir.c_str(), fname.c_str(), idx_nm);
-   if((fp=fopen(name,"wt"))==NULL) {
+   sprintf(name,"%s/%s",outputDir.c_str(), fname.c_str(), idx_nm);
+   if((fp=fopen(name,"a"))==NULL) {
       printf("Cannot open '%s' file for writing\n",name);
       exit(1);
    }
-   fprintf(fp,"%d %f %d %d\n",idx_nm,time,need,niid);
+   fprintf(fp,"%d\t%f\t%d\t%d\n",idx_nm,time,need,niid);
    fclose(fp);
 }
 
