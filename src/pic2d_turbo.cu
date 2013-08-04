@@ -310,7 +310,7 @@ void executePic(int argc, char *argv[])
       const unsigned injectStartX = (NX1 / 2) - (injectWidth / 2);
       //injectTimer.start();
       const int injectThreadsPerBlock = MAX_THREADS_PER_BLOCK;
-      dim3 injectNumBlocks(calcNumBlocks(injectThreadsPerBlock, neededParticles));
+      dim3 injectNumBlocks(static_cast<unsigned int>(calcNumBlocks(injectThreadsPerBlock, neededParticles)));
       dim3 injectBlockSize(injectThreadsPerBlock);
       sharedMemoryBytes = sizeof(float) * 5 * injectThreadsPerBlock;
       cudaThreadSynchronize();

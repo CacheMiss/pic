@@ -346,7 +346,7 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
    cudaThreadSynchronize();
    checkForCudaError("Beginning of potent2");
    realToComplex<<<numBlocks, blockSize>>>(dev_rho.getPtr(), dev_c.getPtr(),
-      dev_rho.size());
+      static_cast<unsigned int>(dev_rho.size()));
    cudaThreadSynchronize();
    checkForCudaError("realToComplex");
    static cufftHandle rhoTransform;
@@ -367,7 +367,7 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
    numThreads = MAX_THREADS_PER_BLOCK / 4;
    resizeDim3(blockSize, numThreads);
    resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1));
-   initPb<<<numBlocks, blockSize>>>(dev_pb.getPtr(), P0, dev_pb.size());
+   initPb<<<numBlocks, blockSize>>>(dev_pb.getPtr(), P0, static_cast<unsigned int>(dev_pb.size()));
    checkForCudaError("initPb");
 
    static cufftHandle pbTransform;
@@ -388,7 +388,7 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
       resizeDim3(blockSize, numThreads);
       resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1));
       loadHarmonics<<<numBlocks, blockSize>>>(
-         dev_cokx.getPtr(), dev_cokx.size());
+         dev_cokx.getPtr(), static_cast<unsigned int>(dev_cokx.size()));
       checkForCudaError("loadHarmonics");
    }
 
@@ -424,7 +424,7 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
    cudaThreadSynchronize();
    checkForCudaError("Before final complex to real call in potent2");
    complexToReal<<<numBlocks, numThreads, sharedSize>>>(
-      dev_phif.getPtr(), dev_phi.getPtr(), dev_phif.size());
+      dev_phif.getPtr(), dev_phi.getPtr(), static_cast<unsigned int>(dev_phif.size()));
    checkForCudaError("potent2::complexToReal");
 
    cudaThreadSynchronize();

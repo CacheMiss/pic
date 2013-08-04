@@ -948,7 +948,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
    // This bin is then used to sort the particles
    threadsInBlock = dev.maxThreadsPerBlock / 2;
    blockSize = new dim3(threadsInBlock);
-   numBlocks = new dim3(calcNumBlocks(threadsInBlock, numParticles));
+   numBlocks = new dim3(static_cast<unsigned int>(calcNumBlocks(threadsInBlock, numParticles)));
    cudaStreamSynchronize(stream);
    checkForCudaError("Before loadParticleLocations");
    loadParticleLocations<<<*numBlocks, *blockSize, 0, stream>>>(
@@ -1007,8 +1007,12 @@ void calcIntermediateRho(DevMemF &dev_rho,
    */
    
    // find the beginning and end of each bucket's list of points
-   findBounds(dev_gridBuckets, dev_bucketBegin, dev_bucketEnd,
-      numParticles, dev_bucketBegin.size(), stream);
+   findBounds(dev_gridBuckets, 
+      dev_bucketBegin, 
+      dev_bucketEnd,
+      numParticles, 
+      static_cast<unsigned int>(dev_bucketBegin.size()), 
+      stream);
 
    /*
    // Begin DEBUG
@@ -1047,7 +1051,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
    // Calculate a1, a2, a3, and a4 for the now sorted particles
    threadsInBlock = MAX_THREADS_PER_BLOCK;
    blockSize = new dim3(threadsInBlock);
-   numBlocks = new dim3(calcNumBlocks(threadsInBlock, numParticles));
+   numBlocks = new dim3(static_cast<unsigned int>(calcNumBlocks(threadsInBlock, numParticles)));
    calcA<<<*numBlocks, *blockSize, 0, stream>>>(
       dev_particleLocations.getPtr(),
       dev_a1.getPtr(),
@@ -1065,7 +1069,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
    threadsInBlock = MAX_THREADS_PER_BLOCK / 8;
    //threadsInBlock = dev.maxThreadsPerBlock / 8;
    blockSize = new dim3(threadsInBlock);
-   numBlocks = new dim3(calcNumBlocks(threadsInBlock, NY * NX1));
+   numBlocks = new dim3(static_cast<unsigned int>(calcNumBlocks(threadsInBlock, NY * NX1)));
    sharedMemoryBytes = 
       4 * sizeof(float) * threadsInBlock * particlesToBuffer + 
       2 * sizeof(uint2);
@@ -1102,8 +1106,8 @@ void calcIntermediateRho(DevMemF &dev_rho,
    threadsX = MAX_THREADS_PER_BLOCK / 4;
    threadsY = 1;
    blockSize = new dim3(threadsX, threadsY);
-   numBlocks = new dim3(calcNumBlocks(threadsX, NX1),
-                        calcNumBlocks(threadsY, NY));
+   numBlocks = new dim3(static_cast<unsigned int>(calcNumBlocks(threadsX, NX1)),
+                        static_cast<unsigned int>(calcNumBlocks(threadsY, NY)));
    sharedMemoryBytes = 8 * (threadsX + 1) * sizeof(float);
    uint2 tmpUint2;
    tmpUint2.x = numParticles;
@@ -1222,7 +1226,7 @@ void dens(DevMemF &dev_rho,
    // Double the rho at the top and bottom of the grid
    threadsInBlock = MAX_THREADS_PER_BLOCK;
    blockSize = new dim3(threadsInBlock);
-   numBlocks = new dim3(calcNumBlocks(threadsInBlock, NX));
+   numBlocks = new dim3(static_cast<unsigned int>(calcNumBlocks(threadsInBlock, NX)));
    cudaThreadSynchronize();
    checkForCudaError("Before fixRhoGridTopBottom");
    fixRhoGridTopBottom<<<*numBlocks, *blockSize>>>(

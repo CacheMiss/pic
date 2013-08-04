@@ -58,11 +58,11 @@ void errExit(const char *errorString)
    exit(1);
 }
 
-void resizeDim3(dim3 &rhs, int x, int y, int z)
+void resizeDim3(dim3 &rhs, std::size_t x, std::size_t y, std::size_t z)
 {
-   rhs.x = x;
-   rhs.y = y;
-   rhs.z = z;
+   rhs.x = static_cast<unsigned int>(x);
+   rhs.y = static_cast<unsigned int>(y);
+   rhs.z = static_cast<unsigned int>(z);
 }
 
 //*****************************************************************************

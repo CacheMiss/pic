@@ -650,7 +650,8 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    findOobParticles<<<numBlocks, blockSize, sharedMemoryBytes, stream>>>(
       partLoc.getPtr(), 
       numParticles, dev_oobIdx.getPtr(), dev_oobArry.getPtr(),
-      NX1, NY1, dev_oobArry.size());
+      NX1, NY1, 
+      static_cast<unsigned int>(dev_oobArry.size()));
    checkForCudaError("moveParticles");
 
    // DEBUG

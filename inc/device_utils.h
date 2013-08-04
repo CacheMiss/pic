@@ -38,7 +38,7 @@ void picSort(DevMem<KeyType, KeyAllocatorType> &keys, DevMem<ValType, ValAllocat
 {
    if(size == 0)
    {
-      size = keys.size();
+      size = static_cast<unsigned int>(keys.size());
    }
 
    thrust::sort_by_key(keys.getThrustPtr(),
@@ -108,7 +108,7 @@ void divVectorKernel(Type *t, unsigned int size, const Type val)
 template<class Type>
 void divVector(Type *devArray, unsigned int size, const Type val)
 {
-   int numThreads = MAX_THREADS_PER_BLOCK / 2;
+   std::size_t numThreads = MAX_THREADS_PER_BLOCK / 2;
    dim3 blockSize(numThreads);
    dim3 numBlocks(calcNumBlocks(numThreads, size));
    divVectorKernel<Type> <<<numBlocks, numThreads>>>(devArray, size, val);
@@ -130,7 +130,9 @@ inline void divVector(DevMem<Type> &devArray,
                        const Type val)
 {
    divVector<Type>(devArray.getPtr(), 
-      devArray.size(), val);
+      static_cast<unsigned int>(devArray.size()), 
+      val);
+
 }
 
 template<class Type>

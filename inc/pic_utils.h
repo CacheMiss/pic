@@ -16,7 +16,7 @@ void errExit(const char *errorString);
 void outinfo(const std::string &fname,int idx_nm,float time,int need,int niid);
 void createOutputDir(const char *);
 bool fileExists(const std::string &fileName);
-void resizeDim3(dim3 &rhs, int x, int y=1, int z=1);
+void resizeDim3(dim3 &rhs, std::size_t x, std::size_t y=1, std::size_t z=1);
 void loadPrevSimState(unsigned int loadIndex, const std::string &loadDir,
                       DevMem<float2> &dev_eleHotLoc, DevMem<float3> &dev_eleHotVel, 
                       DevMem<float2> &dev_eleColdLoc, DevMem<float3> &dev_eleColdVel,
@@ -25,10 +25,10 @@ void loadPrevSimState(unsigned int loadIndex, const std::string &loadDir,
                       unsigned int &numEleHot, unsigned int &numEleCold,
                       unsigned int &numIonHot, unsigned int &numIonCold);
 
-inline unsigned int calcNumBlocks(const unsigned int numThreads, 
-                           const unsigned int numElements)
+inline std::size_t calcNumBlocks(const std::size_t numThreads, 
+                                  const std::size_t numElements)
 {
-   unsigned int ret = (numElements + numThreads - 1) / numThreads;
+   std::size_t ret = (numElements + numThreads - 1) / numThreads;
    assert(ret > 0);
    return ret;
 }

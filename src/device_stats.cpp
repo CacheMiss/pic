@@ -80,7 +80,7 @@ double DeviceStats::getPercentFreeMem() const
    std::size_t freeMem;
    checkCuda(cudaMemGetInfo(&freeMem, &totalMem));
 
-   double percentFree = freeMem;
+   double percentFree = static_cast<double>(freeMem);
    percentFree /= totalMem;
 
    return percentFree;
