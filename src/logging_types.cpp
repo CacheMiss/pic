@@ -65,10 +65,10 @@ void LogParticlesAscii::logData()
    char name[100];
    assert(m_index < 1000000);
 
-   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ele", m_index);
+   sprintf(name,"%s/%s_%04d",outputPath.c_str(), "ele", m_index);
    logParticles(name, &m_eleHotLoc[0], &m_eleHotVel[0], &m_eleColdLoc[0], &m_eleColdVel[0], 
       m_numEleHot, m_numEleCold);
-   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ion", m_index);
+   sprintf(name,"%s/%s_%04d",outputPath.c_str(), "ion", m_index);
    logParticles(name, &m_ionHotLoc[0], &m_ionHotVel[0], &m_ionColdLoc[0], &m_ionColdVel[0], 
       m_numIonHot, m_numIonCold);
 }
@@ -151,10 +151,10 @@ void LogParticlesBinary::logData()
    char name[100];
    assert(m_index < 1000000);
 
-   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ele", m_index);
+   sprintf(name,"%s/%s_%04d",outputPath.c_str(), "ele", m_index);
    logParticles(name, &m_eleHotLoc[0], &m_eleHotVel[0], &m_eleColdLoc[0], &m_eleColdVel[0], 
       m_numEleHot, m_numEleCold);
-   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ion", m_index);
+   sprintf(name,"%s/%s_%04d",outputPath.c_str(), "ion", m_index);
    logParticles(name, &m_ionHotLoc[0], &m_ionHotVel[0], &m_ionColdLoc[0], &m_ionColdVel[0], 
       m_numIonHot, m_numIonCold);
 }
@@ -178,8 +178,8 @@ void LogInfo::logData()
 
 void LogForPerformance::logData()
 {
-   std::string fname = outputDir + "/performance.csv";
-   std::string keyFname = outputDir + "/performance_key.csv";
+   std::string fname = outputPath + "/performance.csv";
+   std::string keyFname = outputPath + "/performance_key.csv";
    FILE *fp;
 
    if(first)

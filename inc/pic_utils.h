@@ -51,7 +51,7 @@ void out2dr(const std::string &fname,int idx_nm,int numRows,int numColumns,
    char name[400];
    FILE *fp;
    int i,j;
-   sprintf(name,"%s/%s_%04d", outputDir.c_str(), fname.c_str(), idx_nm);
+   sprintf(name,"%s/%s_%04d", outputPath.c_str(), fname.c_str(), idx_nm);
    if((fp=fopen(name,"wt"))==NULL) {
       printf("Cannot open '%s' file for writing\n",name);
       exit(1);
@@ -100,7 +100,7 @@ void out2drBin(const std::string &fname,int idx_nm,int numRows,int numColumns,
    char name[400];
    FILE *fp;
    int i,j;
-   sprintf(name,"%s/%s_%04d", outputDir.c_str(), fname.c_str(), idx_nm);
+   sprintf(name,"%s/%s_%04d", outputPath.c_str(), fname.c_str(), idx_nm);
    if((fp=fopen(name,"wb"))==NULL) {
       printf("Cannot open '%s' file for writing\n",name);
       exit(1);
@@ -157,7 +157,7 @@ void outprt(const std::string &fname, int idx_nm, const ArrayType &hot,
    char name[100];
    FILE *fp;
    int i,j;
-   sprintf(name,"%s/%s_%04d", outputDir.c_str(), fname.c_str(), idx_nm);
+   sprintf(name,"%s/%s_%04d", outputPath.c_str(), fname.c_str(), idx_nm);
    if((fp=fopen(name,"wt"))==NULL) {
       printf("Cannot open '%s' file for writing\n",name);
       exit(1);
@@ -207,7 +207,7 @@ void outprtBin(const std::string &fname, int idx_nm, const ArrayType &hot,
    int i,j;
    float one = 1;
    float zero = 0;
-   sprintf(name,"%s/%s_%04d", outputDir.c_str(), fname.c_str(), idx_nm);
+   sprintf(name,"%s/%s_%04d", outputPath.c_str(), fname.c_str(), idx_nm);
    if((fp=fopen(name,"wb"))==NULL) {
       printf("Cannot open '%s' file for writing\n",name);
       exit(1);

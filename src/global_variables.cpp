@@ -1,5 +1,8 @@
 #include "d_global_variables.h"
 
+#include <boost/filesystem.hpp>
+#include <string>
+
 float B0 = 10;
 
 int X_GRD = D_X_GRD;           // number of x grid points + 1
@@ -17,3 +20,6 @@ float SIGMA = static_cast<float>(D_SIGMA); // sigma for cold electrons
 float SIGMA1 = static_cast<float>(D_SIGMA1); // sigma for cold ions
 float SIGMA2 = static_cast<float>(D_SIGMA2); // sigma for hot ions
 float SIGMA3 = static_cast<float>(D_SIGMA3); // sigma for hot electrons
+
+std::string outputPath = "run_output";
+std::string errorLogName;

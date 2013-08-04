@@ -14,6 +14,7 @@
 //       regular position distribution,   mass ratio =400  bx=1.2
 //*******************************************************************
 #include <assert.h>
+#include <boost/filesystem.hpp>
 #include <fstream>
 #include <iostream>
 #include <math.h>
@@ -65,8 +66,11 @@ void printFreeMem()
 
 void executePic(int argc, char *argv[])
 {
+   CommandlineOptions &options(CommandlineOptions::getRef());
+   options.parseArguments(argc, argv);
+
    // Create output directory if necessary
-   createOutputDir("run_output");
+   createOutputDir(outputPath.c_str());
 
    // Clear the old error log
    FILE *errorLog = fopen(errorLogName.c_str(), "w");
@@ -74,8 +78,6 @@ void executePic(int argc, char *argv[])
 
    int lfint = 5; // number of info intervals between output files
 
-   CommandlineOptions &options(CommandlineOptions::getRef());
-   options.parseArguments(argc, argv);
    lfint = options.getLogInterval();
 
    // Init Device
@@ -529,7 +531,7 @@ void executePic(int argc, char *argv[])
    unsigned int timeMin = (unsigned int)(stopTime - startTime) / 60;
    unsigned int timeSec = (unsigned int)(stopTime - startTime) % 60;
 
-   std::string runStatisticsFn = outputDir + "/run_statistics.txt";
+   std::string runStatisticsFn = (boost::filesystem::path(outputPath) /= "run_statistics.txt").string();
    FILE *f = fopen(runStatisticsFn.c_str(), "w");
    fprintf(f, "nit %u reached at %u min %u sec\n", nit, timeMin, timeSec);
    fclose(f);
@@ -554,7 +556,9 @@ int main(int argc, char *argv[])
    catch(CudaRuntimeError e)
    {
       std::cout << e.what() << std::endl;
-      std::ofstream f("caught_exception.txt");
+      boost::filesystem::path fileName(outputPath);
+      fileName /= "caught_exception.txt";
+      std::ofstream f(fileName.c_str());
       f << e.what() << std::endl;
       f.close();
       ParticleAllocator::getRef().cleanup();

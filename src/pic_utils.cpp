@@ -82,7 +82,7 @@ void outinfo(const std::string &fname,int idx_nm,float time,int need,int niid)
 {
    char name[100];
    FILE *fp;
-   sprintf(name,"%s/%s",outputDir.c_str(), fname.c_str(), idx_nm);
+   sprintf(name,"%s/%s",outputPath.c_str(), fname.c_str(), idx_nm);
    if((fp=fopen(name,"a"))==NULL) {
       printf("Cannot open '%s' file for writing\n",name);
       exit(1);

@@ -54,6 +54,7 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
         "The directory the files to restart from are located in. (Ignored if restart-index not used)")
        ("bound-check", po::bool_switch(&m_particleBoundCheck)->default_value(false),
         "Debug option to ensure all particles remain in the grid.")
+        ("output-path,o", po::value<std::string>(&m_outputPath), "The folder to write results to")
    ;
    try
    {
@@ -101,6 +102,8 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
    SIGMA2 = getSigma2();
    SIGMA3 = getSigma3();
    B0 = getB0();
+   outputPath = m_outputPath;
+   errorLogName = (boost::filesystem::path(outputPath) /= "errorLog.txt").string();
 
    return returnVal;
 }

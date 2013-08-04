@@ -55,7 +55,7 @@ const int SQUARE_BLOCK_MAX_THREADS_PER_DIM =
   static_cast<int>(sqrt(static_cast<double>(MAX_THREADS_PER_BLOCK)));
 const int WARPSIZE = 32;
 
-const std::string outputDir = "run_output";
-const std::string errorLogName = outputDir + "/errorLog.txt";
+extern std::string outputPath;
+extern std::string errorLogName;
 
 #endif

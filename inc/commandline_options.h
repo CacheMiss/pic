@@ -34,6 +34,7 @@ class CommandlineOptions
    inline bool  getParticleBoundCheck() const;
    inline float getB0() const;
    inline unsigned int getInjectWidth() const;
+   inline std::string getOutputPath() const;
    void saveOptions(const char fileName[]) const;
 
    private:
@@ -56,6 +57,7 @@ class CommandlineOptions
    unsigned int m_restartPoint;
    std::string m_restartDir;
    bool m_particleBoundCheck;
+   std::string m_outputPath;
 };
 
 inline float CommandlineOptions::getMaxSimTime() const
@@ -126,6 +128,11 @@ inline float CommandlineOptions::getB0() const
 inline unsigned int CommandlineOptions::getInjectWidth() const
 {
    return m_injectWidth;
+}
+
+inline std::string CommandlineOptions::getOutputPath() const
+{
+   return m_outputPath;
 }
 
 #endif
