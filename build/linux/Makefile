@@ -37,7 +37,7 @@ LIB_PATHS=-L$(BOOSTDIR)/lib
 THIRD_PARTY_LIBS=-lboost_thread -lboost_system -lboost_filesystem -lboost_program_options -lcufft -lcurand
 #DEBUG_FLAGS=-g -D_DEBUG
 #CUDA_DEBUG_FLAGS=-G
-OPTIMIZATION=-O2
+OPTIMIZATION=-O2 -DNDEBUG
 PRE_PROCESSOR=
 COMMON_FLAGS=$(PRE_PROCESSOR) $(DEBUG_FLAGS) $(OPTIMIZATION)
 SUPPORTED_VIRTUAL_ARCH=-arch=compute_30 -code=compute_30,sm_30

@@ -636,7 +636,7 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
       printf("WARNING: No out of bounds particles were detected.\n");
       return;
    }
-   assert(numParticles > oobIdx[0] + 1);
+   assert(numParticles >= oobIdx[0]);
    DevMem<unsigned int, ParticleAllocator> dev_oobArry(oobIdx[0]);
 
    numThreads = dev.maxThreadsPerBlock / 4;
