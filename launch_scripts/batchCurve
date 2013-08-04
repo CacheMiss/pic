@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#SBATCH -p gpu
+#SBATCH -J pic_test
+#SBATCH -n 1 
+#SBATCH -t 24:00:00 
+#SBATCH --mail-user=stephen.sewell@gmail.com 
+#SBATCH -o /home1/02498/sewells/pic/std_out.txt 
+#SBATCH -e /home1/02498/sewells/pic/std_out.txt
+./curveHigh 
