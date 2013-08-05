@@ -5,6 +5,6 @@
 #SBATCH -n 1 
 #SBATCH -t 00:10:00 
 #SBATCH --mail-user=stephen.sewell@gmail.com 
-#SBATCH -o /home1/02498/sewells/pic/std_out.txt 
-#SBATCH -e /home1/02498/sewells/pic/std_out.txt
+#SBATCH -o ../std_out.txt 
+#SBATCH -e ../std_out.txt
 ./curveHigh 
