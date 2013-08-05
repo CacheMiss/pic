@@ -95,6 +95,7 @@ void createOutputDir(const char * dir)
 {
    if(!boost::filesystem::exists(dir))
    {
+      std::cout << "Creating " << dir << std::endl;
       boost::filesystem::create_directory(dir);
    }
 }

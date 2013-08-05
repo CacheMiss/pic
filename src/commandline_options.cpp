@@ -54,7 +54,7 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
         "The directory the files to restart from are located in. (Ignored if restart-index not used)")
        ("bound-check", po::bool_switch(&m_particleBoundCheck)->default_value(false),
         "Debug option to ensure all particles remain in the grid.")
-        ("output-path,o", po::value<std::string>(&m_outputPath), "The folder to write results to")
+        ("output-path,o", po::value<std::string>(&m_outputPath)->default_value("run_output"), "The folder to write results to")
    ;
    try
    {
