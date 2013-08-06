@@ -1,5 +1,5 @@
 
-function ret = plotPhiAll(fName, titleStr)
+function ret = plotPhiAll(fName, titleStr, sliceX, sliceY)
 
    f = fopen(fName, 'rb');
 
@@ -18,10 +18,9 @@ function ret = plotPhiAll(fName, titleStr)
    xValues = [0:numColumns-1];
    yValues = [0:numRows-1];
 
-   sliceSize = 4;
-   phi = phi(1:sliceSize:end, 1:sliceSize:end);
-   xValues = xValues(1:sliceSize:end);
-   yValues = yValues(1:sliceSize:end);
+   phi = phi(1:sliceY:end, 1:sliceX:end);
+   xValues = xValues(1:sliceX:end);
+   yValues = yValues(1:sliceY:end);
 
    figure;
    surf(xValues, yValues, phi);

@@ -21,7 +21,7 @@ function ret = plotPhi(fName, titleStr, column)
    title(strcat([titleStr ' x=' int2str(column)]));
    xlabel('y');
    ylabel('phi');
-   axis([0 max(yValues) 0 max(phi)])
+   axis([0 max(yValues) min(phi) max(phi)])
 
    fclose(f);
 
