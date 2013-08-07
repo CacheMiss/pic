@@ -4,5 +4,5 @@ module swap intel gcc/4.4.6
 
 cd ..
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$(pwd)/../boost/lib
-./bin/pic -x 256 -y 5116 -t 24000 -l 40 --inject-width 116
+./bin/pic -x 256 -y 5116 -t 24000 -l 40 --inject-width 64
 cd launch_scripts
