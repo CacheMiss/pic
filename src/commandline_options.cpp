@@ -42,10 +42,10 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
         "The number of info intervals between output files")
        ("x,x", po::value<int>(&m_nx1)->default_value(512), "Width of grid")
        ("y,y", po::value<int>(&m_ny1)->default_value(4096), "Height of grid")
-       ("sigma-he", po::value<float>(&m_sigma3)->default_value(1.0), "Sigma Hot Electrons")
-       ("sigma-ce", po::value<float>(&m_sigma)->default_value(10.0), "Sigma Cold Electrons")
-       ("sigma-hi", po::value<float>(&m_sigma2)->default_value((float)0.3), "Sigma Hot Ions")
-       ("sigma-ci", po::value<float>(&m_sigma1)->default_value(10.0), "Sigma Cold Ions")
+       ("sigma-he", po::value<float>(&m_sigmaHe)->default_value(1.0), "Sigma Hot Electrons")
+       ("sigma-ce", po::value<float>(&m_sigmaCe)->default_value(10.0), "Sigma Cold Electrons")
+       ("sigma-hi", po::value<float>(&m_sigmaHi)->default_value((float)0.3), "Sigma Hot Ions")
+       ("sigma-ci", po::value<float>(&m_sigmaCi)->default_value(10.0), "Sigma Cold Ions")
        ("b0", po::value<float>(&m_b0)->default_value(10), "B0")
        ("inject-width", po::value<unsigned int>(&m_injectWidth)->default_value(0), "The width of the injection area for cold particles")
        ("restart-index", po::value<unsigned int>(&m_restartPoint)->default_value(0), 
@@ -97,10 +97,10 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
    NY12 = NY1 / 2;
    NY = NY1 + 1;
    Y_GRD = NY + 1;
-   SIGMA = getSigma();
-   SIGMA1 = getSigma1();
-   SIGMA2 = getSigma2();
-   SIGMA3 = getSigma3();
+   SIGMA_HE = getSigmaHe();
+   SIGMA_HI = getSigmaHi();
+   SIGMA_CE = getSigmaCe();
+   SIGMA_CI = getSigmaCi();
    B0 = getB0();
    outputPath = m_outputPath;
    errorLogName = (boost::filesystem::path(outputPath) /= "errorLog.txt").string();

@@ -16,10 +16,10 @@ int NY = D_NY;
 int NY1 = D_NY1;
 int NY12 = D_NY12;
 
-float SIGMA = static_cast<float>(D_SIGMA); // sigma for cold electrons
-float SIGMA1 = static_cast<float>(D_SIGMA1); // sigma for cold ions
-float SIGMA2 = static_cast<float>(D_SIGMA2); // sigma for hot ions
-float SIGMA3 = static_cast<float>(D_SIGMA3); // sigma for hot electrons
+float SIGMA_CE = static_cast<float>(D_SIGMA_CE); // sigma for cold electrons
+float SIGMA_CI = static_cast<float>(D_SIGMA_CI); // sigma for cold ions
+float SIGMA_HI = static_cast<float>(D_SIGMA_HI); // sigma for hot ions
+float SIGMA_HE = static_cast<float>(D_SIGMA_HE); // sigma for hot electrons
 
 std::string outputPath = "run_output";
 std::string errorLogName;

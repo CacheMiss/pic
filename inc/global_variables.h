@@ -24,10 +24,10 @@ const float DELT = static_cast<float>(D_DELT);
 const float BXM = static_cast<float>(D_BXM);
 const float BYM = static_cast<float>(D_BYM);
 const float BZM = static_cast<float>(D_BZM);
-extern float SIGMA; // sigma for cold electrons
-extern float SIGMA1; // sigma for cold ions
-extern float SIGMA2; // sigma for hot ions
-extern float SIGMA3; // sigma for hot electrons
+extern float SIGMA_CE; // sigma for cold electrons
+extern float SIGMA_CI; // sigma for cold ions
+extern float SIGMA_HI; // sigma for hot ions
+extern float SIGMA_HE; // sigma for hot electrons
 
 const float TSTART = static_cast<float>(D_TSTART);
 //float TMAX = static_cast<float>(D_TMAX);

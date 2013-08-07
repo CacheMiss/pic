@@ -27,10 +27,10 @@ class CommandlineOptions
    inline int getNy1() const;
    inline unsigned int getRestartPoint() const;
    inline const std::string& getRestartDir() const;
-   inline float getSigma() const;
-   inline float getSigma1() const;
-   inline float getSigma2() const;
-   inline float getSigma3() const;
+   inline float getSigmaHe() const;
+   inline float getSigmaCe() const;
+   inline float getSigmaHi() const;
+   inline float getSigmaCi() const;
    inline bool  getParticleBoundCheck() const;
    inline float getB0() const;
    inline unsigned int getInjectWidth() const;
@@ -48,10 +48,10 @@ class CommandlineOptions
    int m_logInterval;
    int m_nx1;
    int m_ny1;
-   float m_sigma;
-   float m_sigma1;
-   float m_sigma2;
-   float m_sigma3;
+   float m_sigmaHe;
+   float m_sigmaHi;
+   float m_sigmaCe;
+   float m_sigmaCi;
    float m_b0;
    unsigned int m_injectWidth;
    unsigned int m_restartPoint;
@@ -90,24 +90,24 @@ inline const std::string& CommandlineOptions::getRestartDir() const
    return m_restartDir;
 }
 
-inline float CommandlineOptions::getSigma() const
+inline float CommandlineOptions::getSigmaHe() const
 {
-   return m_sigma;
+   return m_sigmaHe;
 }
 
-inline float CommandlineOptions::getSigma1() const
+inline float CommandlineOptions::getSigmaCe() const
 {
-   return m_sigma1;
+   return m_sigmaCe;
 }
 
-inline float CommandlineOptions::getSigma2() const
+inline float CommandlineOptions::getSigmaHi() const
 {
-   return m_sigma2;
+   return m_sigmaHi;
 }
 
-inline float CommandlineOptions::getSigma3() const
+inline float CommandlineOptions::getSigmaCi() const
 {
-   return m_sigma3;
+   return m_sigmaCi;
 }
 
 inline unsigned int CommandlineOptions::getRestartPoint() const
