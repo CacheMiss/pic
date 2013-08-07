@@ -628,122 +628,123 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    {
       printf("WARNING: %d of %d particles eliminated\n", oobIdx[0], numParticles);
       numParticles = 0;
-      return;
    }
    // There are no out of bounds particles
    else if(oobIdx[0] == 0)
    {
       printf("WARNING: No out of bounds particles were detected.\n");
-      return;
    }
-   assert(numParticles >= oobIdx[0]);
-   DevMem<unsigned int, ParticleAllocator> dev_oobArry(oobIdx[0]);
-
-   numThreads = dev.maxThreadsPerBlock / 4;
-   resizeDim3(blockSize, numThreads);
-   resizeDim3(numBlocks, calcNumBlocks(numThreads, numParticles));
-   sharedMemoryBytes = numThreads * sizeof(float2) + 
-      sizeof(unsigned int) * numThreads/dev.warpSize;
-   DevMem<unsigned int, ParticleAllocator> dev_moveCandidates(oobIdx[0]);
-   cudaStreamSynchronize(stream);
-   checkForCudaError("Before findOobParticles");
-   findOobParticles<<<numBlocks, blockSize, sharedMemoryBytes, stream>>>(
-      partLoc.getPtr(), 
-      numParticles, dev_oobIdx.getPtr(), dev_oobArry.getPtr(),
-      NX1, NY1, 
-      static_cast<unsigned int>(dev_oobArry.size()));
-   checkForCudaError("moveParticles");
-
-   // DEBUG
-   //{
-   //   LoggingThread &logger(LoggingThread::getRef());
-   //   cudaThreadSynchronize();
-   //   logger.pushLogItem(
-   //      new LogParticlesAscii(999, partLoc, partVel,
-   //      partLoc, partVel,
-   //      partLoc, partVel,
-   //      partLoc, partVel,
-   //      numParticles, numParticles,
-   //      numParticles, numParticles));
-   //   logger.flush();
-   //}
-   // END DEBUG
-
-   cudaStreamSynchronize(stream);
-   unsigned int alignedStart = ((numParticles - oobIdx[0]) / (16)) * 16;
-
-   numThreads = MAX_THREADS_PER_BLOCK / 4;
-   resizeDim3(blockSize, numThreads);
-   resizeDim3(numBlocks, calcNumBlocks(numThreads, 
-      numParticles-(alignedStart)));
-   sharedMemoryBytes = numThreads * sizeof(float2);
-   // If there are good particles in the top portion of the array,
-   // find them so they can be moved down
-   findGoodIndicies<<<numBlocks, blockSize, sharedMemoryBytes, stream>>>(
-      partLoc.getPtr(), numParticles,
-      dev_moveCandIdx.getPtr(), dev_moveCandidates.getPtr(),
-      alignedStart, oobIdx[0], NY1);
-   checkForCudaError("findGoodIndices");
-
-   cudaStreamSynchronize(stream);
-   checkForCudaError("Before sorting oobArry");
-   moveCandIdx = dev_moveCandIdx;
-   
-   if(moveCandIdx[0] > 0)
+   else
    {
-      //picSort(dev_oobArry, oobIdx[0]);
-      //picSort(dev_moveCandidates, moveCandIdx[0]);
+      assert(numParticles >= oobIdx[0]);
+      DevMem<unsigned int, ParticleAllocator> dev_oobArry(oobIdx[0]);
+
+      numThreads = dev.maxThreadsPerBlock / 4;
+      resizeDim3(blockSize, numThreads);
+      resizeDim3(numBlocks, calcNumBlocks(numThreads, numParticles));
+      sharedMemoryBytes = numThreads * sizeof(float2) + 
+         sizeof(unsigned int) * numThreads/dev.warpSize;
+      DevMem<unsigned int, ParticleAllocator> dev_moveCandidates(oobIdx[0]);
+      cudaStreamSynchronize(stream);
+      checkForCudaError("Before findOobParticles");
+      findOobParticles<<<numBlocks, blockSize, sharedMemoryBytes, stream>>>(
+         partLoc.getPtr(), 
+         numParticles, dev_oobIdx.getPtr(), dev_oobArry.getPtr(),
+         NX1, NY1, 
+         static_cast<unsigned int>(dev_oobArry.size()));
+      checkForCudaError("moveParticles");
+
+      // DEBUG
+      //{
+      //   LoggingThread &logger(LoggingThread::getRef());
+      //   cudaThreadSynchronize();
+      //   logger.pushLogItem(
+      //      new LogParticlesAscii(999, partLoc, partVel,
+      //      partLoc, partVel,
+      //      partLoc, partVel,
+      //      partLoc, partVel,
+      //      numParticles, numParticles,
+      //      numParticles, numParticles));
+      //   logger.flush();
+      //}
+      // END DEBUG
+
+      cudaStreamSynchronize(stream);
+      unsigned int alignedStart = ((numParticles - oobIdx[0]) / (16)) * 16;
 
       numThreads = MAX_THREADS_PER_BLOCK / 4;
       resizeDim3(blockSize, numThreads);
-      resizeDim3(numBlocks, calcNumBlocks(numThreads, moveCandIdx[0]));
-      cudaStreamSynchronize(stream);
-      checkForCudaError("Before killParticles");
-      killParticles<<<numBlocks, blockSize, 0, stream>>>(
-         partLoc.getPtr(), partVel.getPtr(),
-         dev_oobArry.getPtr(), dev_moveCandidates.getPtr(), moveCandIdx[0]);
-      checkForCudaError("killParticles");
-   }
+      resizeDim3(numBlocks, calcNumBlocks(numThreads, 
+         numParticles-(alignedStart)));
+      sharedMemoryBytes = numThreads * sizeof(float2);
+      // If there are good particles in the top portion of the array,
+      // find them so they can be moved down
+      findGoodIndicies<<<numBlocks, blockSize, sharedMemoryBytes, stream>>>(
+         partLoc.getPtr(), numParticles,
+         dev_moveCandIdx.getPtr(), dev_moveCandidates.getPtr(),
+         alignedStart, oobIdx[0], NY1);
+      checkForCudaError("findGoodIndices");
 
-   numParticles -= oobIdx[0];
+      cudaStreamSynchronize(stream);
+      checkForCudaError("Before sorting oobArry");
+      moveCandIdx = dev_moveCandIdx;
 
-   if(CommandlineOptions::getRef().getParticleBoundCheck())
-   {
-      DevMem<bool, DevMemReuse> dev_success;
-      dev_success.fill(true);
-      static HostMem<bool> success(1);
-      numThreads = 256;
-      numBlocks = (numParticles + numThreads - 1) / numThreads;
-      cudaStreamSynchronize(stream);
-      checkBoundaryConditions<<<numBlocks, numThreads, 0, stream>>>(
-         partLoc.getPtr(), 
-         numParticles, 
-         NY1, NX1, 
-         dev_success.getPtr());
-      cudaStreamSynchronize(stream);
-      success = dev_success;
-      if(!success[0])
+      if(moveCandIdx[0] > 0)
       {
-         std::cerr << "ERROR: The movep function failed to constrain "
-                   << "all particles to the grid!" << std::endl;
-      }
-      assert(success[0]);
-   }
+         //picSort(dev_oobArry, oobIdx[0]);
+         //picSort(dev_moveCandidates, moveCandIdx[0]);
 
-   // DEBUG
-   //{
-   //   LoggingThread &logger(LoggingThread::getRef());
-   //   cudaThreadSynchronize();
-   //   logger.pushLogItem(
-   //      new LogParticlesAscii(1000, partLoc, partVel,
-   //      partLoc, partVel,
-   //      partLoc, partVel,
-   //      partLoc, partVel,
-   //      numParticles, numParticles,
-   //      numParticles, numParticles));
-   //   logger.flush();
-   //}
-   // END DEBUG
+         numThreads = MAX_THREADS_PER_BLOCK / 4;
+         resizeDim3(blockSize, numThreads);
+         resizeDim3(numBlocks, calcNumBlocks(numThreads, moveCandIdx[0]));
+         cudaStreamSynchronize(stream);
+         checkForCudaError("Before killParticles");
+         killParticles<<<numBlocks, blockSize, 0, stream>>>(
+            partLoc.getPtr(), partVel.getPtr(),
+            dev_oobArry.getPtr(), dev_moveCandidates.getPtr(), moveCandIdx[0]);
+         checkForCudaError("killParticles");
+      }
+
+      numParticles -= oobIdx[0];
+
+      if(CommandlineOptions::getRef().getParticleBoundCheck())
+      {
+         DevMem<bool, DevMemReuse> dev_success;
+         dev_success.fill(true);
+         static HostMem<bool> success(1);
+         numThreads = 256;
+         numBlocks = (numParticles + numThreads - 1) / numThreads;
+         cudaStreamSynchronize(stream);
+         checkBoundaryConditions<<<numBlocks, numThreads, 0, stream>>>(
+            partLoc.getPtr(), 
+            numParticles, 
+            NY1, NX1, 
+            dev_success.getPtr());
+         cudaStreamSynchronize(stream);
+         success = dev_success;
+         if(!success[0])
+         {
+            std::cerr << "ERROR: The movep function failed to constrain "
+               << "all particles to the grid!" << std::endl;
+         }
+         assert(success[0]);
+      }
+
+      // DEBUG
+      //{
+      //   LoggingThread &logger(LoggingThread::getRef());
+      //   cudaThreadSynchronize();
+      //   logger.pushLogItem(
+      //      new LogParticlesAscii(1000, partLoc, partVel,
+      //      partLoc, partVel,
+      //      partLoc, partVel,
+      //      partLoc, partVel,
+      //      numParticles, numParticles,
+      //      numParticles, numParticles));
+      //   logger.flush();
+      //}
+      // END DEBUG
+   }
 
    first = false;
 }
