@@ -55,6 +55,8 @@
 #endif
 #endif
 
+//#define ENABLE_TIMERS
+
 void printFreeMem()
 {
    DeviceStats &device(DeviceStats::getRef());
@@ -89,11 +91,13 @@ void executePic(int argc, char *argv[])
    reuseAllocator.setSizeY(NY);
 
    PrecisionTimer iterationTimer;
-   //PrecisionTimer injectTimer;
-   //PrecisionTimer densTimer;
-   //PrecisionTimer potent2Timer;
-   //PrecisionTimer fieldTimer;
-   //PrecisionTimer movepTimer;
+#ifdef ENABLE_TIMERS
+   PrecisionTimer injectTimer;
+   PrecisionTimer densTimer;
+   PrecisionTimer potent2Timer;
+   PrecisionTimer fieldTimer;
+   PrecisionTimer movepTimer;
+#endif
    LoggingThread &logger(LoggingThread::getRef());
    
    time_t startTime = time(0);
@@ -310,7 +314,9 @@ void executePic(int argc, char *argv[])
 
       const unsigned injectWidth = options.getInjectWidth();
       const unsigned injectStartX = (NX1 / 2) - (injectWidth / 2);
-      //injectTimer.start();
+#ifdef ENABLE_TIMERS
+      injectTimer.start();
+#endif
       const int injectThreadsPerBlock = MAX_THREADS_PER_BLOCK;
       dim3 injectNumBlocks(static_cast<unsigned int>(calcNumBlocks(injectThreadsPerBlock, neededParticles)));
       dim3 injectBlockSize(injectThreadsPerBlock);
@@ -337,8 +343,10 @@ void executePic(int argc, char *argv[])
       simState.numEleCold += neededParticles;
       simState.numIonHot += neededParticles;
       simState.numIonCold += neededParticles;
-      //cudaThreadSynchronize();
-      //injectTimer.stop();
+#ifdef ENABLE_TIMERS
+      cudaThreadSynchronize();
+      injectTimer.stop();
+#endif
 
       // DEBUG
       //cudaThreadSynchronize();
@@ -355,15 +363,19 @@ void executePic(int argc, char *argv[])
 #ifdef DEBUG_TRACE
       std::cout << "Dens" << std::endl;
 #endif
-      //densTimer.start();
+#ifdef ENABLE_TIMERS
+      densTimer.start();
+#endif
       // determine the charge density at the grid points
       dens(dev_rho, dev_rhoe,dev_rhoi, 
            d_eleHotLoc, d_eleColdLoc,
            d_ionHotLoc, d_ionColdLoc,
            simState.numEleHot, simState.numEleCold, 
            simState.numIonHot, simState.numIonCold);
-      //cudaThreadSynchronize();
-      //densTimer.stop();
+#ifdef ENABLE_TIMERS
+      cudaThreadSynchronize();
+      densTimer.stop();
+#endif
 
       // Start DEBUG
       //cudaThreadSynchronize();
@@ -384,20 +396,28 @@ void executePic(int argc, char *argv[])
       //logger.flush();
       // End DEBUG
 
-      //potent2Timer.start();
+#ifdef ENABLE_TIMERS
+      potent2Timer.start();
+#endif
       // calculate potential at Grid points
       potent2(dev_phi, dev_rho);
-      //cudaThreadSynchronize();
-      //potent2Timer.stop();
+#ifdef ENABLE_TIMERS
+      cudaThreadSynchronize();
+      potent2Timer.stop();
+#endif
 
 #ifdef DEBUG_TRACE
       std::cout << "Field" << std::endl;
 #endif
-      //fieldTimer.start();
-      // calculate E field at Grid points
+#ifdef ENABLE_TIMERS
+      fieldTimer.start();
+#endif
+      //calculate E field at Grid points
       field(dev_ex,dev_ey,dev_phi);
-      //cudaThreadSynchronize();
-      //fieldTimer.stop();
+#ifdef ENABLE_TIMERS
+      cudaThreadSynchronize();
+      fieldTimer.stop();
+#endif
 
       // DEBUG
       // cudaThreadSynchronize();
@@ -411,7 +431,9 @@ void executePic(int argc, char *argv[])
       // logger.flush();
       // END DEBUG
 
-      //movepTimer.start();
+#ifdef ENABLE_TIMERS
+      movepTimer.start();
+#endif
       // move ions
       cudaStream_t movepStreams[4];
       for(int streamIdx = 0; streamIdx < 4; streamIdx++)
@@ -446,8 +468,10 @@ void executePic(int argc, char *argv[])
          cudaStreamDestroy(movepStreams[streamIdx]);
       }
 
-      //cudaThreadSynchronize();
-      //movepTimer.stop();
+#ifdef ENABLE_TIMERS
+      cudaThreadSynchronize();
+      movepTimer.stop();
+#endif
 
       // DEBUG
       //cudaThreadSynchronize();
