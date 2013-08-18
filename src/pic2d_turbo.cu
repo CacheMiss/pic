@@ -497,13 +497,16 @@ void executePic(int argc, char *argv[])
             simState.numEleHot, simState.numEleCold, 
             simState.numIonHot, simState.numIonCold, 
             (unsigned int) iterationTimer.intervalInMilliS(),
+#ifdef ENABLE_TIMERS
+            (unsigned int) injectTimer.intervalInMilliS(),
+            (unsigned int) densTimer.intervalInMilliS(),
+            (unsigned int) potent2Timer.intervalInMilliS(),
+            (unsigned int) fieldTimer.intervalInMilliS(),
+            (unsigned int) movepTimer.intervalInMilliS(),
+#else
             0, 0, 0, 0, 0,
+#endif
             options.getRestartPoint() > 0 ? true : false);
-            //(unsigned int) injectTimer.intervalInMilliS(),
-            //(unsigned int) densTimer.intervalInMilliS(),
-            //(unsigned int) potent2Timer.intervalInMilliS(),
-            //(unsigned int) fieldTimer.intervalInMilliS(),
-            //(unsigned int) movepTimer.intervalInMilliS());
          lfdint = lfdint + 1;
          if (lfdint >= lfint) 
          {
