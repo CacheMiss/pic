@@ -223,3 +223,4 @@ void HostMem<T>::clear()
 {
    m_size = 0;
 }
+

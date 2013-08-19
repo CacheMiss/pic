@@ -9,3 +9,4 @@ void field(PitchedPtr<float> &ex,
            const DevMemF &phi);
 
 #endif
+
