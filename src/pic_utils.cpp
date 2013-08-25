@@ -123,15 +123,15 @@ bool verifyParticle(const float part[], unsigned int nx1, unsigned int ny1)
    {
       ret = false;
    }
-   else if(abs(part[2]) > 1000)
+   else if(fabs(part[2]) > 1000)
    {
       ret = false;
    }
-   else if(abs(part[3]) > 1000)
+   else if(fabs(part[3]) > 1000)
    {
       ret = false;
    }
-   else if(abs(part[4]) > 1000)
+   else if(fabs(part[4]) > 1000)
    {
       ret = false;
    }

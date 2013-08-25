@@ -23,3 +23,4 @@ float SIGMA_HE = static_cast<float>(D_SIGMA_HE); // sigma for hot electrons
 
 std::string outputPath = "run_output";
 std::string errorLogName;
+

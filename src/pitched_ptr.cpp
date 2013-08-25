@@ -10,3 +10,4 @@ CudaPitchedAllocator& CudaPitchedAllocator::getRef()
    }
    return *m_ref;
 }
+
