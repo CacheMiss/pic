@@ -1239,15 +1239,24 @@ void dens(DevMemF &dev_rho,
 
    cudaThreadSynchronize();
    checkForCudaError("Before rhoi - rhoe");
+   //////////////////////////////////////////////////////
+   //
+   // On Linux systems this thrust call took 14 ms while
+   // the kernel call took less than one. I've left the
+   // thrust code here in case its ever any faster.
+   //
+   // Windows did not display these runtiem problems
+   //
+   /////////////////////////////////////////////////////
    // Set rho = rhoi - rhoe
-#ifndef NO_THRUST
-   thrust::transform(dev_rhoi.getThrustPtr(),
-      dev_rhoi.getThrustPtr() + dev_rhoi.size(),
-      dev_rhoe.getThrustPtr(), 
-      dev_rho.getThrustPtr(),
-      thrust::minus<float>());
-#else
+   //#ifndef NO_THRUST
+   //thrust::transform(dev_rhoi.getThrustPtr(),
+   //   dev_rhoi.getThrustPtr() + dev_rhoi.size(),
+   //   dev_rhoe.getThrustPtr(), 
+   //   dev_rho.getThrustPtr(),
+   //   thrust::minus<float>());
+   //#//else
    subVector(dev_rhoi.getPtr(), dev_rhoe.getPtr(), 
              dev_rho.getPtr(), dev_rhoi.size());
-#endif
+   //#endif
 }
