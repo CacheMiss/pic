@@ -1191,7 +1191,7 @@ void dens(DevMemF &dev_rho,
           int numHotElectrons, int numColdElectrons,
           int numHotIons, int numColdIons)
 {
-
+   static bool first = true;
    dim3 *numBlocks;
    dim3 *blockSize;
    int threadsInBlock;
@@ -1201,27 +1201,23 @@ void dens(DevMemF &dev_rho,
    dev_rhoe.zeroMem();
    dev_rhoi.zeroMem();
 
-   cudaStream_t stream[4];
-   for(int i = 0; i < 4; i++)
+   static cudaStream_t stream;
+   if(first)
    {
-      cudaStreamCreate(&stream[i]);
+      cudaStreamCreate(&stream);
    }
    // Calculate the rho from the hot electrons
    calcIntermediateRho(dev_rhoe, d_eleHotLoc, 
-      numHotElectrons, false, true, stream[0]);
+      numHotElectrons, false, true, stream);
    // Calculate the rho from the cold electrons
    calcIntermediateRho(dev_rhoe, d_eleColdLoc,
-      numColdElectrons, true, true, stream[1]);
+      numColdElectrons, true, true, stream);
    // Calculate the rho from the hot ions
    calcIntermediateRho(dev_rhoi, d_ionHotLoc,
-      numHotIons, false, false, stream[2]);
+      numHotIons, false, false, stream);
    // Calculate the rho from the cold ions
    calcIntermediateRho(dev_rhoi, d_ionColdLoc,
-      numColdIons, true, false, stream[3]);
-   for(int i = 0; i < 4; i++)
-   {
-      cudaStreamDestroy(stream[i]);
-   }
+      numColdIons, true, false, stream);
 
    // Double the rho at the top and bottom of the grid
    threadsInBlock = MAX_THREADS_PER_BLOCK;
@@ -1259,4 +1255,5 @@ void dens(DevMemF &dev_rho,
    subVector(dev_rhoi.getPtr(), dev_rhoe.getPtr(), 
              dev_rho.getPtr(), dev_rhoi.size());
    //#endif
+   first = false;
 }
