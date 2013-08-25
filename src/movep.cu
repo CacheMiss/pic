@@ -449,8 +449,7 @@ void countOobParticles(float2 position[],
 **************************************************************/
 void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
            unsigned int &numParticles, float mass,
-           const PitchedPtr<float> &ex, const PitchedPtr<float> &ey,
-           cudaStream_t &stream)
+           const PitchedPtr<float> &ex, const PitchedPtr<float> &ey)
 {
    static bool first = true;
 
@@ -467,8 +466,8 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    dev_oobIdx.zeroMem();
    DevMem<unsigned int, DevMemReuse> dev_moveCandIdx;
    dev_moveCandIdx.zeroMem();
-   HostMem<unsigned int> oobIdx(1);
-   HostMem<unsigned int> moveCandIdx(1);
+   static HostMem<unsigned int> oobIdx(1);
+   static HostMem<unsigned int> moveCandIdx(1);
 
    // DEBUG
    //{
@@ -519,7 +518,7 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
       resizeDim3(blockSize, 256);
       resizeDim3(numBlocks, calcNumBlocks(256, d_bxm.getX()),
          calcNumBlocks(1, d_bxm.getY()));
-      calcBxm<<<numBlocks, blockSize, 0, stream>>>(
+      calcBxm<<<numBlocks, blockSize>>>(
          d_bxm.getPtr(), 
          B0, 
          static_cast<float>(d_bxm.getX()), 
@@ -528,13 +527,13 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
 
       resizeDim3(blockSize, 256);
       resizeDim3(numBlocks, calcNumBlocks(256, d_bym.size()));
-      calcBym<<<numBlocks, blockSize, 0, stream>>>(
+      calcBym<<<numBlocks, blockSize>>>(
          d_bym.getPtr(), 
          B0, 
          static_cast<float>(d_bym.size()));
       checkForCudaError("calcBxm");
 
-      checkCuda(cudaStreamSynchronize(stream));
+      checkCuda(cudaDeviceSynchronize());
       checkCuda(cudaMemcpy2DToArray(cuArrayBxm,
          0,
          0,
@@ -604,9 +603,9 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    numThreads = dev.maxThreadsPerBlock / 2;
    resizeDim3(blockSize, numThreads);
    resizeDim3(numBlocks, calcNumBlocks(numThreads, numParticles));
-   cudaStreamSynchronize(stream);
+   checkCuda(cudaDeviceSynchronize());
    checkForCudaError("Before moveParticles");
-   moveParticles<<<numBlocks, blockSize, 0, stream>>>(
+   moveParticles<<<numBlocks, blockSize>>>(
       partLoc.getPtr(), partVel.getPtr(),
       numParticles, mass, NX1, NY1);
    checkForCudaError("moveParticles");
@@ -614,13 +613,13 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    numThreads = dev.maxThreadsPerBlock / 2;
    resizeDim3(blockSize, numThreads);
    resizeDim3(numBlocks, calcNumBlocks(numThreads, numParticles));
-   cudaStreamSynchronize(stream);
+   checkCuda(cudaDeviceSynchronize());
    checkForCudaError("Before countOobParticles");
-   countOobParticles<<<numBlocks, blockSize, 0, stream>>>(
+   countOobParticles<<<numBlocks, blockSize>>>(
       partLoc.getPtr(), dev_oobIdx.getPtr(), numParticles, NY1);
    checkForCudaError("countOobParticles");
 
-   checkCuda(cudaStreamSynchronize(stream));
+   checkCuda(cudaDeviceSynchronize());
    // Get the number of particles that are outside of the y bounds
    oobIdx = dev_oobIdx;
    dev_oobIdx.zeroMem();
@@ -645,9 +644,9 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
       sharedMemoryBytes = numThreads * sizeof(float2) + 
          sizeof(unsigned int) * numThreads/dev.warpSize;
       DevMem<unsigned int, ParticleAllocator> dev_moveCandidates(oobIdx[0]);
-      cudaStreamSynchronize(stream);
+      checkCuda(cudaDeviceSynchronize());
       checkForCudaError("Before findOobParticles");
-      findOobParticles<<<numBlocks, blockSize, sharedMemoryBytes, stream>>>(
+      findOobParticles<<<numBlocks, blockSize, sharedMemoryBytes>>>(
          partLoc.getPtr(), 
          numParticles, dev_oobIdx.getPtr(), dev_oobArry.getPtr(),
          NX1, NY1, 
@@ -669,7 +668,7 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
       //}
       // END DEBUG
 
-      cudaStreamSynchronize(stream);
+      checkCuda(cudaDeviceSynchronize());
       unsigned int alignedStart = ((numParticles - oobIdx[0]) / (16)) * 16;
 
       numThreads = MAX_THREADS_PER_BLOCK / 4;
@@ -679,13 +678,13 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
       sharedMemoryBytes = numThreads * sizeof(float2);
       // If there are good particles in the top portion of the array,
       // find them so they can be moved down
-      findGoodIndicies<<<numBlocks, blockSize, sharedMemoryBytes, stream>>>(
+      findGoodIndicies<<<numBlocks, blockSize, sharedMemoryBytes>>>(
          partLoc.getPtr(), numParticles,
          dev_moveCandIdx.getPtr(), dev_moveCandidates.getPtr(),
          alignedStart, oobIdx[0], NY1);
       checkForCudaError("findGoodIndices");
 
-      cudaStreamSynchronize(stream);
+      checkCuda(cudaDeviceSynchronize());
       checkForCudaError("Before sorting oobArry");
       moveCandIdx = dev_moveCandIdx;
 
@@ -697,9 +696,9 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
          numThreads = MAX_THREADS_PER_BLOCK / 4;
          resizeDim3(blockSize, numThreads);
          resizeDim3(numBlocks, calcNumBlocks(numThreads, moveCandIdx[0]));
-         cudaStreamSynchronize(stream);
+         checkCuda(cudaDeviceSynchronize());
          checkForCudaError("Before killParticles");
-         killParticles<<<numBlocks, blockSize, 0, stream>>>(
+         killParticles<<<numBlocks, blockSize>>>(
             partLoc.getPtr(), partVel.getPtr(),
             dev_oobArry.getPtr(), dev_moveCandidates.getPtr(), moveCandIdx[0]);
          checkForCudaError("killParticles");
@@ -714,13 +713,13 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
          static HostMem<bool> success(1);
          numThreads = 256;
          numBlocks = (numParticles + numThreads - 1) / numThreads;
-         cudaStreamSynchronize(stream);
-         checkBoundaryConditions<<<numBlocks, numThreads, 0, stream>>>(
+         checkCuda(cudaDeviceSynchronize());
+         checkBoundaryConditions<<<numBlocks, numThreads>>>(
             partLoc.getPtr(), 
             numParticles, 
             NY1, NX1, 
             dev_success.getPtr());
-         cudaStreamSynchronize(stream);
+         checkCuda(cudaDeviceSynchronize());
          success = dev_success;
          if(!success[0])
          {

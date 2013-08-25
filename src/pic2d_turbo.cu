@@ -55,7 +55,7 @@
 #endif
 #endif
 
-//#define ENABLE_TIMERS
+#define ENABLE_TIMERS
 
 void printFreeMem()
 {
@@ -321,7 +321,7 @@ void executePic(int argc, char *argv[])
       dim3 injectNumBlocks(static_cast<unsigned int>(calcNumBlocks(injectThreadsPerBlock, neededParticles)));
       dim3 injectBlockSize(injectThreadsPerBlock);
       sharedMemoryBytes = sizeof(float) * 5 * injectThreadsPerBlock;
-      cudaThreadSynchronize();
+      cudaDeviceSynchronize();
       checkForCudaError("RandomGPU");
       // randomly inject new particles in top and bottom 
       inject<<<injectNumBlocks, injectBlockSize, sharedMemoryBytes>>>(
@@ -344,12 +344,12 @@ void executePic(int argc, char *argv[])
       simState.numIonHot += neededParticles;
       simState.numIonCold += neededParticles;
 #ifdef ENABLE_TIMERS
-      cudaThreadSynchronize();
+      cudaDeviceSynchronize();
       injectTimer.stop();
 #endif
 
       // DEBUG
-      //cudaThreadSynchronize();
+      //cudaDeviceSynchronize();
       //logger.pushLogItem(
       //   new LogParticlesAscii(ind, d_eleHotLoc, d_eleHotVel,
       //   d_eleColdLoc, d_eleColdVel,
@@ -373,12 +373,12 @@ void executePic(int argc, char *argv[])
            simState.numEleHot, simState.numEleCold, 
            simState.numIonHot, simState.numIonCold);
 #ifdef ENABLE_TIMERS
-      cudaThreadSynchronize();
+      cudaDeviceSynchronize();
       densTimer.stop();
 #endif
 
       // Start DEBUG
-      //cudaThreadSynchronize();
+      //cudaDeviceSynchronize();
       //Array2dF *rho = new Array2dF(NY, NX1);
       //Array2dF *rhoe = new Array2dF(NY, NX1);
       //Array2dF *rhoi = new Array2dF(NY, NX1);
@@ -402,7 +402,7 @@ void executePic(int argc, char *argv[])
       // calculate potential at Grid points
       potent2(dev_phi, dev_rho);
 #ifdef ENABLE_TIMERS
-      cudaThreadSynchronize();
+      cudaDeviceSynchronize();
       potent2Timer.stop();
 #endif
 
@@ -415,12 +415,12 @@ void executePic(int argc, char *argv[])
       //calculate E field at Grid points
       field(dev_ex,dev_ey,dev_phi);
 #ifdef ENABLE_TIMERS
-      cudaThreadSynchronize();
+      cudaDeviceSynchronize();
       fieldTimer.stop();
 #endif
 
       // DEBUG
-      // cudaThreadSynchronize();
+      // cudaDeviceSynchronize();
       // logger.pushLogItem(
       //    new LogParticlesAscii(ind, d_eleHotLoc, d_eleHotVel,
       //    d_eleColdLoc, d_eleColdVel,
@@ -434,47 +434,38 @@ void executePic(int argc, char *argv[])
 #ifdef ENABLE_TIMERS
       movepTimer.start();
 #endif
+      checkCuda(cudaDeviceSynchronize());
       // move ions
-      cudaStream_t movepStreams[4];
-      for(int streamIdx = 0; streamIdx < 4; streamIdx++)
-      {
-         cudaStreamCreate(&movepStreams[streamIdx]);
-      }
-      cudaThreadSynchronize();
 #ifdef DEBUG_TRACE
       std::cout << "MoveHi" << std::endl;
 #endif
       movep(d_ionHotLoc, d_ionHotVel, simState.numIonHot, 
-         RATO, dev_ex, dev_ey, movepStreams[0]);
+         RATO, dev_ex, dev_ey);
 #ifdef DEBUG_TRACE
       std::cout << "MoveCi" << std::endl;
 #endif
       movep(d_ionColdLoc, d_ionColdVel, simState.numIonCold, 
-         RATO, dev_ex, dev_ey, movepStreams[1]);
+         RATO, dev_ex, dev_ey);
 
       // move electrons
 #ifdef DEBUG_TRACE
       std::cout << "MoveHe" << std::endl;
 #endif
       movep(d_eleHotLoc, d_eleHotVel, simState.numEleHot, 
-         (float) -1.0, dev_ex, dev_ey, movepStreams[2]);
+         (float) -1.0, dev_ex, dev_ey);
 #ifdef DEBUG_TRACE
       std::cout << "MoveCe" << std::endl;
 #endif
       movep(d_eleColdLoc, d_eleColdVel, simState.numEleCold, 
-         (float) -1.0, dev_ex, dev_ey, movepStreams[3]);
-      for(int streamIdx = 0; streamIdx < 4; streamIdx++)
-      {
-         cudaStreamDestroy(movepStreams[streamIdx]);
-      }
+         (float) -1.0, dev_ex, dev_ey);
 
 #ifdef ENABLE_TIMERS
-      cudaThreadSynchronize();
+      cudaDeviceSynchronize();
       movepTimer.stop();
 #endif
 
       // DEBUG
-      //cudaThreadSynchronize();
+      //cudaDeviceSynchronize();
       //logger.pushLogItem(
       //   new LogParticlesAscii(ind, d_eleHotLoc, d_eleHotVel,
       //   d_eleColdLoc, d_eleColdVel,
@@ -489,7 +480,7 @@ void executePic(int argc, char *argv[])
 
       if (lfd >= LF) 
       {
-         cudaThreadSynchronize();
+         cudaDeviceSynchronize();
          logger.logInfo(ind, simState.simTime, 
             simState.numEleHot + simState.numEleCold,
             simState.numIonHot + simState.numIonCold);
