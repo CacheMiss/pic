@@ -24,6 +24,7 @@ void loadPrevSimState(unsigned int loadIndex, const std::string &loadDir,
                       DevMem<float2> &dev_ionColdLoc, DevMem<float3> &dev_ionColdVel,
                       unsigned int &numEleHot, unsigned int &numEleCold,
                       unsigned int &numIonHot, unsigned int &numIonCold);
+void getLastLine(const std::string fileName, std::string &lastLine);
 
 inline std::size_t calcNumBlocks(const std::size_t numThreads, 
                                   const std::size_t numElements)

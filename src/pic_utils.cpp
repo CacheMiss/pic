@@ -292,3 +292,46 @@ void loadPrevSimState(unsigned int loadIndex, const std::string &loadDir,
    dev_ionColdLoc.copyArrayToDev(h_ionColdLoc);
    dev_ionColdVel.copyArrayToDev(h_ionColdVel);
 }
+
+void getLastLine(const std::string fileName, std::string &lastLine)
+{
+   char lastChar = 0;
+   std::ifstream f(fileName.c_str());
+   f.seekg(std::ios_base::beg);
+   // Seek for the last character
+   f.seekg(-1, std::ios_base::end);
+
+   // Make sure lastLine is empty
+   lastLine.clear();
+
+   // Loop until I'm done with the file or I've read the last non-emtpy line
+   while(f && lastLine == "")
+   {
+      // Check to see if I've found the start of a line
+      lastChar = static_cast<char>(f.peek());
+      if('\n' == lastChar || f.tellg() == static_cast<std::ifstream::streampos>(0))
+      {
+         std::istream::streampos pos = f.tellg();
+         // If I'm back at the beginning of the file, lastChar won't be newline
+         // In those cases, I don't want to skip the first character
+         if('\n' == lastChar)
+         {
+            f.seekg(1, std::ios_base::cur);
+         }
+
+         std::getline(f, lastLine);
+         // Was the line I just read empty?
+         if(lastLine == "")
+         {
+            // Clear the EOF bit if its been set
+            f.clear();
+            // Reset the file cursor to its position before the getline
+            f.seekg(pos);
+         }
+      }
+      // I haven't found the start of a non-emtpy line yet.
+      // Read one more character back.
+      f.seekg(-1, std::ios_base::cur);
+   }
+}
+
