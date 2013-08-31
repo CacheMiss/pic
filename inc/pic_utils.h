@@ -3,6 +3,7 @@
 
 #include <assert.h>
 #include <driver_functions.h>
+#include <fstream>
 #include <string>
 
 #include "array2d.h"
@@ -25,6 +26,7 @@ void loadPrevSimState(unsigned int loadIndex, const std::string &loadDir,
                       unsigned int &numEleHot, unsigned int &numEleCold,
                       unsigned int &numIonHot, unsigned int &numIonCold);
 void getLastLine(const std::string fileName, std::string &lastLine);
+std::string getPrevLine(std::ifstream &f);
 
 inline std::size_t calcNumBlocks(const std::size_t numThreads, 
                                   const std::size_t numElements)
