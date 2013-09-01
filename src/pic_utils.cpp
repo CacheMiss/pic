@@ -184,7 +184,7 @@ void loadPrevSimState(const std::string &loadDir,
    char ionName[strSize];
 
    // Generate file names
-   snprintf(infoName, strSize, "info");
+   sprintf(infoName, "info");
    boost::filesystem::path infoPath(loadDir + "/" + infoName);
    boost::filesystem::path elePath;
    boost::filesystem::path ionPath;
@@ -196,22 +196,23 @@ void loadPrevSimState(const std::string &loadDir,
    }
 
    // Now I need to find the right files to load
-   std::ifstream infoF(infoPath.string().c_str());
+   std::ifstream infoF(infoPath.string().c_str(), std::ios::binary);
    infoF.seekg(-1, std::ios_base::end);
    std::stringstream infoLine;
    bool foundFiles = false;
    unsigned int numEle;
    unsigned int numIon;
+   unsigned int index;
 
    infoLine << getPrevLine(infoF);
    while(!foundFiles && infoLine.str() != "")
    {
-      unsigned int index;
       infoLine >> simState.iterationNum >> simState.simTime >> numEle >> numIon;
-      snprintf(eleName, strSize, "ele_%04d", index);
-      snprintf(ionName, strSize, "ion_%04d", index);
-      elePath = boost::filesystem::path(loadDir + "/" + eleName);
-      ionPath = boost::filesystem::path(loadDir + "/" + ionName);
+      index = simState.iterationNum;
+      sprintf(eleName, "ele_%04d", index);
+      sprintf(ionName, "ion_%04d", index);
+      elePath = boost::filesystem::path(loadDir) / eleName;
+      ionPath = boost::filesystem::path(loadDir) / ionName;
 
       if(boost::filesystem::exists(elePath) &&
          boost::filesystem::exists(ionPath))
@@ -318,8 +319,8 @@ void getLastLine(const std::string fileName, std::string &lastLine)
 {
    char lastChar = 0;
    std::ifstream f(fileName.c_str());
-   // Seek for the last character
-   f.seekg(-1, std::ios_base::end);
+   // Seek for the last character; for some reason -1 is always a newline
+   f.seekg(-2, std::ios_base::end);
 
    lastLine = getPrevLine(f);
 
