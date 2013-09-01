@@ -122,6 +122,22 @@ LogParticlesBinary::LogParticlesBinary(const int i,
    }
 }
 
+// The file format here is as follows
+// 4 byte int - Total number of particles
+// 4 byte int - Number of hot particles
+// 4 byte int - Number of cold particles
+// The following sections repeat until all hot particles are written
+// 4 byte float - posX
+// 4 byte float - posY
+// 4 byte float - velX
+// 4 byte float - velY
+// 4 byte float - velZ
+// The following sections repeat until all cold particles are written
+// 4 byte float - posX
+// 4 byte float - posY
+// 4 byte float - velX
+// 4 byte float - velY
+// 4 byte float - velZ
 void LogParticlesBinary::logParticles(const char *fileName, 
                                       const float2 hotLoc[], const float3 hotVel[],
                                       const float2 coldLoc[], const float3 coldVel[],
