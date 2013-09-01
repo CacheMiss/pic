@@ -164,7 +164,7 @@ bool verifyParticle(const float part[], unsigned int nx1, unsigned int ny1)
    return ret;
 }
 
-void loadPrevSimState(unsigned int loadIndex, const std::string &loadDir,
+void loadPrevSimState(const std::string &loadDir,
                       DevMem<float2> &dev_eleHotLoc, DevMem<float3> &dev_eleHotVel, 
                       DevMem<float2> &dev_eleColdLoc, DevMem<float3> &dev_eleColdVel,
                       DevMem<float2> &dev_ionHotLoc, DevMem<float3> &dev_ionHotVel, 
@@ -172,49 +172,70 @@ void loadPrevSimState(unsigned int loadIndex, const std::string &loadDir,
                       unsigned int &numEleHot, unsigned int &numEleCold,
                       unsigned int &numIonHot, unsigned int &numIonCold)
 {
-   assert(loadIndex < 10000);
    const unsigned int FPPF = 6; // Floats Per Particle File
    const unsigned int FPPM = 5; // Floats Per Particle Memory
 
    SimulationState &simState(SimulationState::getRef());
    CommandlineOptions &options(CommandlineOptions::getRef());
 
-   char infoName[40];
-   char eleName[40];
-   char ionName[40];
+   const std::size_t strSize = 40;
+   char infoName[strSize];
+   char eleName[strSize];
+   char ionName[strSize];
 
    // Generate file names
-   sprintf(infoName, "info_%04d", loadIndex);
-   sprintf(eleName, "ele__%04d", loadIndex);
-   sprintf(ionName, "ion__%04d", loadIndex);
+   snprintf(infoName, strSize, "info");
    boost::filesystem::path infoPath(loadDir + "/" + infoName);
-   boost::filesystem::path elePath(loadDir + "/" + eleName);
-   boost::filesystem::path ionPath(loadDir + "/" + ionName);
+   boost::filesystem::path elePath;
+   boost::filesystem::path ionPath;
 
    if(!boost::filesystem::exists(infoPath))
    {
       std::cerr << "ERROR: " << infoPath.string() << " does not exist!" << std::endl;
       exit(1);
    }
-   if(!boost::filesystem::exists(elePath))
+
+   // Now I need to find the right files to load
+   std::ifstream infoF(infoPath.string().c_str());
+   infoF.seekg(-1, std::ios_base::end);
+   std::stringstream infoLine;
+   bool foundFiles = false;
+   unsigned int numEle;
+   unsigned int numIon;
+
+   infoLine << getPrevLine(infoF);
+   while(!foundFiles && infoLine.str() != "")
    {
-      std::cerr << "ERROR: " << elePath.string() << " does not exist!" << std::endl;
-      exit(1);
+      unsigned int index;
+      infoLine >> simState.iterationNum >> simState.simTime >> numEle >> numIon;
+      snprintf(eleName, strSize, "ele_%04d", index);
+      snprintf(ionName, strSize, "ion_%04d", index);
+      elePath = boost::filesystem::path(loadDir + "/" + eleName);
+      ionPath = boost::filesystem::path(loadDir + "/" + ionName);
+
+      if(boost::filesystem::exists(elePath) &&
+         boost::filesystem::exists(ionPath))
+      {
+         foundFiles = true;
+      }
+      infoLine.clear();
+      infoLine << getPrevLine(infoF);
    }
-   if(!boost::filesystem::exists(ionPath))
+
+   if(infoLine.str() == "")
    {
-      std::cerr << "ERROR: " << ionPath.string() << " does not exist!" << std::endl;
+      std::cerr << "ERROR: " << infoPath.string() 
+         << " is either empty or does not reference any ele or ion files that exist." << std::endl;
       exit(1);
    }
 
-   unsigned int numEle;
-   unsigned int numIon;
+   std::cout << "Restating run from index " << index << std::endl;
+
    float hot;
    std::ifstream infoFile(infoPath.string().c_str());
    FILE *eleFile;
    FILE *ionFile;
 
-   infoFile >> simState.iterationNum >> simState.simTime >> numEle >> numIon;
    infoFile.close();
    simState.iterationNum *= D_LF;
 
@@ -297,7 +318,6 @@ void getLastLine(const std::string fileName, std::string &lastLine)
 {
    char lastChar = 0;
    std::ifstream f(fileName.c_str());
-   f.seekg(std::ios_base::beg);
    // Seek for the last character
    f.seekg(-1, std::ios_base::end);
 

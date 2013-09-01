@@ -25,7 +25,6 @@ class CommandlineOptions
    inline int getLogInterval() const;
    inline int getNx1() const;
    inline int getNy1() const;
-   inline unsigned int getRestartPoint() const;
    inline const std::string& getRestartDir() const;
    inline float getSigmaHe() const;
    inline float getSigmaCe() const;
@@ -54,7 +53,6 @@ class CommandlineOptions
    float m_sigmaCi;
    float m_b0;
    unsigned int m_injectWidth;
-   unsigned int m_restartPoint;
    std::string m_restartDir;
    bool m_particleBoundCheck;
    std::string m_outputPath;
@@ -108,11 +106,6 @@ inline float CommandlineOptions::getSigmaHi() const
 inline float CommandlineOptions::getSigmaCi() const
 {
    return m_sigmaCi;
-}
-
-inline unsigned int CommandlineOptions::getRestartPoint() const
-{
-   return m_restartPoint;
 }
 
 inline bool CommandlineOptions::getParticleBoundCheck() const

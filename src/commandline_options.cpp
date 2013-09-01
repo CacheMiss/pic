@@ -48,10 +48,8 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
        ("sigma-ci", po::value<float>(&m_sigmaCi)->default_value(10.0), "Sigma Cold Ions")
        ("b0", po::value<float>(&m_b0)->default_value(10), "B0")
        ("inject-width", po::value<unsigned int>(&m_injectWidth)->default_value(0), "The width of the injection area for cold particles")
-       ("restart-index", po::value<unsigned int>(&m_restartPoint)->default_value(0), 
-        "File index number for restart point")
-       ("restart-dir", po::value<std::string>(&m_restartDir)->default_value("."),
-        "The directory the files to restart from are located in. (Ignored if restart-index not used)")
+       ("restart-dir", po::value<std::string>(&m_restartDir)->default_value(""),
+        "The directory the files to restart from are located in.")
        ("bound-check", po::bool_switch(&m_particleBoundCheck)->default_value(false),
         "Debug option to ensure all particles remain in the grid.")
         ("output-path,o", po::value<std::string>(&m_outputPath)->default_value("run_output"), "The folder to write results to")

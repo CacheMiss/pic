@@ -169,12 +169,12 @@ void executePic(int argc, char *argv[])
    ind=0;
    lfdint=0;
 
-   if(options.getRestartPoint() > 0)
+   if(options.getRestartDir() != "")
    {
 #ifdef DEBUG_TRACE
       std::cout << "Loading previous run data..." << std::endl;
 #endif
-      loadPrevSimState(options.getRestartPoint(), options.getRestartDir(),
+      loadPrevSimState(options.getRestartDir(),
          d_eleHotLoc, d_eleHotVel, d_eleColdLoc, d_eleColdVel,
          d_ionHotLoc, d_ionHotVel, d_ionColdLoc, d_ionColdVel,
          simState.numEleHot, simState.numEleCold,
@@ -497,7 +497,7 @@ void executePic(int argc, char *argv[])
 #else
             0, 0, 0, 0, 0,
 #endif
-            options.getRestartPoint() > 0 ? true : false);
+            options.getRestartDir() != "" ? true : false);
          lfdint = lfdint + 1;
          if (lfdint >= lfint) 
          {

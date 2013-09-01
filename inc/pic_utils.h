@@ -18,7 +18,7 @@ void outinfo(const std::string &fname,int idx_nm,float time,int need,int niid);
 void createOutputDir(const char *);
 bool fileExists(const std::string &fileName);
 void resizeDim3(dim3 &rhs, std::size_t x, std::size_t y=1, std::size_t z=1);
-void loadPrevSimState(unsigned int loadIndex, const std::string &loadDir,
+void loadPrevSimState(const std::string &loadDir,
                       DevMem<float2> &dev_eleHotLoc, DevMem<float3> &dev_eleHotVel, 
                       DevMem<float2> &dev_eleColdLoc, DevMem<float3> &dev_eleColdVel,
                       DevMem<float2> &dev_ionHotLoc, DevMem<float3> &dev_ionHotVel, 
