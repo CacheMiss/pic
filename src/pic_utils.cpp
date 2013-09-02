@@ -232,10 +232,7 @@ void loadPrevSimState(const std::string &loadDir,
 
    std::cout << "Restating run from index " << index << std::endl;
 
-   float hot;
    std::ifstream infoFile(infoPath.string().c_str());
-   FILE *eleFile;
-   FILE *ionFile;
 
    infoFile.close();
    simState.iterationNum *= D_LF;
@@ -254,56 +251,37 @@ void loadPrevSimState(const std::string &loadDir,
    numIonHot = 0;
    numIonCold = 0;
 
-   float2 tmpLoc;
-   float3 tmpVel;
-
-   eleFile = fopen(elePath.string().c_str(), "rb");
-   fread(&numEle, sizeof(unsigned int), 1, eleFile);
-   for(unsigned int i = 0; i < numEle; i++)
+   std::ifstream eleFile(elePath.string().c_str(), std::ios::binary);
+   eleFile.read(reinterpret_cast<char*>(&numEle), sizeof(unsigned int));
+   eleFile.read(reinterpret_cast<char*>(&numEleHot), sizeof(unsigned int));
+   eleFile.read(reinterpret_cast<char*>(&numEleCold), sizeof(unsigned int));
+   for(unsigned int i = 0; i < numEleHot; i++)
    {
-      fread(&tmpLoc, sizeof(float2), 1, eleFile);
-      fread(&tmpVel, sizeof(float3), 1, eleFile);
-      fread(&hot, sizeof(float), 1, eleFile);
-      if(hot > 0)
-      {
-         assert(numEleHot < h_eleHotLoc.size());
-         h_eleHotLoc[numEleHot] = tmpLoc;
-         h_eleHotVel[numEleHot] = tmpVel;
-         numEleHot++;
-      }
-      else
-      {
-         assert(numEleCold < h_eleColdLoc.size());
-         h_eleColdLoc[numEleCold] = tmpLoc;
-         h_eleColdVel[numEleCold] = tmpVel;
-         numEleCold++;
-      }
+      eleFile.read(reinterpret_cast<char*>(&h_eleHotLoc[i]), sizeof(float2));
+      eleFile.read(reinterpret_cast<char*>(&h_eleHotVel[i]), sizeof(float3));
    }
-   fclose(eleFile);
-
-   ionFile = fopen(ionPath.string().c_str(), "rb");
-   fread(&numIon, sizeof(unsigned int), 1, ionFile);
-   for(unsigned int i = 0; i < numIon; i++)
+   for(unsigned int i = 0; i < numEleCold; i++)
    {
-      fread(&tmpLoc, sizeof(float2), 1, ionFile);
-      fread(&tmpVel, sizeof(float3), 1, ionFile);
-      fread(&hot, sizeof(float), 1, ionFile);
-      if(hot > 0)
-      {
-         assert(numIonHot < h_ionHotLoc.size());
-         h_ionHotLoc[numIonHot] = tmpLoc;
-         h_ionHotVel[numIonHot] = tmpVel;
-         numIonHot++;
-      }
-      else
-      {
-         assert(numIonCold < h_ionColdLoc.size());
-         h_ionColdLoc[numIonCold] = tmpLoc;
-         h_ionColdVel[numIonCold] = tmpVel;
-         numIonCold++;
-      }
+      eleFile.read(reinterpret_cast<char*>(&h_eleColdLoc[i]), sizeof(float2));
+      eleFile.read(reinterpret_cast<char*>(&h_eleColdVel[i]), sizeof(float3));
    }
-   fclose(ionFile);
+   eleFile.close();
+
+   std::ifstream ionFile(ionPath.string().c_str(), std::ios::binary);
+   eleFile.read(reinterpret_cast<char*>(&numIon), sizeof(unsigned int));
+   eleFile.read(reinterpret_cast<char*>(&numIonHot), sizeof(unsigned int));
+   eleFile.read(reinterpret_cast<char*>(&numIonCold), sizeof(unsigned int));
+   for(unsigned int i = 0; i < numIonHot; i++)
+   {
+      eleFile.read(reinterpret_cast<char*>(&h_ionHotLoc[i]), sizeof(float2));
+      eleFile.read(reinterpret_cast<char*>(&h_ionHotVel[i]), sizeof(float3));
+   }
+   for(unsigned int i = 0; i < numIonCold; i++)
+   {
+      eleFile.read(reinterpret_cast<char*>(&h_ionColdLoc[i]), sizeof(float2));
+      eleFile.read(reinterpret_cast<char*>(&h_ionColdVel[i]), sizeof(float3));
+   }
+   ionFile.close();
 
    dev_eleHotLoc.copyArrayToDev(h_eleHotLoc);
    dev_eleHotVel.copyArrayToDev(h_eleHotVel);
