@@ -268,18 +268,18 @@ void loadPrevSimState(const std::string &loadDir,
    eleFile.close();
 
    std::ifstream ionFile(ionPath.string().c_str(), std::ios::binary);
-   eleFile.read(reinterpret_cast<char*>(&numIon), sizeof(unsigned int));
-   eleFile.read(reinterpret_cast<char*>(&numIonHot), sizeof(unsigned int));
-   eleFile.read(reinterpret_cast<char*>(&numIonCold), sizeof(unsigned int));
+   ionFile.read(reinterpret_cast<char*>(&numIon), sizeof(unsigned int));
+   ionFile.read(reinterpret_cast<char*>(&numIonHot), sizeof(unsigned int));
+   ionFile.read(reinterpret_cast<char*>(&numIonCold), sizeof(unsigned int));
    for(unsigned int i = 0; i < numIonHot; i++)
    {
-      eleFile.read(reinterpret_cast<char*>(&h_ionHotLoc[i]), sizeof(float2));
-      eleFile.read(reinterpret_cast<char*>(&h_ionHotVel[i]), sizeof(float3));
+      ionFile.read(reinterpret_cast<char*>(&h_ionHotLoc[i]), sizeof(float2));
+      ionFile.read(reinterpret_cast<char*>(&h_ionHotVel[i]), sizeof(float3));
    }
    for(unsigned int i = 0; i < numIonCold; i++)
    {
-      eleFile.read(reinterpret_cast<char*>(&h_ionColdLoc[i]), sizeof(float2));
-      eleFile.read(reinterpret_cast<char*>(&h_ionColdVel[i]), sizeof(float3));
+      ionFile.read(reinterpret_cast<char*>(&h_ionColdLoc[i]), sizeof(float2));
+      ionFile.read(reinterpret_cast<char*>(&h_ionColdVel[i]), sizeof(float3));
    }
    ionFile.close();
 
