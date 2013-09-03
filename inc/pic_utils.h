@@ -14,7 +14,12 @@ void checkForCudaError(const char *errorMsg);
 void checkForCudaErrorSync(const char *errorMsg);
 void checkForCudaError(const char *errorMsg, cudaError_t error);
 void errExit(const char *errorString);
-void outinfo(const std::string &fname,int idx_nm,float time,int need,int niid);
+void outinfo(const std::string &fname,
+             int idx_nm,
+             float time,
+             int need,
+             int niid, 
+             bool first);
 void createOutputDir(const char *);
 bool fileExists(const std::string &fileName);
 void resizeDim3(dim3 &rhs, std::size_t x, std::size_t y=1, std::size_t z=1);

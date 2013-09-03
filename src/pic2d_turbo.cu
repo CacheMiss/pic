@@ -483,7 +483,8 @@ void executePic(int argc, char *argv[])
          cudaDeviceSynchronize();
          logger.logInfo(ind, simState.simTime, 
             simState.numEleHot + simState.numEleCold,
-            simState.numIonHot + simState.numIonCold);
+            simState.numIonHot + simState.numIonCold,
+            options.getRestartDir() != "" ? true : false);
          logger.logForPerformance(ind, simState.simTime, 
             simState.numEleHot, simState.numEleCold, 
             simState.numIonHot, simState.numIonCold, 

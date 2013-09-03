@@ -32,7 +32,8 @@ class LoggingThread
            const Array2dF *rhoe, const Array2dF *rhoi);
    void logPhiBinary(const int index, const Array2dF *phi);
    void logInfo(unsigned int idx, float sTime, 
-           unsigned int nmElectrons, unsigned int nmIons);
+           unsigned int nmElectrons, unsigned int nmIons,
+           bool resumeRun);
    void logForPerformance(unsigned int iter, float sTime,
            unsigned int nEleHot, unsigned int nEleCold,
            unsigned int nIonHot, unsigned int nIonCold,

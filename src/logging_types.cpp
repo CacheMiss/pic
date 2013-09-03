@@ -187,11 +187,14 @@ void LogPhiBinary::logData()
     out2drBin("phi",m_index,NY,NX1,*m_phi, true);
 }
 
+bool LogInfo::first = true;
 void LogInfo::logData()
 {
-   outinfo("info", index, simTime, numElectrons, numIons);
+   outinfo("info", index, simTime, numElectrons, numIons, first);
+   first = false;
 }
 
+bool LogForPerformance::first = true;
 void LogForPerformance::logData()
 {
    std::string fname = outputPath + "/performance.csv";

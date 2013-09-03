@@ -77,13 +77,28 @@ void resizeDim3(dim3 &rhs, std::size_t x, std::size_t y, std::size_t z)
 // time   - TODO *** Find a better description ***
 // need   - The number of electrons
 // niid   - The number of ions
+// first  - Flag which governs overwriting the info file
 //*****************************************************************************
-void outinfo(const std::string &fname,int idx_nm,float time,int need,int niid)
+void outinfo(const std::string &fname,
+             int idx_nm,
+             float time,
+             int need,
+             int niid,
+             bool first)
 {
    char name[100];
    FILE *fp;
    sprintf(name,"%s/%s",outputPath.c_str(), fname.c_str(), idx_nm);
-   if((fp=fopen(name,"a"))==NULL) {
+   if(!first)
+   {
+      fp = fopen(name, "a");
+   }
+   else
+   {
+      fp = fopen(name, "w");
+   }
+   if(fp==NULL)
+   {
       printf("Cannot open '%s' file for writing\n",name);
       exit(1);
    }
@@ -198,16 +213,18 @@ void loadPrevSimState(const std::string &loadDir,
    // Now I need to find the right files to load
    std::ifstream infoF(infoPath.string().c_str(), std::ios::binary);
    infoF.seekg(-1, std::ios_base::end);
-   std::stringstream infoLine;
+   std::stringstream infoStream;
+   std::string infoLine;
    bool foundFiles = false;
    unsigned int numEle;
    unsigned int numIon;
    unsigned int index;
 
-   infoLine << getPrevLine(infoF);
-   while(!foundFiles && infoLine.str() != "")
+   infoLine = getPrevLine(infoF);
+   infoStream << infoLine;
+   while(!foundFiles && infoLine != "")
    {
-      infoLine >> simState.iterationNum >> simState.simTime >> numEle >> numIon;
+      infoStream >> simState.iterationNum >> simState.simTime >> numEle >> numIon;
       index = simState.iterationNum;
       sprintf(eleName, "ele_%04d", index);
       sprintf(ionName, "ion_%04d", index);
@@ -220,10 +237,11 @@ void loadPrevSimState(const std::string &loadDir,
          foundFiles = true;
       }
       infoLine.clear();
-      infoLine << getPrevLine(infoF);
+      infoLine = getPrevLine(infoF);
+      infoStream << infoLine;
    }
 
-   if(infoLine.str() == "")
+   if(infoLine == "")
    {
       std::cerr << "ERROR: " << infoPath.string() 
          << " is either empty or does not reference any ele or ion files that exist." << std::endl;

@@ -179,16 +179,25 @@ class LogInfo : public LoggingBase
    float simTime;
    unsigned int numElectrons;
    unsigned int numIons;
+   bool resume;
+   static bool first;
 
    public:
    LogInfo(unsigned int idx, float sTime, 
-           unsigned int nmElectrons, unsigned int nmIons)
+           unsigned int nmElectrons, unsigned int nmIons,
+           bool resumeRun=false)
      :LoggingBase()
      ,index(idx)
      ,simTime(sTime)
      ,numElectrons(nmElectrons)
      ,numIons(nmIons)
-   {}
+     ,resume(resumeRun)
+   {
+      if(resumeRun)
+      {
+         first = false;
+      }
+   }
 
    virtual void logData();
 };
