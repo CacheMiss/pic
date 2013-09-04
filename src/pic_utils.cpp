@@ -226,6 +226,7 @@ void loadPrevSimState(const std::string &loadDir,
    {
       infoStream >> simState.iterationNum >> simState.simTime >> numEle >> numIon;
       index = simState.iterationNum;
+		std::cout << "Attempting to load from index " << index << std::endl;
       sprintf(eleName, "ele_%04d", index);
       sprintf(ionName, "ion_%04d", index);
       elePath = boost::filesystem::path(loadDir) / eleName;
@@ -238,6 +239,8 @@ void loadPrevSimState(const std::string &loadDir,
       }
       infoLine.clear();
       infoLine = getPrevLine(infoF);
+		std::cout << infoLine << std::endl;
+		infoStream.clear();
       infoStream << infoLine;
    }
 
