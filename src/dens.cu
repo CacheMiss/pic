@@ -146,10 +146,14 @@ void findQuadIndices(const unsigned int threadX,
 //             created by loadParticles associated with this grid square
 //******************************************************************************
 __device__
-void densGridPointsLoadShared(const float area1[], const float area2[],
-                              const float area3[], const float area4[],
-                              float a1[], float a2[],
-                              float a3[], float a4[],
+void densGridPointsLoadShared(const float* __restrict area1, 
+                              const float* __restrict area2,
+                              const float* __restrict area3, 
+                              const float* __restrict area4,
+                              float* __restrict a1, 
+                              float* __restrict a2,
+                              float* __restrict a3, 
+                              float* __restrict a4,
                               const unsigned int quad1,
                               const unsigned int quad2,
                               const unsigned int quad3,
