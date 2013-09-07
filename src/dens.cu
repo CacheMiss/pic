@@ -235,17 +235,17 @@ void densGridPointsLoadShared(const float area1[], const float area2[],
 // rho[] - The charge array for the grid points
 //******************************************************************************
 __global__
-void densGridPoints(float rho[],
-                   const unsigned int bucketWidth,
-                   const unsigned int bucketHeight,
-                   const float area1[],
-                   const float area2[],
-                   const float area3[],
-                   const float area4[],
-                   const bool cold,
-                   const unsigned int particlesToBuffer,
-                   const unsigned int NIJ
-                   )
+void densGridPoints(float* __restrict__ rho,
+                    const unsigned int bucketWidth,
+                    const unsigned int bucketHeight,
+                    const float* __restrict__ area1,
+                    const float* __restrict__ area2,
+                    const float* __restrict__ area3,
+                    const float* __restrict__ area4,
+                    const bool cold,
+                    const unsigned int particlesToBuffer,
+                    const unsigned int NIJ
+                    )
 {
    extern __shared__ char sharedBase[];
    // Calculate all of the shared memory offsets
@@ -407,11 +407,13 @@ struct DbgArea
 // a4Sum[] - The array containing the sums for a4
 //******************************************************************************
 __global__
-void sumArea(float a1Sum[], float a2Sum[], float a3Sum[], float a4Sum[],
-             const unsigned int bucketBeg[], const unsigned int bucketEnd[],
-             uint2 maxMinArray[],
-             const float a1[], const float a2[], 
-             const float a3[], const float a4[],
+void sumArea(float* __restrict__ a1Sum, float* __restrict__ a2Sum, 
+             float* __restrict__ a3Sum, float* __restrict__ a4Sum, 
+             const unsigned int* __restrict__ bucketBeg, 
+				 const unsigned int* __restrict__ bucketEnd,
+             uint2* __restrict__ maxMinArray,
+             const float* __restrict__ a1, const float* __restrict__ a2, 
+             const float* __restrict__ a3, const float* __restrict__ a4,
              unsigned int numGridBins, unsigned int numParticles,
              int bufferSize=4)
 {
@@ -630,9 +632,9 @@ void sumArea(float a1Sum[], float a2Sum[], float a3Sum[], float a4Sum[],
 // associatedBin - The bin each particle belongs in
 //******************************************************************************
 __global__
-void loadParticleLocations(const float2 d_loc[], 
-                           float2 locCopy[], 
-                           unsigned int associatedBin[],
+void loadParticleLocations(const float2* __restrict__ d_loc, 
+                           float2* __restrict__ locCopy, 
+                           unsigned int* __restrict__ associatedBin,
                            const unsigned int size,
                            const unsigned int NX,
                            const unsigned int NX1,
@@ -688,11 +690,11 @@ void loadParticleLocations(const float2 d_loc[],
 //        a3 = area.z, a4 = area.w
 //******************************************************************************
 __global__
-void calcA(const float2 particleLocations[],
-           float area1[],
-           float area2[],
-           float area3[],
-           float area4[],
+void calcA(const float2* __restrict__ particleLocations,
+           float* __restrict__ area1,
+           float* __restrict__ area2,
+           float* __restrict__ area3,
+           float* __restrict__ area4,
            const unsigned int numParticles,
            const unsigned int NY,
            const float DX,
@@ -760,7 +762,7 @@ void calcA(const float2 particleLocations[],
 // physicalY - The number of rows allocated for the array
 //******************************************************************************
 __global__
-void fixRhoGridSides(float rhoe[], float rhoi[],
+void fixRhoGridSides(float* __restrict__ rhoe, float* __restrict__ rhoi,
                      const unsigned int logicalX, 
                      const unsigned int logicalY,
                      const unsigned int physicalX, 
@@ -798,7 +800,7 @@ void fixRhoGridSides(float rhoe[], float rhoi[],
 // height - The height of the area that is calculated
 //******************************************************************************
 __global__
-void fixRhoGridTopBottom(float rhoe[], float rhoi[],
+void fixRhoGridTopBottom(float* __restrict__ rhoe, float* __restrict__ rhoi,
                          const unsigned int width, 
                          const unsigned int height
                          )
@@ -830,9 +832,9 @@ void fixRhoGridTopBottom(float rhoe[], float rhoi[],
 // size - The total number of grid points
 //******************************************************************************
 __global__ 
-void getFinalRho(float rho[],
-                 const float rhoi[],
-                 const float rhoe[],
+void getFinalRho(float* __restrict__ rho,
+                 const float* __restrict__ rhoi,
+                 const float* __restrict__ rhoe,
                  const unsigned int size)
 {
    unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
@@ -847,9 +849,11 @@ void getFinalRho(float rho[],
 }
 
 __global__
-void findUpperLowerBound(const unsigned int binList[],
-                         unsigned int beg[], unsigned int end[],
-                         unsigned int numParticles, unsigned int numBins)
+void findUpperLowerBound(const unsigned int* __restrict__ binList,
+                         unsigned int* __restrict__ beg, 
+								 unsigned int* __restrict__ end,
+                         unsigned int numParticles, 
+								 unsigned int numBins)
 {
    extern __shared__ char bytes[];
    unsigned int *scratch = reinterpret_cast<unsigned int *>(&bytes[0]);
