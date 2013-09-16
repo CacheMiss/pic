@@ -115,7 +115,7 @@ void HostMem<T>::resize(std::size_t newSize)
 {
    if(newSize > m_reserved)
    {
-      cudaFreeHost(m_ptr);
+      checkCuda(cudaFreeHost(m_ptr));
       m_size = newSize;
       m_reserved = m_size;
       checkCuda(cudaMallocHost(reinterpret_cast<void**>(&m_ptr), sizeof(T) * m_reserved));
@@ -136,24 +136,28 @@ void HostMem<T>::resize(const std::vector<T> &dataToCopy)
 template<class T>
 T& HostMem<T>::operator[](std::size_t i)
 {
+   assert(i < m_size);
    return m_ptr[i];
 }
 
 template<class T>
 const T& HostMem<T>::operator[](std::size_t i) const
 {
+   assert(i < m_size);
    return m_ptr[i];
 }
 
 template<class T>
 T* HostMem<T>::getPtr()
 {
+   assert(m_ptr != NULL);
    return m_ptr;
 }
 
 template<class T>
 const T* HostMem<T>::getPtr() const
 {
+   assert(m_ptr != NULL);
    return m_ptr;
 }
 
