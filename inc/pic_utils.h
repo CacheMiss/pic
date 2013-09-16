@@ -34,8 +34,8 @@ void loadPrevSimState(const std::string &loadDir,
 void getLastLine(const std::string fileName, std::string &lastLine);
 std::string getPrevLine(std::ifstream &f);
 
-inline std::size_t calcNumBlocks(const std::size_t numThreads, 
-                                  const std::size_t numElements)
+inline std::size_t calcNumBlocks(const unsigned int numThreads, 
+                                  const unsigned int numElements)
 {
    std::size_t ret = (numElements + numThreads - 1) / numThreads;
    assert(ret > 0);

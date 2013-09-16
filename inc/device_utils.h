@@ -108,7 +108,7 @@ void divVectorKernel(Type *t, unsigned int size, const Type val)
 template<class Type>
 void divVector(Type *devArray, unsigned int size, const Type val)
 {
-   std::size_t numThreads = MAX_THREADS_PER_BLOCK / 2;
+   unsigned int numThreads = MAX_THREADS_PER_BLOCK / 2;
    dim3 blockSize(numThreads);
    dim3 numBlocks(calcNumBlocks(numThreads, size));
    divVectorKernel<Type> <<<numBlocks, numThreads>>>(devArray, size, val);
