@@ -101,6 +101,7 @@ HostMem<T>::HostMem(const DevMem<T, Allocator> &rhs)
 template<class T>
 HostMem<T>::~HostMem()
 {
+   //checkCuda(cudaFreeHost(m_ptr));
    cudaFreeHost(m_ptr);
 }
 
