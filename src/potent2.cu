@@ -132,7 +132,7 @@ void loadHarmonics(float cokx[], const unsigned int size)
 //       size NX1 * NY1
 // cokx - TBD size NX1
 // pb - TBD size NX1
-// c  - TBD size NX1 * NY1
+// c  - TBD size NX1 * NY
 // NX1 - The number of columns being calculated
 // NY1 - The number of rows being calculated
 // DX - The spacing between columns
