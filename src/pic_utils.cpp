@@ -185,7 +185,8 @@ void loadPrevSimState(const std::string &loadDir,
                       DevMem<float2> &dev_ionHotLoc, DevMem<float3> &dev_ionHotVel, 
                       DevMem<float2> &dev_ionColdLoc, DevMem<float3> &dev_ionColdVel,
                       unsigned int &numEleHot, unsigned int &numEleCold,
-                      unsigned int &numIonHot, unsigned int &numIonCold)
+                      unsigned int &numIonHot, unsigned int &numIonCold,
+                      const unsigned int allocIncrement)
 {
    const unsigned int FPPF = 6; // Floats Per Particle File
    const unsigned int FPPM = 5; // Floats Per Particle Memory
@@ -256,15 +257,6 @@ void loadPrevSimState(const std::string &loadDir,
    infoFile.close();
    simState.iterationNum *= D_LF;
 
-   HostMem<float2> h_eleHotLoc(dev_eleHotLoc.size());
-   HostMem<float3> h_eleHotVel(dev_eleHotVel.size());
-   HostMem<float2> h_eleColdLoc(dev_eleColdLoc.size());
-   HostMem<float3> h_eleColdVel(dev_eleColdVel.size());
-   HostMem<float2> h_ionHotLoc(dev_ionHotLoc.size());
-   HostMem<float3> h_ionHotVel(dev_ionHotVel.size());
-   HostMem<float2> h_ionColdLoc(dev_ionColdLoc.size());
-   HostMem<float3> h_ionColdVel(dev_ionColdVel.size());
-
    numEleHot = 0;
    numEleCold = 0;
    numIonHot = 0;
@@ -274,6 +266,23 @@ void loadPrevSimState(const std::string &loadDir,
    eleFile.read(reinterpret_cast<char*>(&numEle), sizeof(unsigned int));
    eleFile.read(reinterpret_cast<char*>(&numEleHot), sizeof(unsigned int));
    eleFile.read(reinterpret_cast<char*>(&numEleCold), sizeof(unsigned int));
+
+   if(numEleHot > dev_eleHotLoc.size())
+   {
+      dev_eleHotLoc.resize(numEleHot + allocIncrement);
+      dev_eleHotVel.resize(numEleHot + allocIncrement);
+   }
+   HostMem<float2> h_eleHotLoc(dev_eleHotLoc.size());
+   HostMem<float3> h_eleHotVel(dev_eleHotVel.size());
+
+   if(numEleCold > dev_eleColdLoc.size())
+   {
+      dev_eleColdLoc.resize(numEleCold + allocIncrement);
+      dev_eleColdVel.resize(numEleCold + allocIncrement);
+   }
+   HostMem<float2> h_eleColdLoc(dev_eleColdLoc.size());
+   HostMem<float3> h_eleColdVel(dev_eleColdVel.size());
+
    for(unsigned int i = 0; i < numEleHot; i++)
    {
       eleFile.read(reinterpret_cast<char*>(&h_eleHotLoc[i]), sizeof(float2));
@@ -290,6 +299,23 @@ void loadPrevSimState(const std::string &loadDir,
    ionFile.read(reinterpret_cast<char*>(&numIon), sizeof(unsigned int));
    ionFile.read(reinterpret_cast<char*>(&numIonHot), sizeof(unsigned int));
    ionFile.read(reinterpret_cast<char*>(&numIonCold), sizeof(unsigned int));
+
+   if(numIonHot > dev_ionHotLoc.size())
+   {
+      dev_ionHotLoc.resize(numIonHot + allocIncrement);
+      dev_ionHotVel.resize(numIonHot + allocIncrement);
+   }
+   HostMem<float2> h_ionHotLoc(dev_ionHotLoc.size());
+   HostMem<float3> h_ionHotVel(dev_ionHotVel.size());
+
+   if(numIonCold > dev_ionColdLoc.size())
+   {
+      dev_ionColdLoc.resize(numIonCold + allocIncrement);
+      dev_ionColdVel.resize(numIonCold + allocIncrement);
+   }
+   HostMem<float2> h_ionColdLoc(dev_ionColdLoc.size());
+   HostMem<float3> h_ionColdVel(dev_ionColdVel.size());
+
    for(unsigned int i = 0; i < numIonHot; i++)
    {
       ionFile.read(reinterpret_cast<char*>(&h_ionHotLoc[i]), sizeof(float2));

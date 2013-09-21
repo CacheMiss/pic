@@ -79,6 +79,8 @@ void executePic(int argc, char *argv[])
    fclose(errorLog);
 
    int lfint = 5; // number of info intervals between output files
+   // The amount of space to get if I run out of space in the particle array
+   const std::size_t ALLOC_INCREMENT = 1000000;
 
    lfint = options.getLogInterval();
 
@@ -178,7 +180,8 @@ void executePic(int argc, char *argv[])
          d_eleHotLoc, d_eleHotVel, d_eleColdLoc, d_eleColdVel,
          d_ionHotLoc, d_ionHotVel, d_ionColdLoc, d_ionColdVel,
          simState.numEleHot, simState.numEleCold,
-         simState.numIonHot, simState.numIonCold);
+         simState.numIonHot, simState.numIonCold,
+         ALLOC_INCREMENT);
       printf("INFO: Loaded %d hot electrons\n", simState.numEleHot);
       printf("INFO: Loaded %d cold electrons\n", simState.numEleCold);
       printf("INFO: Loaded %d hot ions\n", simState.numIonHot);
@@ -234,7 +237,6 @@ void executePic(int argc, char *argv[])
       lfd++;
 
       // Make sure I'm not out of memory
-      const std::size_t ALLOC_INCREMENT = 1000000;
       if(simState.numEleHot + neededParticles > d_eleHotLoc.size())
       {
          std::cout << "Adding storage for hot electrons." << std::endl;

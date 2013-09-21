@@ -29,7 +29,8 @@ void loadPrevSimState(const std::string &loadDir,
                       DevMem<float2> &dev_ionHotLoc, DevMem<float3> &dev_ionHotVel, 
                       DevMem<float2> &dev_ionColdLoc, DevMem<float3> &dev_ionColdVel,
                       unsigned int &numEleHot, unsigned int &numEleCold,
-                      unsigned int &numIonHot, unsigned int &numIonCold);
+                      unsigned int &numIonHot, unsigned int &numIonCold,
+                      const unsigned int allocIncrement);
 void getLastLine(const std::string fileName, std::string &lastLine);
 std::string getPrevLine(std::ifstream &f);
 
