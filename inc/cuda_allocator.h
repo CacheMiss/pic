@@ -1,8 +1,7 @@
 #pragma once
 
 #include <cuda_runtime_api.h>
-
-#include "pitched_ptr.h"
+#include <cstddef>
 
 class CudaAllocator
 {
