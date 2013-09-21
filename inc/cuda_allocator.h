@@ -3,6 +3,8 @@
 #include <cuda_runtime_api.h>
 #include <cstddef>
 
+#include "error_check.h"
+
 class CudaAllocator
 {
 public:
