@@ -1196,8 +1196,8 @@ void dens(DevMemF &dev_rho,
           DevMemF &dev_rhoi,
           const DevMem<float2> &d_eleHotLoc, const DevMem<float2> &d_eleColdLoc, 
           const DevMem<float2> &d_ionHotLoc, const DevMem<float2> &d_ionColdLoc,
-          int numHotElectrons, int numColdElectrons,
-          int numHotIons, int numColdIons)
+          unsigned int numHotElectrons, unsigned int numColdElectrons,
+          unsigned int numHotIons, unsigned int numColdIons)
 {
    static bool first = true;
    dim3 *numBlocks;
