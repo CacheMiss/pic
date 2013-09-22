@@ -1261,7 +1261,7 @@ void dens(DevMemF &dev_rho,
    //   thrust::minus<float>());
    //#//else
    subVector(dev_rhoi.getPtr(), dev_rhoe.getPtr(), 
-             dev_rho.getPtr(), dev_rhoi.size());
+             dev_rho.getPtr(), static_cast<unsigned int>(dev_rhoi.size()));
    //#endif
    first = false;
 }
