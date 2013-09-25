@@ -542,6 +542,15 @@ void executePic(int argc, char *argv[])
                logger.logPhiBinary(ind, phi);
             }
             lfdint = 0;
+
+				// Exit if we've been asked to
+				boost::filesystem::path stopFile(outputPath);
+				stopFile /= "stop";
+				if(boost::filesystem::exists(stopFile))
+				{
+					boost::filesystem::remove(stopFile);
+					break;
+				}
          }
          lfd=0 ;
          ind=ind+1;
