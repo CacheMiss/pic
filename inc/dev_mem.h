@@ -10,11 +10,9 @@ class DevMem;
 #include <vector>
 
 #include "cuda_allocator.h"
-#include "d_global_variables.h"
 #include "device_stats.h"
 #include "error_check.h"
 #include "host_mem.h"
-#include "simulation_state.h"
 
 #ifndef NO_THRUST
 #include <thrust/device_ptr.h>
