@@ -36,7 +36,8 @@ function ret = plotPart(fName, titleStr, sliceSize)
    
    if ~ isempty(hotP)
        xMax = 2^nextpow2(max(hotP(1,:)));
-       yMax = 2^nextpow2(max(hotP(2,:)));
+       % yMax = 2^nextpow2(max(hotP(2,:)));
+       yMax = max(hotP(2,:));
        
        figure;
        scatter(hotP(1,:), hotP(2,:), 0.1)
@@ -48,7 +49,8 @@ function ret = plotPart(fName, titleStr, sliceSize)
    
    if ~ isempty(coldP)
        xMax = max(xMax, 2^nextpow2(max(coldP(1,:))));
-       yMax = max(yMax, 2^nextpow2(max(coldP(2,:))));
+       % yMax = max(yMax, 2^nextpow2(max(coldP(2,:))));
+       yMax = max(coldP(2,:));
        
        figure;
        scatter(coldP(1,:), coldP(2,:), 0.1)
