@@ -17,6 +17,7 @@
 #define D_TPI (6.283185307179586476925287f)
 #define D_ISEED 300085189 // random number seed
 
+// The electric potential at the top of the grid
 #define D_P0 (-10.0f) 
 #define D_SCALE (10.0f)
 #define D_RATO  (1.0f/400.0f)

@@ -46,7 +46,7 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
        ("sigma-ce", po::value<float>(&m_sigmaCe)->default_value(10.0), "Sigma Cold Electrons")
        ("sigma-hi", po::value<float>(&m_sigmaHi)->default_value((float)0.3), "Sigma Hot Ions")
        ("sigma-ci", po::value<float>(&m_sigmaCi)->default_value(10.0), "Sigma Cold Ions")
-       ("b0", po::value<float>(&m_b0)->default_value(10), "B0")
+       ("b0", po::value<float>(&m_b0)->default_value(10), "B0 controls the magnetic field strength")
        ("inject-width", po::value<unsigned int>(&m_injectWidth)->default_value(0), "The width of the injection area for cold particles")
        ("restart-dir", po::value<std::string>(&m_restartDir)->default_value(""),
         "The directory the files to restart from are located in.")
