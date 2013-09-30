@@ -116,6 +116,7 @@ void SortThread::writeMain()
       {
          boost::unique_lock<boost::mutex> lock(m_finishedSetLock);
          m_finishedSet.insert(newJob.d_srcPos);
+         m_finishedSetCond.notify_one();
       }
    }
 }
