@@ -29,6 +29,7 @@ class HostMem
    void resize(std::size_t newSize);
    // Resize to match the given vector and copy the vectors data into the class
    void resize(const std::vector<T> &dataToCopy);
+   void setPadding(std::size_t newPadding);
    void push_back(const T &rhs);
    void clear();
 
@@ -46,8 +47,10 @@ class HostMem
    T* m_ptr;
    std::size_t m_size;
    std::size_t m_reserved;
+   std::size_t m_padding;
 
    void reserve(std::size_t n);
+   void allocate(std::size_t size, bool preserve=false);
 };
 
 template<class T>
@@ -55,6 +58,7 @@ HostMem<T>::HostMem()
   :m_ptr(NULL)
   , m_size(0)
   , m_reserved(0)
+  , m_padding(0)
 {
 }
 
@@ -62,16 +66,18 @@ template<class T>
 HostMem<T>::HostMem(std::size_t size)
   :m_size(size)
   , m_reserved(size)
+  , m_padding(0)
 {
-   checkCuda(cudaMallocHost(reinterpret_cast<void**>(&m_ptr), sizeof(T) * m_size));
+   allocate(m_size);
 }
 
 template<class T>
 HostMem<T>::HostMem(std::size_t size, int val)
   :m_size(size)
   , m_reserved(size)
+  , m_padding(0)
 {
-   checkCuda(cudaMallocHost(reinterpret_cast<void**>(&m_ptr), sizeof(T) * m_size));
+   allocate(m_size);
    memset(m_ptr, val, sizeof(T) * m_size);
 }
 
@@ -81,7 +87,7 @@ HostMem<T>::HostMem(const PitchedPtr<T> &rhs)
    const PitchedPtr_t<T> &rhsPtr = rhs.getPtr();
    m_size = rhsPtr.x * rhsPtr.y;
    m_reserved = m_size;
-   checkCuda(cudaMallocHost(reinterpret_cast<void**>(&m_ptr), sizeof(T) * m_size));
+   allocate(m_size);
    checkCuda(cudaMemcpy2D(m_ptr, rhsPtr.widthBytes, 
                           rhsPtr.ptr, rhsPtr.pitch, 
                           rhsPtr.widthBytes, rhsPtr.y, 
@@ -94,6 +100,7 @@ HostMem<T>::HostMem(const DevMem<T, Allocator> &rhs)
   :m_ptr(NULL)
   , m_size(0)
   , m_reserved(0)
+  , m_padding(rhs.padding)
 {
    operator=(rhs);
 }
@@ -119,7 +126,7 @@ void HostMem<T>::resize(std::size_t newSize)
       checkCuda(cudaFreeHost(m_ptr));
       m_size = newSize;
       m_reserved = m_size;
-      checkCuda(cudaMallocHost(reinterpret_cast<void**>(&m_ptr), sizeof(T) * m_reserved));
+      allocate(m_reserved);
    }
    else
    {
@@ -197,19 +204,8 @@ void HostMem<T>::reserve(std::size_t n)
       return;
    }
 
-   T* tmp = m_ptr;
-
    m_reserved = n;
-   checkCuda(cudaMallocHost(reinterpret_cast<void**>(&m_ptr), sizeof(T) * m_reserved));
-
-   if(tmp != NULL)
-   {
-      if(m_size != 0)
-      {
-         memcpy(m_ptr, tmp, sizeof(T) * m_size);
-      }
-      cudaFreeHost(tmp);
-   }
+   allocate(m_reserved, true);
 }
 
 template<class T>
@@ -229,3 +225,33 @@ void HostMem<T>::clear()
    m_size = 0;
 }
 
+template<class T>
+void HostMem<T>::setPadding(std::size_t newPadding)
+{
+   m_padding = newPadding;
+}
+
+template<class T>
+void HostMem<T>::allocate(std::size_t size, bool preserve)
+{
+   if(!preserve)
+   {
+      checkCuda(cudaFreeHost(m_ptr));
+      checkCuda(cudaMallocHost(reinterpret_cast<void**>(&m_ptr), (size + m_padding) * sizeof(T)));
+   }
+   else
+   {
+      T* tmp = m_ptr;
+
+      checkCuda(cudaMallocHost(reinterpret_cast<void**>(&m_ptr), sizeof(T) * size));
+
+      if(tmp != NULL)
+      {
+         if(m_size != 0)
+         {
+            memcpy(m_ptr, tmp, sizeof(T) * m_size);
+         }
+         cudaFreeHost(tmp);
+      }
+   }
+}
