@@ -9,6 +9,7 @@
 #include "logging_types.h"
 #include "particle_allocator.h"
 #include "pic_utils.h"
+#include "simulation_state.h"
 
 // Texture reference for 2D float texture
 texture<float, 2, cudaReadModeElementType> texEx;
