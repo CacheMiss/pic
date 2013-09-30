@@ -452,6 +452,10 @@
 				RelativePath="..\..\src\simulation_state.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\..\src\sort_thread.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -560,6 +564,10 @@
 			</File>
 			<File
 				RelativePath="..\..\inc\simulation_state.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\inc\sort_thread.h"
 				>
 			</File>
 			<File
