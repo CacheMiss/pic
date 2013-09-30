@@ -2,11 +2,13 @@
 #define FIELD_H
 
 #include "typedefs.h"
+#include "dev_stream.h"
 #include "pitched_ptr.h"
 
 void field(PitchedPtr<float> &ex,
            PitchedPtr<float> &ey,
-           const DevMemF &phi);
+           const DevMemF &phi,
+           DevStream &stream);
 
 #endif
 

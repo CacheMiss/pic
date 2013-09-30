@@ -326,7 +326,7 @@ void fixPhiSides(float phi[],
 // -------------------
 // dev_phi - The electrical potential at all of the grid points
 //******************************************************************************
-void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
+void potent2(DevMemF &dev_phi, const DevMemF &dev_rho, DevStream &stream)
 {
    static bool first = true;
 
@@ -343,16 +343,17 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
 
    resizeDim3(blockSize, MAX_THREADS_PER_BLOCK / 2);
    resizeDim3(numBlocks, calcNumBlocks(256, NX1 * NY));
-   cudaDeviceSynchronize();
+   stream.synchronize();
    checkForCudaError("Beginning of potent2");
-   realToComplex<<<numBlocks, blockSize>>>(dev_rho.getPtr(), dev_c.getPtr(),
+   realToComplex<<<numBlocks, blockSize, 0, *stream>>>(dev_rho.getPtr(), dev_c.getPtr(),
       static_cast<unsigned int>(dev_rho.size()));
-   cudaDeviceSynchronize();
+   stream.synchronize();
    checkForCudaError("realToComplex");
    static cufftHandle rhoTransform;
    if(first)
    {
       checkCufftStatus(cufftPlan1d(&rhoTransform, NX1, CUFFT_C2C, NY));
+      checkCufftStatus(cufftSetStream(rhoTransform, *stream));
    }
    checkCufftStatus(cufftExecC2C(rhoTransform, dev_c.getPtr(), 
       dev_c.getPtr(), CUFFT_FORWARD));
@@ -367,15 +368,16 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
    numThreads = MAX_THREADS_PER_BLOCK / 4;
    resizeDim3(blockSize, numThreads);
    resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1));
-   initPb<<<numBlocks, blockSize>>>(dev_pb.getPtr(), P0, static_cast<unsigned int>(dev_pb.size()));
+   initPb<<<numBlocks, blockSize, 0, *stream>>>(dev_pb.getPtr(), P0, static_cast<unsigned int>(dev_pb.size()));
    checkForCudaError("initPb");
 
    static cufftHandle pbTransform;
    if(first)
    {
       checkCufftStatus(cufftPlan1d(&pbTransform, NX1, CUFFT_C2C, 1));
+      checkCufftStatus(cufftSetStream(pbTransform, *stream));
    }
-   cudaDeviceSynchronize();
+   stream.synchronize();
    checkForCudaError("Before cufft on dev_pb");
    checkCufftStatus(cufftExecC2C(pbTransform, dev_pb.getPtr(), dev_pb.getPtr(),
       CUFFT_FORWARD));
@@ -387,7 +389,7 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
       numThreads = MAX_THREADS_PER_BLOCK / 4;
       resizeDim3(blockSize, numThreads);
       resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1));
-      loadHarmonics<<<numBlocks, blockSize>>>(
+      loadHarmonics<<<numBlocks, blockSize, 0, *stream>>>(
          dev_cokx.getPtr(), static_cast<unsigned int>(dev_cokx.size()));
       checkForCudaError("loadHarmonics");
    }
@@ -395,9 +397,9 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
    numThreads = MAX_THREADS_PER_BLOCK / 8;
    resizeDim3(blockSize, numThreads);
    resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1));
-   cudaDeviceSynchronize();
+   stream.synchronize();
    checkForCudaError("Before calcPhif");
-   calcPhif<<<numBlocks, numThreads>>>(dev_phif.getPtr(),
+   calcPhif<<<numBlocks, numThreads, 0, *stream>>>(dev_phif.getPtr(),
       dev_z.getPtr(), dev_yyy.getPtr(), dev_cokx.getPtr(), dev_pb.getPtr(),
       dev_c.getPtr(), NX1, NY1, DX, DY);
    checkForCudaError("calcPhif");
@@ -406,8 +408,9 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
    if(first)
    {
       checkCufftStatus(cufftPlan1d(&phifTransform, NX1, CUFFT_C2C, NY));
+      checkCufftStatus(cufftSetStream(phifTransform, *stream));
    }
-   cudaDeviceSynchronize();
+   stream.synchronize();
    checkForCudaError("Before inverse cufft on phif");
    cufftExecC2C(phifTransform, dev_phif.getPtr(), 
       dev_phif.getPtr(), CUFFT_INVERSE);
@@ -421,13 +424,13 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho)
    sharedSize = numThreads * sizeof(float2);
    resizeDim3(blockSize, numThreads);
    resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1 * NY));
-   cudaDeviceSynchronize();
+   stream.synchronize();
    checkForCudaError("Before final complex to real call in potent2");
-   complexToReal<<<numBlocks, numThreads, sharedSize>>>(
+   complexToReal<<<numBlocks, numThreads, sharedSize, *stream>>>(
       dev_phif.getPtr(), dev_phi.getPtr(), static_cast<unsigned int>(dev_phif.size()));
    checkForCudaError("potent2::complexToReal");
 
-   cudaDeviceSynchronize();
+   stream.synchronize();
    checkForCudaError("Before potent2 divVector");
    // Normalize the inverse transform
    divVector(dev_phi, float(NX1));

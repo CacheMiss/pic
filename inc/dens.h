@@ -1,6 +1,7 @@
 #ifndef DENS_H
 #define DENS_H
 
+#include "dev_stream.h"
 #include "typedefs.h"
 
 void dens(DevMemF &dev_rho,
@@ -9,6 +10,7 @@ void dens(DevMemF &dev_rho,
           const DevMem<float2> &d_eleHotLoc, const DevMem<float2> &d_eleColdLoc,
           const DevMem<float2> &d_ionHotLoc, const DevMem<float2> &d_ionColdLoc,
           unsigned int numHotElectrons, unsigned int numColdElectrons,
-          unsigned int numHotIons, unsigned int numColdIons);
+          unsigned int numHotIons, unsigned int numColdIons,
+          DevStream &stream);
 
 #endif

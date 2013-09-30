@@ -122,7 +122,8 @@ namespace Field
  ***************************************************************/
 void field(PitchedPtr<float> &ex,
            PitchedPtr<float> &ey,
-           const DevMemF &phi)
+           const DevMemF &phi,
+           DevStream &stream)
 {
    unsigned int numThreads;
    unsigned int sharedMemSizeBytes;
@@ -132,9 +133,10 @@ void field(PitchedPtr<float> &ex,
    numThreads = MAX_THREADS_PER_BLOCK / 2;
    blockSize.x = numThreads;
    resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1), NY1-1);
-   cudaThreadSynchronize();
+   stream.synchronize();
    checkForCudaError("Before calcEy");
-   Field::calcEy<<<numBlocks, blockSize>>>(ey.getPtr(), phi.getPtr(),
+   Field::calcEy<<<numBlocks, blockSize, 0, *stream>>>(
+      ey.getPtr(), phi.getPtr(),
       NX1, NY1, DY);
    checkForCudaError("calcEy");
 
@@ -142,16 +144,17 @@ void field(PitchedPtr<float> &ex,
    blockSize.x = numThreads;
    resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1), NY1);
    sharedMemSizeBytes = (numThreads + 2) * sizeof(float);
-   Field::calcEx<<<numBlocks, blockSize, sharedMemSizeBytes>>>(
+   Field::calcEx<<<numBlocks, blockSize, sharedMemSizeBytes, *stream>>>(
       ex.getPtr(), phi.getPtr(), NX1, NY, DX);
    checkForCudaError("calcEx");
 
    numThreads = MAX_THREADS_PER_BLOCK / 2;
    blockSize.x = numThreads;
    resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1));
-   cudaThreadSynchronize();
+   stream.synchronize();
    checkForCudaError("Before fixEyBoundaries");
-   Field::fixEyBoundaries<<<numBlocks, blockSize>>>(ey.getPtr(), phi.getPtr(),
+   Field::fixEyBoundaries<<<numBlocks, blockSize, 0, *stream>>>(
+      ey.getPtr(), phi.getPtr(),
       NX1, NY1, DY);
    checkForCudaError("fixEyBoundaries");
 }

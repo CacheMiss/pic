@@ -1,3 +1,5 @@
+#include "dens.h"
+
 #include "array2d.h"
 #include "dev_mem.h"
 #include "dev_mem_reuse.h"
@@ -1197,9 +1199,9 @@ void dens(DevMemF &dev_rho,
           const DevMem<float2> &d_eleHotLoc, const DevMem<float2> &d_eleColdLoc, 
           const DevMem<float2> &d_ionHotLoc, const DevMem<float2> &d_ionColdLoc,
           unsigned int numHotElectrons, unsigned int numColdElectrons,
-          unsigned int numHotIons, unsigned int numColdIons)
+          unsigned int numHotIons, unsigned int numColdIons,
+          DevStream &stream)
 {
-   static bool first = true;
    dim3 *numBlocks;
    dim3 *blockSize;
    int threadsInBlock;
@@ -1209,29 +1211,24 @@ void dens(DevMemF &dev_rho,
    dev_rhoe.zeroMem();
    dev_rhoi.zeroMem();
 
-   static cudaStream_t stream;
-   if(first)
-   {
-      cudaStreamCreate(&stream);
-   }
    // Calculate the rho from the hot electrons
    calcIntermediateRho(dev_rhoe, d_eleHotLoc, 
-      numHotElectrons, false, true, stream);
+      numHotElectrons, false, true, *stream);
    // Calculate the rho from the cold electrons
    calcIntermediateRho(dev_rhoe, d_eleColdLoc,
-      numColdElectrons, true, true, stream);
+      numColdElectrons, true, true, *stream);
    // Calculate the rho from the hot ions
    calcIntermediateRho(dev_rhoi, d_ionHotLoc,
-      numHotIons, false, false, stream);
+      numHotIons, false, false, *stream);
    // Calculate the rho from the cold ions
    calcIntermediateRho(dev_rhoi, d_ionColdLoc,
-      numColdIons, true, false, stream);
+      numColdIons, true, false, *stream);
 
    // Double the rho at the top and bottom of the grid
    threadsInBlock = MAX_THREADS_PER_BLOCK;
    blockSize = new dim3(threadsInBlock);
    numBlocks = new dim3(static_cast<unsigned int>(calcNumBlocks(threadsInBlock, NX)));
-   cudaThreadSynchronize();
+   stream.synchronize();
    checkForCudaError("Before fixRhoGridTopBottom");
    fixRhoGridTopBottom<<<*numBlocks, *blockSize>>>(
       dev_rhoe.getPtr(),
@@ -1241,7 +1238,7 @@ void dens(DevMemF &dev_rho,
    delete numBlocks;
    checkForCudaError("fixRhoGridTopBottom");
 
-   cudaThreadSynchronize();
+   stream.synchronize();
    checkForCudaError("Before rhoi - rhoe");
    //////////////////////////////////////////////////////
    //
@@ -1263,5 +1260,4 @@ void dens(DevMemF &dev_rho,
    subVector(dev_rhoi.getPtr(), dev_rhoe.getPtr(), 
              dev_rho.getPtr(), static_cast<unsigned int>(dev_rhoi.size()));
    //#endif
-   first = false;
 }

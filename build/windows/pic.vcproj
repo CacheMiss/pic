@@ -491,6 +491,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\inc\dev_stream.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\inc\device_constants.h"
 				>
 			</File>
