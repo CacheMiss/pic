@@ -127,53 +127,24 @@ bool fileExists(const std::string &fileName)
   }
 }
 
-bool verifyParticle(const float part[], unsigned int nx1, unsigned int ny1)
+bool verifyParticles(const float2 partLoc[], std::size_t size, 
+                     unsigned int nx1, unsigned int ny1,
+                     const char* whatAmI)
 {
    bool ret = true;
-   if(part[0] < 0 || part[0] > nx1)
+   std::size_t numErrors = 0;
+   std::size_t printLimit = 20;
+   for(std::size_t i = 0; i < size; i++)
    {
-      ret = false;
-   }
-   else if(part[1] < 0 || part[1] > ny1)
-   {
-      ret = false;
-   }
-   else if(fabs(part[2]) > 1000)
-   {
-      ret = false;
-   }
-   else if(fabs(part[3]) > 1000)
-   {
-      ret = false;
-   }
-   else if(fabs(part[4]) > 1000)
-   {
-      ret = false;
-   }
-   else if(part[0] != part[0])
-   {
-      ret = false;
-   }
-   else if(part[1] != part[1])
-   {
-      ret = false;
-   }
-   else if(part[2] != part[2])
-   {
-      ret = false;
-   }
-   else if(part[3] != part[3])
-   {
-      ret = false;
-   }
-   else if(part[4] != part[4])
-   {
-      ret = false;
-   }
-   else if(part[0] == 0 && part[1] == 0 && 
-           part[2] == 0 && part[3] == 0)
-   {
-      ret = false;
+      if(partLoc[i].y < DY || partLoc[i].y > DY * NY1 - 1)
+      {
+         if(numErrors < printLimit)
+         {
+            std::cout << "ERROR: " << whatAmI << " found at x=" << partLoc[i].x
+               << " y=" << partLoc[i].y << std::endl;
+         }
+         numErrors++;
+      }
    }
 
    return ret;
@@ -327,6 +298,13 @@ void loadPrevSimState(const std::string &loadDir,
       ionFile.read(reinterpret_cast<char*>(&h_ionColdVel[i]), sizeof(float3));
    }
    ionFile.close();
+
+#ifdef _DEBUG
+   verifyParticles(&h_eleHotLoc[0], numEleHot, NX1, NY1, "Hot ele");
+   verifyParticles(&h_eleColdLoc[0], numEleCold, NX1, NY1, "Cold ele");
+   verifyParticles(&h_ionHotLoc[0], numIonHot, NX1, NY1, "Hot ion");
+   verifyParticles(&h_ionColdLoc[0], numIonCold, NX1, NY1, "Cold ion");
+#endif
 
    dev_eleHotLoc.copyArrayToDev(h_eleHotLoc);
    dev_eleHotVel.copyArrayToDev(h_eleHotVel);
