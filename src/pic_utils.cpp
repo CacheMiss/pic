@@ -221,7 +221,7 @@ void loadPrevSimState(const std::string &loadDir,
       exit(1);
    }
 
-   std::cout << "Restating run from index " << index << std::endl;
+   std::cout << "Restarting run from index " << index << std::endl;
 
    std::ifstream infoFile(infoPath.string().c_str());
 
