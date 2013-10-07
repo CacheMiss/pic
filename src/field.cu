@@ -86,6 +86,7 @@ namespace Field
       }
       else
       {
+         // There is nothing to the left here. sharedPhi[1] is phi where x=0
          // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
          fieldVal = -__fdividef((sharedPhi[2] - sharedPhi[1]), DX);
       }
