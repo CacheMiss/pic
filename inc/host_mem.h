@@ -1,9 +1,10 @@
 #pragma once
 
-#include <iostream>
 
-#include <cuda_runtime_api.h>
 #include <algorithm>
+#include <boost/iterator/iterator_facade.hpp>
+#include <cuda_runtime_api.h>
+#include <iostream>
 
 #include "error_check.h"
 #include "dev_mem.h"
@@ -17,6 +18,63 @@ template<class T>
 class HostMem
 {
    public:
+
+   template<class Value>
+   class iterator_template
+      : public boost::iterator_facade<
+         iterator_template<Value>, 
+         Value, 
+         boost::random_access_traversal_tag 
+         >
+   {
+      public:
+      iterator_template() : m_data(NULL){}
+      explicit iterator_template(Value* data, std::size_t index=0)
+         :m_data(data+index){}
+
+      template<class OtherValue>
+      iterator_template(iterator_template<OtherValue> const& other)
+         :m_data(other.m_data)
+      {}
+
+      private:
+      friend class boost::iterator_core_access;
+      template <class> friend class iterator_template;
+
+      Value& dereference() const
+      {
+         return *m_data;
+      }
+      template<class OtherValue>
+      bool equal(iterator_template<OtherValue> const& i) const
+      {
+         return m_data == i.m_data;
+      }
+      void increment()
+      {
+         m_data++;
+      }
+      void decrement()
+      {
+         m_data--;
+      }
+      void advance(std::size_t n)
+      {
+         m_data += n;
+      }
+      std::size_t distance_to(iterator_template<Value> const& j) const
+      {
+         return j.m_data - m_data;
+      }
+      //T& operator[](std::size_t n);
+      //const T& operator[](std::size_t n) const;
+
+      Value* m_data;
+   };
+
+   typedef iterator_template<T> iterator;
+   typedef iterator_template<T const> const_iterator;
+
    HostMem(std::size_t size);
    HostMem(std::size_t size, int val);
    HostMem(const PitchedPtr<T> &rhs);
@@ -24,6 +82,9 @@ class HostMem
    HostMem(const DevMem<T, Allocator> &rhs);
    HostMem();
    ~HostMem();
+
+   iterator begin();
+   iterator end();
 
    std::size_t size() const;
    void resize(std::size_t newSize);
@@ -112,6 +173,18 @@ HostMem<T>::~HostMem()
 {
    //checkCuda(cudaFreeHost(m_ptr));
    cudaFreeHost(m_ptr);
+}
+
+template<class T>
+typename HostMem<T>::iterator HostMem<T>::begin()
+{
+   return HostMem<T>::iterator(m_ptr, 0);
+}
+
+template<class T>
+typename HostMem<T>::iterator HostMem<T>::end()
+{
+   return HostMem<T>::iterator(m_ptr, m_size);
 }
 
 template<class T>
