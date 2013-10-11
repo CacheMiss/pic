@@ -66,8 +66,6 @@ class HostMem
       {
          return j.m_data - m_data;
       }
-      //T& operator[](std::size_t n);
-      //const T& operator[](std::size_t n) const;
 
       Value* m_data;
    };
