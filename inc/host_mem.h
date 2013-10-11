@@ -55,7 +55,7 @@ class HostMem
 
 template<class T>
 HostMem<T>::HostMem()
-  :m_ptr(NULL)
+  : m_ptr(NULL)
   , m_size(0)
   , m_reserved(0)
   , m_padding(0)
@@ -74,7 +74,8 @@ HostMem<T>::HostMem(std::size_t size)
 
 template<class T>
 HostMem<T>::HostMem(std::size_t size, int val)
-  :m_size(size)
+  : m_ptr(NULL)
+  , m_size(size)
   , m_reserved(size)
   , m_padding(0)
 {
@@ -98,7 +99,7 @@ HostMem<T>::HostMem(const PitchedPtr<T> &rhs)
 template<class T>
 template<class Allocator>
 HostMem<T>::HostMem(const DevMem<T, Allocator> &rhs)
-  :m_ptr(NULL)
+  : m_ptr(NULL)
   , m_size(0)
   , m_reserved(0)
   , m_padding(rhs.padding)
