@@ -1096,6 +1096,8 @@ void calcIntermediateRho(DevMemF &dev_rho,
 #endif
    cudaStreamSynchronize(stream);
    checkForCudaError("Finished prep for sumArea");
+   // For each bin in the grid, sum all the a1-a4 values.
+   // Once this is complete, the charge at a point will just be a1+a2+a3+a4.
    sumArea<<<*numBlocks, *blockSize, sharedMemoryBytes, stream>>>(
       dev_a1Sum.getPtr(), dev_a2Sum.getPtr(), 
       dev_a3Sum.getPtr(), dev_a4Sum.getPtr(),
