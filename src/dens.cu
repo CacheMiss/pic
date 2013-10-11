@@ -354,11 +354,15 @@ void densGridPoints(float* __restrict__ rho,
    {
       if(cold)
       {
-         rhoLocal = rhoLocal * 10 / NIJ;
+         // Scale the charge of the cold particles
+         // This allows us to use our memory to simulate more hot particles
+         //rhoLocal = rhoLocal * 10 / NIJ;
+         rhoLocal = rhoLocal / NIJ;
       }
       else
       {
-         rhoLocal = rhoLocal / NIJ;
+         //rhoLocal = rhoLocal / NIJ;
+         rhoLocal = rhoLocal / (NIJ * 10);
       }
       rho[bucketWidth * threadY + threadX] += rhoLocal;
    }
