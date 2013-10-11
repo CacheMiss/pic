@@ -64,7 +64,8 @@ HostMem<T>::HostMem()
 
 template<class T>
 HostMem<T>::HostMem(std::size_t size)
-  :m_size(size)
+  : m_ptr(NULL)
+  , m_size(size)
   , m_reserved(size)
   , m_padding(0)
 {
