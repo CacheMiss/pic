@@ -115,7 +115,8 @@ void executePic(int argc, char *argv[])
    unsigned int nit;
 
    const std::size_t initialAllocSize = 5000000;
-   const int neededParticles = NIJ*NX1; // Need this many particles in each array
+   //const int neededParticles = NIJ*NX1; // Need this many particles in each array
+   const int neededParticles = NIJ * options.getInjectWidth(); // Need this many particles in each array
    // 6 rands for hot electrons
    // 6 rands for cold electrons
    // 6 rands for hot ions
