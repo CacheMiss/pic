@@ -48,6 +48,7 @@
 #include "potent2.h"
 #include "precisiontimer.h"
 #include "simulation_state.h"
+#include "sort_thread.h"
 #include "typedefs.h"
 
 #ifdef _DEBUG
@@ -221,6 +222,9 @@ void executePic(int argc, char *argv[])
    //   logger.flush();
    // END DEBUG
 
+   SortThread sortThread;
+   sortThread.run();
+
    std::cout << "Free mem after initial allocations:" << std::endl;
    printFreeMem();
 
@@ -383,6 +387,11 @@ void executePic(int argc, char *argv[])
       processingStream.synchronize();
       densTimer.stop();
 #endif
+
+      sortThread.sortAsync(d_eleHotLoc, d_eleHotVel, simState.numEleHot);
+      sortThread.sortAsync(d_eleColdLoc, d_eleColdVel, simState.numEleCold);
+      sortThread.sortAsync(d_ionHotLoc, d_ionHotVel, simState.numIonHot);
+      sortThread.sortAsync(d_ionColdLoc, d_ionColdVel, simState.numIonCold);
 
       // Start DEBUG
       //processingStream.synchronize();

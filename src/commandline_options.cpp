@@ -109,4 +109,3 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
 void CommandlineOptions::saveOptions(const char fileName[]) const
 {
 }
-

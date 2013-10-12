@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/thread.hpp>
+#include <boost/thread/locks.hpp>
 #include <deque>
 #include <set>
 #include <utility>
@@ -14,8 +15,9 @@ public:
    SortThread();
    void run();
    void join();
-   void sortAsync(DevMem<float2> *devPos, DevMem<float3> *devVel);
-   void waitForSort(DevMem<float2> *devPos, DevMem<float3> *devVel);
+   void sortAsync(DevMem<float2> &devPos, DevMem<float3> &devVel, std::size_t numPart);
+   void waitForSort(DevMem<float2> &devPos, DevMem<float3> &devVel);
+   struct ParticleList;
 private:
    void readMain();
    void writeMain();
@@ -26,19 +28,57 @@ private:
    boost::thread *m_writeThread;
    boost::thread *m_sortThread;
 
+   struct CopyRequest
+   {
+      CopyRequest()
+         :pos(NULL), vel(NULL), numPart(0)
+      {}
+      CopyRequest(float2* p, float3* v, std::size_t n)
+         :pos(p), vel(v), numPart(n)
+      {}
+      float2* pos;
+      float3* vel;
+      std::size_t numPart;
+   };
+
    struct Job
    {
       Job()
         : pos(NULL), vel(NULL), d_srcPos(NULL), d_srcVel(NULL)
       {}
       Job(HostMem<float2> *p, HostMem<float3> *v, 
-          DevMem<float2> *d_p, DevMem<float3> *d_v)
-        : pos(p), vel(v), d_srcPos(d_p), d_srcVel(d_v)
+          float2* d_p, float3* d_v,
+          std::size_t n)
+        : pos(p), vel(v), d_srcPos(d_p), d_srcVel(d_v), numPart(n)
       {}
+      Job& operator=(const CopyRequest &rhs)
+      {
+         d_srcPos = rhs.pos;
+         d_srcVel = rhs.vel;
+         numPart = rhs.numPart;
+         pos->resize(numPart);
+         vel->resize(numPart);
+
+         return *this;
+      }
+      Job& operator=(Job const& rhs)
+      {
+         if(this != &rhs)
+         {
+            d_srcPos = rhs.d_srcPos;
+            d_srcVel = rhs.d_srcVel;
+            numPart = rhs.numPart;
+            pos = rhs.pos;
+            vel = rhs.vel;
+         }
+         return *this;
+      }
+
       HostMem<float2> *pos;
       HostMem<float3> *vel;
-      DevMem<float2> *d_srcPos;
-      DevMem<float3> *d_srcVel;
+      float2* d_srcPos;
+      float3* d_srcVel;
+      std::size_t numPart;
    };
 
    template<class T>
@@ -91,8 +131,8 @@ private:
       }
    private:
       std::deque<T> m_deque;
-      boost::mutex m_mutex;
-      boost::condition_variable m_cond;
+      mutable boost::mutex m_mutex;
+      mutable boost::condition_variable m_cond;
    };
 
    std::size_t m_padding;
@@ -102,12 +142,12 @@ private:
    SafeDeque<Job> m_memPool;
    SafeDeque<Job> m_writeJobs;
    SafeDeque<Job> m_sortJobs;
-   SafeDeque<std::pair<DevMem<float2>*, DevMem<float3>*> > m_newRequests;
+   SafeDeque<CopyRequest> m_newRequests;
 
    DevStream m_readStream;
    DevStream m_writeStream;
 
-   std::set<DevMem<float2>*> m_finishedSet;
+   std::set<float2*> m_finishedSet;
    boost::mutex m_finishedSetLock;
    boost::condition_variable m_finishedSetCond;
 

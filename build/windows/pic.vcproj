@@ -121,7 +121,8 @@
 			/>
 			<Tool
 				Name="Cudart Build Rule"
-				Include="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST);"
+				AdditionalOptions="-G"
+				Include="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST);$(INTEL_TBB)/include"
 				Arch1="0"
 				TargetMachinePlatform="1"
 				ExtraNvccOptions="-g"
@@ -141,7 +142,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST);"
+				AdditionalIncludeDirectories="&quot;$(CUDA_INC_PATH)&quot;;&quot;$(SolutionDir)\..\..\inc&quot;;&quot;$(BOOST)&quot;;&quot;$(INTEL_TBB)/include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -161,9 +162,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt-gd-1_49.lib libboost_date_time-vc90-mt-gd-1_49.lib libboost_filesystem-vc90-mt-gd-1_49.lib libboost_program_options-vc90-mt-gd-1_49.lib libboost_system-vc90-mt-gd-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib"
+				AdditionalDependencies="libboost_thread-vc90-mt-gd-1_49.lib libboost_date_time-vc90-mt-gd-1_49.lib libboost_filesystem-vc90-mt-gd-1_49.lib libboost_program_options-vc90-mt-gd-1_49.lib libboost_system-vc90-mt-gd-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib tbb_debug.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\x64&quot;;&quot;$(BOOST)\lib\win64&quot;"
+				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\x64&quot;;&quot;$(BOOST)\lib\win64&quot;;&quot;$(INTEL_TBB)\lib\intel64\vc9&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="17"
@@ -293,7 +294,7 @@
 			/>
 			<Tool
 				Name="Cudart Build Rule"
-				Include="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST);"
+				Include="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST);$(INTEL_TBB)/include"
 				Arch1="0"
 				TargetMachinePlatform="1"
 				Runtime="2"
@@ -313,7 +314,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST);"
+				AdditionalIncludeDirectories="&quot;$(CUDA_INC_PATH)&quot;;&quot;$(SolutionDir)\..\..\inc&quot;;&quot;$(BOOST)&quot;;&quot;$(INTEL_TBB)/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -332,9 +333,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt-1_49.lib libboost_date_time-vc90-mt-1_49.lib libboost_filesystem-vc90-mt-1_49.lib libboost_program_options-vc90-mt-1_49.lib libboost_system-vc90-mt-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib"
+				AdditionalDependencies="libboost_thread-vc90-mt-1_49.lib libboost_date_time-vc90-mt-1_49.lib libboost_filesystem-vc90-mt-1_49.lib libboost_program_options-vc90-mt-1_49.lib libboost_system-vc90-mt-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib tbb.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\x64&quot;;&quot;$(BOOST)\lib\win64&quot;"
+				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\x64&quot;;&quot;$(BOOST)\lib\win64&quot;;&quot;$(INTEL_TBB)\lib\intel64\vc9&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
