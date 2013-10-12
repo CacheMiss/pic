@@ -37,6 +37,11 @@ class HostMem
          :m_data(other.m_data)
       {}
 
+      Value& operator[](std::size_t n) const
+      {
+         return m_data[n];
+      }
+
       private:
       friend class boost::iterator_core_access;
       template <class> friend class iterator_template;
@@ -62,7 +67,7 @@ class HostMem
       {
          m_data += n;
       }
-      std::size_t distance_to(iterator_template<Value> const& j) const
+      std::ptrdiff_t distance_to(iterator_template<Value> const& j) const
       {
          return j.m_data - m_data;
       }
@@ -311,12 +316,14 @@ void HostMem<T>::allocate(std::size_t size, bool preserve)
    {
       checkCuda(cudaFreeHost(m_ptr));
       checkCuda(cudaMallocHost(reinterpret_cast<void**>(&m_ptr), (size + m_padding) * sizeof(T)));
+      m_reserved = size + m_padding;
    }
    else
    {
       T* tmp = m_ptr;
 
-      checkCuda(cudaMallocHost(reinterpret_cast<void**>(&m_ptr), sizeof(T) * size));
+      checkCuda(cudaMallocHost(reinterpret_cast<void**>(&m_ptr), sizeof(T) * (size + m_padding)));
+      m_reserved = size + m_padding;
 
       if(tmp != NULL)
       {
