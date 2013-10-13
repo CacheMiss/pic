@@ -388,10 +388,10 @@ void executePic(int argc, char *argv[])
       densTimer.stop();
 #endif
 
-      sortThread.sortAsync(d_eleHotLoc, d_eleHotVel, simState.numEleHot);
-      sortThread.sortAsync(d_eleColdLoc, d_eleColdVel, simState.numEleCold);
       sortThread.sortAsync(d_ionHotLoc, d_ionHotVel, simState.numIonHot);
       sortThread.sortAsync(d_ionColdLoc, d_ionColdVel, simState.numIonCold);
+      sortThread.sortAsync(d_eleHotLoc, d_eleHotVel, simState.numEleHot);
+      sortThread.sortAsync(d_eleColdLoc, d_eleColdVel, simState.numEleCold);
 
       // Start DEBUG
       //processingStream.synchronize();
@@ -447,10 +447,6 @@ void executePic(int argc, char *argv[])
       // logger.flush();
       // END DEBUG
 
-      sortThread.waitForSort(d_ionHotLoc, d_ionHotVel);
-      sortThread.waitForSort(d_ionColdLoc, d_ionColdVel);
-      sortThread.waitForSort(d_eleHotLoc, d_eleHotVel);
-      sortThread.waitForSort(d_eleColdLoc, d_eleColdVel);
 #ifdef ENABLE_TIMERS
       movepTimer.start();
 #endif
@@ -459,11 +455,13 @@ void executePic(int argc, char *argv[])
 #ifdef DEBUG_TRACE
       std::cout << "MoveHi" << std::endl;
 #endif
+      sortThread.waitForSort(d_ionHotLoc, d_ionHotVel);
       movep(d_ionHotLoc, d_ionHotVel, simState.numIonHot, 
          RATO, dev_ex, dev_ey, processingStream);
 #ifdef DEBUG_TRACE
       std::cout << "MoveCi" << std::endl;
 #endif
+      sortThread.waitForSort(d_ionColdLoc, d_ionColdVel);
       movep(d_ionColdLoc, d_ionColdVel, simState.numIonCold, 
          RATO, dev_ex, dev_ey, processingStream);
 
@@ -471,11 +469,13 @@ void executePic(int argc, char *argv[])
 #ifdef DEBUG_TRACE
       std::cout << "MoveHe" << std::endl;
 #endif
+      sortThread.waitForSort(d_eleHotLoc, d_eleHotVel);
       movep(d_eleHotLoc, d_eleHotVel, simState.numEleHot, 
          (float) -1.0, dev_ex, dev_ey, processingStream);
 #ifdef DEBUG_TRACE
       std::cout << "MoveCe" << std::endl;
 #endif
+      sortThread.waitForSort(d_eleColdLoc, d_eleColdVel);
       movep(d_eleColdLoc, d_eleColdVel, simState.numEleCold, 
          (float) -1.0, dev_ex, dev_ey, processingStream);
 
