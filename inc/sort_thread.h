@@ -17,7 +17,6 @@ public:
    void join();
    void sortAsync(DevMem<float2> &devPos, DevMem<float3> &devVel, std::size_t numPart);
    void waitForSort(DevMem<float2> &devPos, DevMem<float3> &devVel);
-   struct ParticleList;
 private:
    void readMain();
    void writeMain();
@@ -26,38 +25,73 @@ private:
    //boost::condition_variable *m_cond;
    boost::thread *m_readThread;
    boost::thread *m_writeThread;
-   boost::thread *m_sortThread;
+   std::vector<boost::thread*> m_sortThread;
+   std::size_t m_numSortThreads;
+
+   class Particle
+   {
+      public:
+      Particle()
+      {
+         pos.x = 0;
+         pos.y = 0;
+         vel.x = 0;
+         vel.y = 0;
+         vel.z = 0;
+      }
+      Particle(float2 p, float3 v)
+         : pos(p), vel(v)
+      {}
+      bool operator<(Particle const& rhs) const
+      {
+         if(pos.y < rhs.pos.y)
+         {
+            return true;
+         }
+         else if(pos.y == rhs.pos.y && pos.x < rhs.pos.x)
+         {
+            return true;
+         }
+         return false;
+      }
+      bool operator==(Particle const& rhs) const
+      {
+         return pos.y == rhs.pos.y && pos.x == rhs.pos.x;
+      }
+      float2 pos;
+      float3 vel;
+   };
 
    struct CopyRequest
    {
       CopyRequest()
-         :pos(NULL), vel(NULL), numPart(0)
+         :d_pos(NULL), d_vel(NULL), numPart(0)
       {}
       CopyRequest(float2* p, float3* v, std::size_t n)
-         :pos(p), vel(v), numPart(n)
+         :d_pos(p), d_vel(v), numPart(n)
       {}
-      float2* pos;
-      float3* vel;
+      float2* d_pos;
+      float3* d_vel;
       std::size_t numPart;
    };
 
    struct Job
    {
       Job()
-        : pos(NULL), vel(NULL), d_srcPos(NULL), d_srcVel(NULL)
+        : part(NULL), d_srcPos(NULL), d_srcVel(NULL)
       {}
-      Job(HostMem<float2> *p, HostMem<float3> *v, 
+      Job(HostMem<Particle> *p,
           float2* d_p, float3* d_v,
           std::size_t n)
-        : pos(p), vel(v), d_srcPos(d_p), d_srcVel(d_v), numPart(n)
+        : part(p), d_srcPos(d_p), d_srcVel(d_v), numPart(n)
       {}
       Job& operator=(const CopyRequest &rhs)
       {
-         d_srcPos = rhs.pos;
-         d_srcVel = rhs.vel;
+         d_srcPos = rhs.d_pos;
+         d_srcVel = rhs.d_vel;
          numPart = rhs.numPart;
-         pos->resize(numPart);
-         vel->resize(numPart);
+         assert(part != NULL);
+         part->resize(numPart);
 
          return *this;
       }
@@ -68,14 +102,12 @@ private:
             d_srcPos = rhs.d_srcPos;
             d_srcVel = rhs.d_srcVel;
             numPart = rhs.numPart;
-            pos = rhs.pos;
-            vel = rhs.vel;
+            part = rhs.part;
          }
          return *this;
       }
 
-      HostMem<float2> *pos;
-      HostMem<float3> *vel;
+      HostMem<Particle> *part;
       float2* d_srcPos;
       float3* d_srcVel;
       std::size_t numPart;
@@ -136,8 +168,7 @@ private:
    };
 
    std::size_t m_padding;
-   HostMem<float2> m_pos[2];
-   HostMem<float3> m_vel[2];
+   HostMem<Particle> m_part[3];
 
    SafeDeque<Job> m_memPool;
    SafeDeque<Job> m_writeJobs;

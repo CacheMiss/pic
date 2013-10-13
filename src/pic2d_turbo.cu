@@ -447,6 +447,10 @@ void executePic(int argc, char *argv[])
       // logger.flush();
       // END DEBUG
 
+      sortThread.waitForSort(d_ionHotLoc, d_ionHotVel);
+      sortThread.waitForSort(d_ionColdLoc, d_ionColdVel);
+      sortThread.waitForSort(d_eleHotLoc, d_eleHotVel);
+      sortThread.waitForSort(d_eleColdLoc, d_eleColdVel);
 #ifdef ENABLE_TIMERS
       movepTimer.start();
 #endif
