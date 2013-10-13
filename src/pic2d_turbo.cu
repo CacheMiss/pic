@@ -597,9 +597,12 @@ int main(int argc, char *argv[])
       std::cout << e.what() << std::endl;
       throw;
    }
+#ifndef _DEBUG
    try
    {
+#endif
       executePic(argc, argv);
+#ifndef _DEBUG
    }
    catch(CudaRuntimeError e)
    {
@@ -614,6 +617,7 @@ int main(int argc, char *argv[])
       cudaDeviceReset();
       throw;
    }
+#endif
 
    ParticleAllocator::getRef().cleanup();
    DevMemReuse::getRef().cleanup();
