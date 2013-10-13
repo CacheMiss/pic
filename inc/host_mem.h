@@ -149,6 +149,7 @@ HostMem<T>::HostMem(std::size_t size, int val)
 
 template<class T>
 HostMem<T>::HostMem(const PitchedPtr<T> &rhs)
+  : m_ptr(NULL)
 {
    const PitchedPtr_t<T> &rhsPtr = rhs.getPtr();
    m_size = rhsPtr.x * rhsPtr.y;
