@@ -170,6 +170,10 @@ void executePic(int argc, char *argv[])
    nit = static_cast<int>((maxSimTime-TSTART)/DELT + 1); // determine number of iterations
 
    percentSize = nit / 100;
+   if(percentSize == 0)
+   {
+      percentSize = 1;
+   }
 
    simState.simTime = TSTART;
    lfd=LF-1;
