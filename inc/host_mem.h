@@ -130,7 +130,7 @@ template<class T>
 HostMem<T>::HostMem(std::size_t size)
   : m_ptr(NULL)
   , m_size(size)
-  , m_reserved(size)
+  , m_reserved(0)
   , m_padding(0)
 {
    allocate(m_size);
@@ -140,7 +140,7 @@ template<class T>
 HostMem<T>::HostMem(std::size_t size, int val)
   : m_ptr(NULL)
   , m_size(size)
-  , m_reserved(size)
+  , m_reserved(0)
   , m_padding(0)
 {
    allocate(m_size);
@@ -150,10 +150,12 @@ HostMem<T>::HostMem(std::size_t size, int val)
 template<class T>
 HostMem<T>::HostMem(const PitchedPtr<T> &rhs)
   : m_ptr(NULL)
+  , m_size(0)
+  , m_reserved(0)
+  , m_padding(0)
 {
    const PitchedPtr_t<T> &rhsPtr = rhs.getPtr();
    m_size = rhsPtr.x * rhsPtr.y;
-   m_reserved = m_size;
    allocate(m_size);
    checkCuda(cudaMemcpy2D(m_ptr, rhsPtr.widthBytes, 
                           rhsPtr.ptr, rhsPtr.pitch, 
@@ -202,9 +204,7 @@ void HostMem<T>::resize(std::size_t newSize)
 {
    if(newSize > m_reserved)
    {
-      checkCuda(cudaFreeHost(m_ptr));
       m_size = newSize;
-      m_reserved = m_size;
       allocate(m_reserved);
    }
    else
