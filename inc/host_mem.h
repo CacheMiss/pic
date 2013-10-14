@@ -205,7 +205,7 @@ void HostMem<T>::resize(std::size_t newSize)
    if(newSize > m_reserved)
    {
       m_size = newSize;
-      allocate(m_reserved);
+      allocate(m_size);
    }
    else
    {
