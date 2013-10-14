@@ -90,7 +90,7 @@ void executePic(int argc, char *argv[])
    DeviceStats &ref(DeviceStats::getRef());
    printFreeMem();
 
-   DevStream processingStream;
+   DevStream processingStream[4];
 
    DevMemReuse &reuseAllocator(DevMemReuse::getRef());
    reuseAllocator.setSizeX(NX1);
@@ -226,7 +226,7 @@ void executePic(int argc, char *argv[])
    //   logger.flush();
    // END DEBUG
 
-   SortThread sortThread;
+   SortThread sortThread(OOB_PARTICLE);
    sortThread.run();
 
    std::cout << "Free mem after initial allocations:" << std::endl;
@@ -338,10 +338,10 @@ void executePic(int argc, char *argv[])
       dim3 injectNumBlocks(static_cast<unsigned int>(calcNumBlocks(injectThreadsPerBlock, neededParticles)));
       dim3 injectBlockSize(injectThreadsPerBlock);
       sharedMemoryBytes = sizeof(float) * 5 * injectThreadsPerBlock;
-      processingStream.synchronize();
+      processingStream[0].synchronize();
       checkForCudaError("RandomGPU");
       // randomly inject new particles in top and bottom 
-      inject<<<injectNumBlocks, injectBlockSize, sharedMemoryBytes, *processingStream>>>(
+      inject<<<injectNumBlocks, injectBlockSize, sharedMemoryBytes, *processingStream[0]>>>(
          d_eleHotLoc.getPtr(), d_eleHotVel.getPtr(), 
          d_eleColdLoc.getPtr(), d_eleColdVel.getPtr(), 
          d_ionHotLoc.getPtr(), d_ionHotVel.getPtr(), 
@@ -361,12 +361,12 @@ void executePic(int argc, char *argv[])
       simState.numIonHot += neededParticles;
       simState.numIonCold += neededParticles;
 #ifdef ENABLE_TIMERS
-      processingStream.synchronize();
+      processingStream[0].synchronize();
       injectTimer.stop();
 #endif
 
       // DEBUG
-      //processingStream.synchronize();
+      //processingStream[0].synchronize();
       //logger.pushLogItem(
       //   new LogParticlesAscii(ind, d_eleHotLoc, d_eleHotVel,
       //   d_eleColdLoc, d_eleColdVel,
@@ -389,9 +389,9 @@ void executePic(int argc, char *argv[])
            d_ionHotLoc, d_ionColdLoc,
            simState.numEleHot, simState.numEleCold, 
            simState.numIonHot, simState.numIonCold,
-           processingStream);
+           processingStream[0]);
 #ifdef ENABLE_TIMERS
-      processingStream.synchronize();
+      processingStream[0].synchronize();
       densTimer.stop();
 #endif
 
@@ -413,7 +413,7 @@ void executePic(int argc, char *argv[])
       }
 
       // Start DEBUG
-      //processingStream.synchronize();
+      //processingStream[0].synchronize();
       //Array2dF *rho = new Array2dF(NY, NX1);
       //Array2dF *rhoe = new Array2dF(NY, NX1);
       //Array2dF *rhoi = new Array2dF(NY, NX1);
@@ -435,9 +435,9 @@ void executePic(int argc, char *argv[])
       potent2Timer.start();
 #endif
       // calculate potential at Grid points
-      potent2(dev_phi, dev_rho, processingStream);
+      potent2(dev_phi, dev_rho, processingStream[0]);
 #ifdef ENABLE_TIMERS
-      processingStream.synchronize();
+      processingStream[0].synchronize();
       potent2Timer.stop();
 #endif
 
@@ -448,14 +448,14 @@ void executePic(int argc, char *argv[])
       fieldTimer.start();
 #endif
       //calculate E field at Grid points
-      field(dev_ex,dev_ey,dev_phi, processingStream);
+      field(dev_ex,dev_ey,dev_phi, processingStream[0]);
 #ifdef ENABLE_TIMERS
-      processingStream.synchronize();
+      processingStream[0].synchronize();
       fieldTimer.stop();
 #endif
 
       // DEBUG
-      //processingStream.synchronize();
+      //processingStream[0].synchronize();
       // logger.pushLogItem(
       //    new LogParticlesAscii(ind, d_eleHotLoc, d_eleHotVel,
       //    d_eleColdLoc, d_eleColdVel,
@@ -469,26 +469,26 @@ void executePic(int argc, char *argv[])
 #ifdef ENABLE_TIMERS
       movepTimer.start();
 #endif
-      processingStream.synchronize();
+      processingStream[0].synchronize();
       // move ions
 #ifdef DEBUG_TRACE
       std::cout << "MoveHi" << std::endl;
 #endif
       if(itRemainder == 1)
       {
-         sortThread.waitForSort(d_ionHotLoc, d_ionHotVel);
+         simState.numIonHot -= static_cast<unsigned int>(sortThread.waitForSort(d_ionHotLoc, d_ionHotVel));
       }
       movep(d_ionHotLoc, d_ionHotVel, simState.numIonHot, 
-         RATO, dev_ex, dev_ey, processingStream);
+         RATO, dev_ex, dev_ey, processingStream[0], true);
 #ifdef DEBUG_TRACE
       std::cout << "MoveCi" << std::endl;
 #endif
       if(itRemainder == 2)
       {
-         sortThread.waitForSort(d_ionColdLoc, d_ionColdVel);
+         simState.numIonCold -= static_cast<unsigned int>(sortThread.waitForSort(d_ionColdLoc, d_ionColdVel));
       }
       movep(d_ionColdLoc, d_ionColdVel, simState.numIonCold, 
-         RATO, dev_ex, dev_ey, processingStream);
+         RATO, dev_ex, dev_ey, processingStream[1], false);
 
       // move electrons
 #ifdef DEBUG_TRACE
@@ -496,27 +496,30 @@ void executePic(int argc, char *argv[])
 #endif
       if(itRemainder == 3)
       {
-         sortThread.waitForSort(d_eleHotLoc, d_eleHotVel);
+         simState.numEleHot -= static_cast<unsigned int>(sortThread.waitForSort(d_eleHotLoc, d_eleHotVel));
       }
       movep(d_eleHotLoc, d_eleHotVel, simState.numEleHot, 
-         (float) -1.0, dev_ex, dev_ey, processingStream);
+         (float) -1.0, dev_ex, dev_ey, processingStream[2], false);
 #ifdef DEBUG_TRACE
       std::cout << "MoveCe" << std::endl;
 #endif
       if(itRemainder == 4)
       {
-         sortThread.waitForSort(d_eleColdLoc, d_eleColdVel);
+         simState.numEleCold -= static_cast<unsigned int>(sortThread.waitForSort(d_eleColdLoc, d_eleColdVel));
       }
       movep(d_eleColdLoc, d_eleColdVel, simState.numEleCold, 
-         (float) -1.0, dev_ex, dev_ey, processingStream);
+         (float) -1.0, dev_ex, dev_ey, processingStream[3], false);
 
 #ifdef ENABLE_TIMERS
-      processingStream.synchronize();
+      processingStream[0].synchronize();
+      processingStream[1].synchronize();
+      processingStream[2].synchronize();
+      processingStream[3].synchronize();
       movepTimer.stop();
 #endif
 
       // DEBUG
-      //processingStream.synchronize();
+      //processingStream[0].synchronize();
       //logger.pushLogItem(
       //   new LogParticlesAscii(ind, d_eleHotLoc, d_eleHotVel,
       //   d_eleColdLoc, d_eleColdVel,
@@ -530,7 +533,10 @@ void executePic(int argc, char *argv[])
       if (lfd >= LF) 
       {
          iterationTimer.stop();
-         processingStream.synchronize();
+         processingStream[0].synchronize();
+         processingStream[1].synchronize();
+         processingStream[2].synchronize();
+         processingStream[3].synchronize();
          logger.logInfo(ind, simState.simTime, 
             simState.numEleHot + simState.numEleCold,
             simState.numIonHot + simState.numIonCold,

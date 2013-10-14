@@ -8,7 +8,7 @@
 void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
            unsigned int &numParticles, float mass,
            const PitchedPtr<float> &ex, const PitchedPtr<float> &ey,
-           DevStream &stream);
+           DevStream &stream, bool updateField);
 
 #endif
 

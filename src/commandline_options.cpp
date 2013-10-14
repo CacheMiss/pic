@@ -100,6 +100,7 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
    SIGMA_CE = getSigmaCe();
    SIGMA_CI = getSigmaCi();
    B0 = getB0();
+   OOB_PARTICLE = static_cast<float>(NY1) + 1000.0f;
    outputPath = m_outputPath;
    errorLogName = (boost::filesystem::path(outputPath) /= "errorLog.txt").string();
 

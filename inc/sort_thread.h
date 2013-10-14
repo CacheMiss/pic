@@ -3,7 +3,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/locks.hpp>
 #include <deque>
-#include <set>
+#include <map>
 #include <utility>
 
 #include "dev_stream.h"
@@ -12,11 +12,12 @@
 class SortThread
 {
 public:
-   SortThread();
+   SortThread(float oobValue);
    void run();
    void join();
    void sortAsync(DevMem<float2> &devPos, DevMem<float3> &devVel, std::size_t numPart);
-   void waitForSort(DevMem<float2> &devPos, DevMem<float3> &devVel);
+   // Wait for a sort to finish. Returns the number of particles which were out of bounds.
+   std::size_t waitForSort(DevMem<float2> &devPos, DevMem<float3> &devVel);
 private:
    void readMain();
    void writeMain();
@@ -78,7 +79,7 @@ private:
    struct Job
    {
       Job()
-        : part(NULL), d_srcPos(NULL), d_srcVel(NULL)
+        : part(NULL), d_srcPos(NULL), d_srcVel(NULL), numOob(0)
       {}
       Job(HostMem<Particle> *p,
           float2* d_p, float3* d_v,
@@ -90,6 +91,7 @@ private:
          d_srcPos = rhs.d_pos;
          d_srcVel = rhs.d_vel;
          numPart = rhs.numPart;
+         numOob = 0;
          assert(part != NULL);
          part->resize(numPart);
 
@@ -111,6 +113,8 @@ private:
       float2* d_srcPos;
       float3* d_srcVel;
       std::size_t numPart;
+      // Num out of bounds particles
+      std::size_t numOob;
    };
 
    template<class T>
@@ -168,6 +172,7 @@ private:
    };
 
    std::size_t m_padding;
+   float m_oobValue;
    HostMem<Particle> m_part[3];
 
    SafeDeque<Job> m_memPool;
@@ -178,9 +183,10 @@ private:
    DevStream m_readStream;
    DevStream m_writeStream;
 
-   std::set<float2*> m_finishedSet;
-   boost::mutex m_finishedSetLock;
-   boost::condition_variable m_finishedSetCond;
+   typedef std::map<float2*, std::size_t> FinishedCopies;
+   FinishedCopies m_finishedCopies;
+   boost::mutex m_finishedCopiesLock;
+   boost::condition_variable m_finishedCopiesCond;
 
    bool m_keepRunning;
 };

@@ -7,11 +7,12 @@
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_sort.h>
 
-SortThread::SortThread()
+SortThread::SortThread(float oobValue)
 : m_readThread(NULL)
 , m_writeThread(NULL)
 , m_numSortThreads(2)
 , m_keepRunning(false)
+, m_oobValue(oobValue)
 , m_padding(100000)
 {
    m_sortThread.resize(m_numSortThreads);
@@ -138,11 +139,20 @@ void SortThread::writeMain()
                 newJob.numPart, 
                 cudaMemcpyHostToDevice, 
                 *m_writeStream));
+      std::size_t numOob = 0;
+      for(int i = static_cast<int>(newJob.part->size()) - 1; i >= 0; i--)
+      {
+         if((*newJob.part)[i].pos.y != m_oobValue)
+         {
+            numOob = (newJob.part->size() - 1) - i;
+            break;
+         }
+      }
       m_writeStream.synchronize();
       {
-         boost::unique_lock<boost::mutex> lock(m_finishedSetLock);
-         m_finishedSet.insert(newJob.d_srcPos);
-         m_finishedSetCond.notify_one();
+         boost::unique_lock<boost::mutex> lock(m_finishedCopiesLock);
+         m_finishedCopies.insert(std::make_pair(newJob.d_srcPos, numOob));
+         m_finishedCopiesCond.notify_one();
       }
       m_memPool.push_back(newJob);
    }
@@ -174,18 +184,21 @@ void SortThread::sortAsync(DevMem<float2> &devPos, DevMem<float3> &devVel, std::
    m_newRequests.push_back(CopyRequest(devPos.getPtr(), devVel.getPtr(), numPart));
 }
 
-void SortThread::waitForSort(DevMem<float2> &devPos, DevMem<float3> &devVel)
+std::size_t SortThread::waitForSort(DevMem<float2> &devPos, DevMem<float3> &devVel)
 {
-   std::set<float2*>::iterator it;
-   boost::unique_lock<boost::mutex> lock(m_finishedSetLock);
+   FinishedCopies::iterator it;
+   boost::unique_lock<boost::mutex> lock(m_finishedCopiesLock);
    do
    {
-      it = m_finishedSet.find(devPos.getPtr());
-      if(it != m_finishedSet.end())
+      it = m_finishedCopies.find(devPos.getPtr());
+      if(it != m_finishedCopies.end())
       {
          break;
       }
-      m_finishedSetCond.wait(lock);
-   }while(it == m_finishedSet.end());
-   m_finishedSet.erase(it);
+      m_finishedCopiesCond.wait(lock);
+   }while(it == m_finishedCopies.end());
+   std::size_t numOob = it->second;
+   m_finishedCopies.erase(it);
+
+   return numOob;
 }

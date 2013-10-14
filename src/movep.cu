@@ -96,7 +96,8 @@ __global__
 void moveParticles(float2 d_partLoc[], float3 d_partVel[],
                    const unsigned int numParticles,
                    const float mass,
-                   const unsigned int NX1, const unsigned int NY1)
+                   const unsigned int NX1, const unsigned int NY1,
+                   const float OOB_PARTICLE)
 {
    const unsigned int threadX = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -224,6 +225,11 @@ void moveParticles(float2 d_partLoc[], float3 d_partVel[],
       else if (pLoc.x <  0)
       { 
          pLoc.x= pLoc.x + (D_DX * NX1);
+      }
+
+      if(pLoc.y > D_DY * (NY1-1) || pLoc.y < D_DY)
+      {
+         pLoc.y = OOB_PARTICLE;
       }
    }
 
@@ -451,25 +457,24 @@ void countOobParticles(float2 position[],
 void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
            unsigned int &numParticles, float mass,
            const PitchedPtr<float> &ex, const PitchedPtr<float> &ey,
-           DevStream &stream)
+           DevStream &stream, bool updateField)
 {
    static bool first = true;
 
    int numThreads;
    dim3 blockSize;
    dim3 numBlocks;
-   unsigned int sharedMemoryBytes;
 
    DeviceStats &dev(DeviceStats::getRef());
    SimulationState &simState(SimulationState::getRef());
 
-   DevMem<unsigned int, DevMemReuse> dev_oobIdx;
-   assert(dev_oobIdx.getPtr() != NULL);
-   dev_oobIdx.zeroMem();
-   DevMem<unsigned int, DevMemReuse> dev_moveCandIdx;
-   dev_moveCandIdx.zeroMem();
-   static HostMem<unsigned int> oobIdx(1);
-   static HostMem<unsigned int> moveCandIdx(1);
+   //DevMem<unsigned int, DevMemReuse> dev_oobIdx;
+   //assert(dev_oobIdx.getPtr() != NULL);
+   //dev_oobIdx.zeroMem();
+   //DevMem<unsigned int, DevMemReuse> dev_moveCandIdx;
+   //dev_moveCandIdx.zeroMem();
+   //static HostMem<unsigned int> oobIdx(1);
+   //static HostMem<unsigned int> moveCandIdx(1);
 
    // DEBUG
    //{
@@ -518,7 +523,7 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
       DevMem<float> d_bym(NY+1);
 
       resizeDim3(blockSize, 256);
-      resizeDim3(numBlocks, calcNumBlocks(256, d_bxm.getX()),
+      resizeDim3(numBlocks, calcNumBlocks(256, static_cast<unsigned int>(d_bxm.getX())),
          calcNumBlocks(1, d_bxm.getY()));
       calcBxm<<<numBlocks, blockSize, 0, *stream>>>(
          d_bxm.getPtr(), 
@@ -565,24 +570,27 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
       checkCuda(cudaBindTextureToArray(texBym, cuArrayBym, channelDesc));
    }
 
-
-   //cudaMemset(const_cast<float*>(ex.getPtr()), 0, ex.size() * sizeof(float));
-   checkCuda(cudaMemcpy2DToArray(cuArrayEx,
-      0,
-      0,
-      ex.getPtr().ptr,
-      ex.getPtr().pitch,
-      ex.getPtr().widthBytes,
-      ex.getPtr().y,
-      cudaMemcpyDeviceToDevice));
-   checkCuda(cudaMemcpy2DToArray(cuArrayEy,
-      0,
-      0,
-      ey.getPtr().ptr,
-      ey.getPtr().pitch,
-      ey.getPtr().widthBytes,
-      ey.getPtr().y,
-      cudaMemcpyDeviceToDevice));
+   if(updateField)
+   {
+      stream.synchronize();
+      checkCuda(cudaMemcpy2DToArray(cuArrayEx,
+         0,
+         0,
+         ex.getPtr().ptr,
+         ex.getPtr().pitch,
+         ex.getPtr().widthBytes,
+         ex.getPtr().y,
+         cudaMemcpyDeviceToDevice));
+      checkCuda(cudaMemcpy2DToArray(cuArrayEy,
+         0,
+         0,
+         ey.getPtr().ptr,
+         ey.getPtr().pitch,
+         ey.getPtr().widthBytes,
+         ey.getPtr().y,
+         cudaMemcpyDeviceToDevice));
+      stream.synchronize();
+   }
 
    if(first)
    {
@@ -605,13 +613,13 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
    numThreads = dev.maxThreadsPerBlock / 2;
    resizeDim3(blockSize, numThreads);
    resizeDim3(numBlocks, calcNumBlocks(numThreads, numParticles));
-   stream.synchronize();
    checkForCudaError("Before moveParticles");
    moveParticles<<<numBlocks, blockSize, 0, *stream>>>(
       partLoc.getPtr(), partVel.getPtr(),
-      numParticles, mass, NX1, NY1);
+      numParticles, mass, NX1, NY1, OOB_PARTICLE);
    checkForCudaError("moveParticles");
 
+   /*
    numThreads = dev.maxThreadsPerBlock / 2;
    resizeDim3(blockSize, numThreads);
    resizeDim3(numBlocks, calcNumBlocks(numThreads, numParticles));
@@ -746,6 +754,7 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
       //}
       // END DEBUG
    }
+   */
 
    first = false;
 }

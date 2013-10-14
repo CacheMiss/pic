@@ -21,6 +21,9 @@ float SIGMA_CI = static_cast<float>(D_SIGMA_CI); // sigma for cold ions
 float SIGMA_HI = static_cast<float>(D_SIGMA_HI); // sigma for hot ions
 float SIGMA_HE = static_cast<float>(D_SIGMA_HE); // sigma for hot electrons
 
+float OOB_PARTICLE;
+
+
 std::string outputPath = "run_output";
 std::string errorLogName;
 

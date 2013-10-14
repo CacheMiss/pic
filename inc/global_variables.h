@@ -49,6 +49,8 @@ extern int NY12;
 // avg number of particles per cell?
 const int NIJ = D_NIJ; // avg number of particle per cell?
 
+extern float OOB_PARTICLE;
+
 // CUDA Globals
 const int MAX_THREADS_PER_BLOCK = D_MAX_THREADS_PER_BLOCK;
 const int SQUARE_BLOCK_MAX_THREADS_PER_DIM = 
