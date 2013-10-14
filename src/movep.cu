@@ -135,8 +135,7 @@ void moveParticles(float2 d_partLoc[], float3 d_partVel[],
 
    if(threadX < numParticles)
    {
-      if (pLoc.x <= D_DX * NX1 && 
-          pLoc.x >= 0)
+      if(!(pLoc.y > D_DY * (NY1-1) || pLoc.y < D_DY))
       {
          const int nii = static_cast<int>(pLoc.y/D_DY);  // Y Position of pBuficle
          const int nj = static_cast<int>((pLoc.x)/D_DX); // X Position of pBuficle
