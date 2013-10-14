@@ -335,7 +335,7 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho, DevStream &stream)
    dim3 numBlocks;
    int sharedSize;
    DevMem<cufftComplex, ParticleAllocator> dev_c(NX1 * NY);
-   DevMem<cufftComplex, ParticleAllocator> dev_pb(NX1);
+   static DevMem<cufftComplex> dev_pb(NX1);
    static DevMem<float> dev_cokx(NX1);
    DevMem<cufftComplex, ParticleAllocator> dev_phif(NY * NX1);
    DevMem<float, DevMemReuse> dev_z(NY1 * NX1);
@@ -365,26 +365,23 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho, DevStream &stream)
    //     boundary conditions
    //ccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-   numThreads = MAX_THREADS_PER_BLOCK / 4;
-   resizeDim3(blockSize, numThreads);
-   resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1));
-   initPb<<<numBlocks, blockSize, 0, *stream>>>(dev_pb.getPtr(), P0, static_cast<unsigned int>(dev_pb.size()));
-   checkForCudaError("initPb");
-
-   static cufftHandle pbTransform;
    if(first)
    {
+      numThreads = MAX_THREADS_PER_BLOCK / 4;
+      resizeDim3(blockSize, numThreads);
+      resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1));
+      initPb<<<numBlocks, blockSize, 0, *stream>>>(dev_pb.getPtr(), P0, static_cast<unsigned int>(dev_pb.size()));
+      checkForCudaError("initPb");
+
+      static cufftHandle pbTransform;
       checkCufftStatus(cufftPlan1d(&pbTransform, NX1, CUFFT_C2C, 1));
       checkCufftStatus(cufftSetStream(pbTransform, *stream));
-   }
-   stream.synchronize();
-   checkForCudaError("Before cufft on dev_pb");
-   checkCufftStatus(cufftExecC2C(pbTransform, dev_pb.getPtr(), dev_pb.getPtr(),
-      CUFFT_FORWARD));
-   //cufftDestroy(pbTransform);
 
-   if(first)
-   {
+      stream.synchronize();
+      checkForCudaError("Before cufft on dev_pb");
+      checkCufftStatus(cufftExecC2C(pbTransform, dev_pb.getPtr(), dev_pb.getPtr(),
+         CUFFT_FORWARD));
+
       // loading harmonics
       numThreads = MAX_THREADS_PER_BLOCK / 4;
       resizeDim3(blockSize, numThreads);
@@ -392,6 +389,9 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho, DevStream &stream)
       loadHarmonics<<<numBlocks, blockSize, 0, *stream>>>(
          dev_cokx.getPtr(), static_cast<unsigned int>(dev_cokx.size()));
       checkForCudaError("loadHarmonics");
+
+      stream.synchronize();
+      cufftDestroy(pbTransform);
    }
 
    numThreads = MAX_THREADS_PER_BLOCK / 8;
