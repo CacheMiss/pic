@@ -243,7 +243,10 @@ void executePic(int argc, char *argv[])
          printFreeMem();
       }
 
-      iterationTimer.start();
+      if (lfd == 0) 
+      {
+         iterationTimer.start();
+      }
 
       simState.simTime +=DELT;
       lfd++;
@@ -392,10 +395,22 @@ void executePic(int argc, char *argv[])
       densTimer.stop();
 #endif
 
-      sortThread.sortAsync(d_ionHotLoc, d_ionHotVel, simState.numIonHot);
-      sortThread.sortAsync(d_ionColdLoc, d_ionColdVel, simState.numIonCold);
-      sortThread.sortAsync(d_eleHotLoc, d_eleHotVel, simState.numEleHot);
-      sortThread.sortAsync(d_eleColdLoc, d_eleColdVel, simState.numEleCold);
+      unsigned int itRemainder = simState.iterationNum % 100;
+      switch(itRemainder)
+      {
+      case 1:
+         sortThread.sortAsync(d_ionHotLoc, d_ionHotVel, simState.numIonHot);
+         break;
+      case 2:
+         sortThread.sortAsync(d_ionColdLoc, d_ionColdVel, simState.numIonCold);
+         break;
+      case 3:
+         sortThread.sortAsync(d_eleHotLoc, d_eleHotVel, simState.numEleHot);
+         break;
+      case 4:
+         sortThread.sortAsync(d_eleColdLoc, d_eleColdVel, simState.numEleCold);
+         break;
+      }
 
       // Start DEBUG
       //processingStream.synchronize();
@@ -459,13 +474,19 @@ void executePic(int argc, char *argv[])
 #ifdef DEBUG_TRACE
       std::cout << "MoveHi" << std::endl;
 #endif
-      sortThread.waitForSort(d_ionHotLoc, d_ionHotVel);
+      if(itRemainder == 1)
+      {
+         sortThread.waitForSort(d_ionHotLoc, d_ionHotVel);
+      }
       movep(d_ionHotLoc, d_ionHotVel, simState.numIonHot, 
          RATO, dev_ex, dev_ey, processingStream);
 #ifdef DEBUG_TRACE
       std::cout << "MoveCi" << std::endl;
 #endif
-      sortThread.waitForSort(d_ionColdLoc, d_ionColdVel);
+      if(itRemainder == 2)
+      {
+         sortThread.waitForSort(d_ionColdLoc, d_ionColdVel);
+      }
       movep(d_ionColdLoc, d_ionColdVel, simState.numIonCold, 
          RATO, dev_ex, dev_ey, processingStream);
 
@@ -473,13 +494,19 @@ void executePic(int argc, char *argv[])
 #ifdef DEBUG_TRACE
       std::cout << "MoveHe" << std::endl;
 #endif
-      sortThread.waitForSort(d_eleHotLoc, d_eleHotVel);
+      if(itRemainder == 3)
+      {
+         sortThread.waitForSort(d_eleHotLoc, d_eleHotVel);
+      }
       movep(d_eleHotLoc, d_eleHotVel, simState.numEleHot, 
          (float) -1.0, dev_ex, dev_ey, processingStream);
 #ifdef DEBUG_TRACE
       std::cout << "MoveCe" << std::endl;
 #endif
-      sortThread.waitForSort(d_eleColdLoc, d_eleColdVel);
+      if(itRemainder == 4)
+      {
+         sortThread.waitForSort(d_eleColdLoc, d_eleColdVel);
+      }
       movep(d_eleColdLoc, d_eleColdVel, simState.numEleCold, 
          (float) -1.0, dev_ex, dev_ey, processingStream);
 
@@ -500,10 +527,9 @@ void executePic(int argc, char *argv[])
       //logger.flush();
       // END DEBUG
 
-      iterationTimer.stop();
-
       if (lfd >= LF) 
       {
+         iterationTimer.stop();
          processingStream.synchronize();
          logger.logInfo(ind, simState.simTime, 
             simState.numEleHot + simState.numEleCold,
@@ -512,7 +538,7 @@ void executePic(int argc, char *argv[])
          logger.logForPerformance(ind, simState.simTime, 
             simState.numEleHot, simState.numEleCold, 
             simState.numIonHot, simState.numIonCold, 
-            (unsigned int) iterationTimer.intervalInMilliS(),
+            (unsigned int) iterationTimer.intervalInMilliS() / LF,
 #ifdef ENABLE_TIMERS
             (unsigned int) injectTimer.intervalInMilliS(),
             (unsigned int) densTimer.intervalInMilliS(),
