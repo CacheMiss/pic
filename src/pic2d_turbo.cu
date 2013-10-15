@@ -448,9 +448,12 @@ void executePic(int argc, char *argv[])
       fieldTimer.start();
 #endif
       //calculate E field at Grid points
-      field(dev_ex,dev_ey,dev_phi, processingStream[0]);
+      field(dev_ex,dev_ey,dev_phi,
+         processingStream[0],
+         processingStream[1]);
 #ifdef ENABLE_TIMERS
       processingStream[0].synchronize();
+      processingStream[1].synchronize();
       fieldTimer.stop();
 #endif
 
@@ -478,6 +481,8 @@ void executePic(int argc, char *argv[])
       {
          simState.numIonHot -= static_cast<unsigned int>(sortThread.waitForSort(d_ionHotLoc, d_ionHotVel));
       }
+      processingStream[0].synchronize();
+      processingStream[1].synchronize();
       movep(d_ionHotLoc, d_ionHotVel, simState.numIonHot, 
          RATO, dev_ex, dev_ey, processingStream[0], true);
 #ifdef DEBUG_TRACE
