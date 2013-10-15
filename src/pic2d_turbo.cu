@@ -248,7 +248,7 @@ void executePic(int argc, char *argv[])
          iterationTimer.start();
       }
 
-      simState.simTime +=DELT;
+      simState.simTime = simState.iterationNum * static_cast<double>(DELT);
       lfd++;
 
       // Make sure I'm not out of memory

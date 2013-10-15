@@ -8,7 +8,8 @@
 void field(PitchedPtr<float> &ex,
            PitchedPtr<float> &ey,
            const DevMemF &phi,
-           DevStream &stream);
+           DevStream &stream1,
+           DevStream &stream2);
 
 #endif
 

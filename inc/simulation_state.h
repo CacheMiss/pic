@@ -7,7 +7,7 @@ class SimulationState
    ~SimulationState(){};
    static SimulationState & getRef();
 
-   float simTime;
+   double simTime;
    unsigned int iterationNum;
    unsigned int numEleHot;
    unsigned int numEleCold;

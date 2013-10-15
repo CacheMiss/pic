@@ -362,6 +362,9 @@ void findOobParticles(float2 d_partLoc[],
 // Purpose: If there are 1000 particles and 100 need to be removed, this kernel
 //          finds which indices in the last 100 elements of the array don't need
 //          to be removed. These particles are later moved lower into the array
+//
+// WARNING: This assumes device has been synchronized prior to entry
+//
 // Parameters:
 // -------------------
 // particles - The array of particles (This array has 5 elements per part)
@@ -571,7 +574,6 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
 
    if(updateField)
    {
-      stream.synchronize();
       checkCuda(cudaMemcpy2DToArray(cuArrayEx,
          0,
          0,

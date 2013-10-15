@@ -124,7 +124,8 @@ namespace Field
 void field(PitchedPtr<float> &ex,
            PitchedPtr<float> &ey,
            const DevMemF &phi,
-           DevStream &stream)
+           DevStream &stream1,
+           DevStream &stream2)
 {
    unsigned int numThreads;
    unsigned int sharedMemSizeBytes;
@@ -136,7 +137,7 @@ void field(PitchedPtr<float> &ex,
    resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1), NY1-1);
    stream.synchronize();
    checkForCudaError("Before calcEy");
-   Field::calcEy<<<numBlocks, blockSize, 0, *stream>>>(
+   Field::calcEy<<<numBlocks, blockSize, 0, *stream1>>>(
       ey.getPtr(), phi.getPtr(),
       NX1, NY1, DY);
    checkForCudaError("calcEy");
@@ -145,7 +146,7 @@ void field(PitchedPtr<float> &ex,
    blockSize.x = numThreads;
    resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1), NY1);
    sharedMemSizeBytes = (numThreads + 2) * sizeof(float);
-   Field::calcEx<<<numBlocks, blockSize, sharedMemSizeBytes, *stream>>>(
+   Field::calcEx<<<numBlocks, blockSize, sharedMemSizeBytes, *stream2>>>(
       ex.getPtr(), phi.getPtr(), NX1, NY, DX);
    checkForCudaError("calcEx");
 
@@ -154,7 +155,7 @@ void field(PitchedPtr<float> &ex,
    resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1));
    stream.synchronize();
    checkForCudaError("Before fixEyBoundaries");
-   Field::fixEyBoundaries<<<numBlocks, blockSize, 0, *stream>>>(
+   Field::fixEyBoundaries<<<numBlocks, blockSize, 0, *stream1>>>(
       ey.getPtr(), phi.getPtr(),
       NX1, NY1, DY);
    checkForCudaError("fixEyBoundaries");
