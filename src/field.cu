@@ -135,7 +135,7 @@ void field(PitchedPtr<float> &ex,
    numThreads = MAX_THREADS_PER_BLOCK / 2;
    blockSize.x = numThreads;
    resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1), NY1-1);
-   stream.synchronize();
+   stream1.synchronize();
    checkForCudaError("Before calcEy");
    Field::calcEy<<<numBlocks, blockSize, 0, *stream1>>>(
       ey.getPtr(), phi.getPtr(),
@@ -153,7 +153,7 @@ void field(PitchedPtr<float> &ex,
    numThreads = MAX_THREADS_PER_BLOCK / 2;
    blockSize.x = numThreads;
    resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1));
-   stream.synchronize();
+   stream1.synchronize();
    checkForCudaError("Before fixEyBoundaries");
    Field::fixEyBoundaries<<<numBlocks, blockSize, 0, *stream1>>>(
       ey.getPtr(), phi.getPtr(),
