@@ -22,7 +22,7 @@
 #define D_SCALE (10.0f)
 #define D_RATO  (1.0f/400.0f)
 //#define D_DELT  (D_TPI/64.0f)  // She simulation step size
-#define D_DELT  (0.01f)  // She simulation step size
+#define D_DELT  (0.05f)  // She simulation step size
 #define D_BXM (0.0f)
 #define D_BYM (3.0f)
 #define D_BZM (0.0f)
