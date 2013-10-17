@@ -1,5 +1,7 @@
 #include "logging_types.h"
 
+#include <fstream>
+
 #include "array2d.h"
 #include "global_variables.h"
 #include "pic_utils.h"
@@ -141,25 +143,64 @@ LogParticlesBinary::LogParticlesBinary(const int i,
 void LogParticlesBinary::logParticles(const char *fileName, 
                                       const float2 hotLoc[], const float3 hotVel[],
                                       const float2 coldLoc[], const float3 coldVel[],
-                                      const int numHot, const int numCold)
+                                      int maxSizeHot, int maxSizeCold)
 {
-   FILE *f = fopen(fileName, "wb");
-   int numPart = numHot + numCold;
+   std::fstream f;
+   // Create the file
+   f.open(fileName, std::ios::out | std::ios::binary);
+   f.close();
+   // Reopen the file for writing
+   f.open(fileName, std::ios::in | std::ios::out | std::ios::binary);
+   assert(f.good());
+   std::ios::streampos numPartLoc;
+   std::ios::streampos numHotLoc;
+   std::ios::streampos numColdLoc;
+   //FILE *f = fopen(fileName, "wb");
+   //int numPart = numHot + numCold;
+   unsigned int numPart = 0;
+   unsigned int numHot = 0;
+   unsigned int numCold = 0;
 
-   fwrite(&numPart, sizeof(int), 1, f);
-   fwrite(&numHot, sizeof(int), 1, f);
-   fwrite(&numCold, sizeof(int), 1, f);
-   for(int i = 0; i < numHot; i++)
+   //fwrite(&numPart, sizeof(int), 1, f);
+   //fwrite(&numHot, sizeof(int), 1, f);
+   //fwrite(&numCold, sizeof(int), 1, f);
+   numPartLoc = f.tellg();
+   f.write(reinterpret_cast<const char*>(&numPart), sizeof(numPart));
+   numHotLoc = f.tellg();
+   f.write(reinterpret_cast<const char*>(&numHot), sizeof(numHot));
+   numColdLoc = f.tellg();
+   f.write(reinterpret_cast<const char*>(&numCold), sizeof(numCold));
+   for(int i = 0; i < maxSizeHot; i++)
    {
-      fwrite(hotLoc + i, sizeof(float2), 1, f);
-      fwrite(hotVel + i, sizeof(float3), 1, f);
+      //fwrite(hotLoc + i, sizeof(float2), 1, f);
+      //fwrite(hotVel + i, sizeof(float3), 1, f);
+      if(hotLoc[i].y != OOB_PARTICLE)
+      {
+         f.write(reinterpret_cast<const char*>(hotLoc+i), sizeof(hotLoc[0]));
+         f.write(reinterpret_cast<const char*>(hotVel+i), sizeof(hotVel[0]));
+         numPart++;
+         numHot++;
+      }
    }
-   for(int i = 0; i < numCold; i++)
+   for(int i = 0; i < maxSizeCold; i++)
    {
-      fwrite(coldLoc + i, sizeof(float2), 1, f);
-      fwrite(coldVel + i, sizeof(float3), 1, f);
+      //fwrite(coldLoc + i, sizeof(float2), 1, f);
+      //fwrite(coldVel + i, sizeof(float3), 1, f);
+      if(coldLoc[i].y != OOB_PARTICLE)
+      {
+         f.write(reinterpret_cast<const char*>(coldLoc+i), sizeof(coldLoc[0]));
+         f.write(reinterpret_cast<const char*>(coldVel+i), sizeof(coldVel[0]));
+         numPart++;
+         numCold++;
+      }
    }
-   fclose(f);
+   f.seekg(numPartLoc);
+   f.write(reinterpret_cast<const char*>(&numPart), sizeof(numPart));
+   f.seekg(numHotLoc);
+   f.write(reinterpret_cast<const char*>(&numHot), sizeof(numHot));
+   f.seekg(numColdLoc);
+   f.write(reinterpret_cast<const char*>(&numCold), sizeof(numCold));
+   //fclose(f);
 }
 
 void LogParticlesBinary::logData()
@@ -168,10 +209,12 @@ void LogParticlesBinary::logData()
    assert(m_index < 1000000);
 
    sprintf(name,"%s/%s_%04d",outputPath.c_str(), "ele", m_index);
-   logParticles(name, &m_eleHotLoc[0], &m_eleHotVel[0], &m_eleColdLoc[0], &m_eleColdVel[0], 
+   logParticles(name, &m_eleHotLoc[0], &m_eleHotVel[0], 
+      &m_eleColdLoc[0], &m_eleColdVel[0],
       m_numEleHot, m_numEleCold);
    sprintf(name,"%s/%s_%04d",outputPath.c_str(), "ion", m_index);
-   logParticles(name, &m_ionHotLoc[0], &m_ionHotVel[0], &m_ionColdLoc[0], &m_ionColdVel[0], 
+   logParticles(name, &m_ionHotLoc[0], &m_ionHotVel[0], 
+      &m_ionColdLoc[0], &m_ionColdVel[0],
       m_numIonHot, m_numIonCold);
 }
 

@@ -72,7 +72,7 @@ class LogParticlesBinary : public LoggingBase
    void logParticles(const char *fileName, 
                      const float2 hotLoc[], const float3 hotVel[],
                      const float2 coldLoc[], const float3 coldVel[],
-                     const int numHot, const int numCold);
+                     int maxSizeHot, int maxSizeCold);
 
    public:
    LogParticlesBinary(const int i,
