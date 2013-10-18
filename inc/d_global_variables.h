@@ -36,7 +36,7 @@
 //#define D_TMAX 100000.0
 #define D_LF 20                // number of iterations before 
                                // incrementing the log number
-//#define D_LFINT 5            // number of info intervals between output files
+#define D_LOG_IDX_WIDTH 6
 #define D_DX (1.0f)
 #define D_DX2 (1.0/2.)
 #define D_DY (1.0f)

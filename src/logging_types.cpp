@@ -1,6 +1,8 @@
 #include "logging_types.h"
 
 #include <fstream>
+#include <iomanip>
+#include <sstream>
 
 #include "array2d.h"
 #include "global_variables.h"
@@ -64,14 +66,15 @@ void LogParticlesAscii::logParticles(const char *fileName,
 
 void LogParticlesAscii::logData()
 {
-   char name[100];
    assert(m_index < 1000000);
 
-   sprintf(name,"%s/%s_%04d",outputPath.c_str(), "ele", m_index);
-   logParticles(name, &m_eleHotLoc[0], &m_eleHotVel[0], &m_eleColdLoc[0], &m_eleColdVel[0], 
+   std::stringstream s;
+   s << outputPath << "/ele_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << m_index;
+   logParticles(s.str().c_str(), &m_eleHotLoc[0], &m_eleHotVel[0], &m_eleColdLoc[0], &m_eleColdVel[0], 
       m_numEleHot, m_numEleCold);
-   sprintf(name,"%s/%s_%04d",outputPath.c_str(), "ion", m_index);
-   logParticles(name, &m_ionHotLoc[0], &m_ionHotVel[0], &m_ionColdLoc[0], &m_ionColdVel[0], 
+   s.str("");
+   s << outputPath << "/ion_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << m_index;
+   logParticles(s.str().c_str(), &m_ionHotLoc[0], &m_ionHotVel[0], &m_ionColdLoc[0], &m_ionColdVel[0], 
       m_numIonHot, m_numIonCold);
 }
 
@@ -205,15 +208,16 @@ void LogParticlesBinary::logParticles(const char *fileName,
 
 void LogParticlesBinary::logData()
 {
-   char name[100];
    assert(m_index < 1000000);
 
-   sprintf(name,"%s/%s_%04d",outputPath.c_str(), "ele", m_index);
-   logParticles(name, &m_eleHotLoc[0], &m_eleHotVel[0], 
+   std::stringstream s;
+   s << outputPath << "/ele_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << m_index;
+   logParticles(s.str().c_str(), &m_eleHotLoc[0], &m_eleHotVel[0], 
       &m_eleColdLoc[0], &m_eleColdVel[0],
       m_numEleHot, m_numEleCold);
-   sprintf(name,"%s/%s_%04d",outputPath.c_str(), "ion", m_index);
-   logParticles(name, &m_ionHotLoc[0], &m_ionHotVel[0], 
+   s.str("");
+   s << outputPath << "/ion_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << m_index;
+   logParticles(s.str().c_str(), &m_ionHotLoc[0], &m_ionHotVel[0], 
       &m_ionColdLoc[0], &m_ionColdVel[0],
       m_numIonHot, m_numIonCold);
 }

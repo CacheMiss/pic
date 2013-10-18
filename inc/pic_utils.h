@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <driver_functions.h>
 #include <fstream>
+#include <iomanip>
 #include <string>
 
 #include "array2d.h"
@@ -57,12 +58,12 @@ template<class ArrayType>
 void out2dr(const std::string &fname,int idx_nm,int numRows,int numColumns,
             const ArrayType &arry, bool printColumnOrder=false)
 {
-   char name[400];
    FILE *fp;
    int i,j;
-   sprintf(name,"%s/%s_%04d", outputPath.c_str(), fname.c_str(), idx_nm);
-   if((fp=fopen(name,"wt"))==NULL) {
-      printf("Cannot open '%s' file for writing\n",name);
+   std::stringstream s;
+   s << outputPath << "/" << fname << "_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << idx_nm;
+   if((fp=fopen(s.str().c_str(),"wt"))==NULL) {
+      printf("Cannot open '%s' file for writing\n",s.str().c_str());
       exit(1);
    }
    if(!printColumnOrder)
@@ -106,12 +107,12 @@ template<class ArrayType>
 void out2drBin(const std::string &fname,int idx_nm,int numRows,int numColumns,
             const ArrayType &arry, bool printColumnOrder=false)
 {
-   char name[400];
    FILE *fp;
    int i,j;
-   sprintf(name,"%s/%s_%04d", outputPath.c_str(), fname.c_str(), idx_nm);
-   if((fp=fopen(name,"wb"))==NULL) {
-      printf("Cannot open '%s' file for writing\n",name);
+   std::stringstream s;
+   s << outputPath << "/" << fname << "_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << idx_nm;
+   if((fp=fopen(s.str().c_str(),"wb"))==NULL) {
+      printf("Cannot open '%s' file for writing\n",s.str().c_str());
       exit(1);
    }
    fwrite(&numRows, sizeof(numRows), 1, fp);
@@ -163,11 +164,11 @@ template<class ArrayType>
 void outprt(const std::string &fname, int idx_nm, const ArrayType &hot,
             const ArrayType &cold, int numHot, int numCold)
 {
-   char name[100];
    FILE *fp;
    int i,j;
-   sprintf(name,"%s/%s_%04d", outputPath.c_str(), fname.c_str(), idx_nm);
-   if((fp=fopen(name,"wt"))==NULL) {
+   std::stringstream s;
+   s << outputPath << "/" << fname << "_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << idx_nm;
+   if((fp=fopen(s.str().c_str(),"wt"))==NULL) {
       printf("Cannot open '%s' file for writing\n",name);
       exit(1);
    }
@@ -211,13 +212,13 @@ template<class ArrayType>
 void outprtBin(const std::string &fname, int idx_nm, const ArrayType &hot,
             const ArrayType &cold, int numHot, int numCold)
 {
-   char name[100];
    FILE *fp;
    int i,j;
    float one = 1;
    float zero = 0;
-   sprintf(name,"%s/%s_%04d", outputPath.c_str(), fname.c_str(), idx_nm);
-   if((fp=fopen(name,"wb"))==NULL) {
+   std::stringstream s;
+   s << outputPath << "/" << fname << "_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << idx_nm;
+   if((fp=fopen(s.str().c_str(),"wb"))==NULL) {
       printf("Cannot open '%s' file for writing\n",name);
       exit(1);
    }
