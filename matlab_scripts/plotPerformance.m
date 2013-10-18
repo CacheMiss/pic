@@ -9,12 +9,12 @@ function ret = plotPerformance(fName)
    %          'Field Time', 'Movep Time'];
 
    figure;
-   plot(d(:,2), d(:,7));
+   plot(d(:,2), smoothLine(d(:,7),16));
    xlabel('Sim Time (s)');
    ylabel('Iteration Time (ms)');
    totalParticles = d(:,3) + d(:,4) + d(:,5) + d(:,6);
    figure;
-   plot(totalParticles, d(:,7));
+   plot(totalParticles, smoothLine(d(:,7),16));
    xlabel('Num Particles');
    ylabel('Iteration Time (ms)');
    figure;
@@ -22,12 +22,28 @@ function ret = plotPerformance(fName)
    xlabel('Sim Time (s)');
    ylabel('Num Particles');
    figure;
-   plot(d(:,2), d(:,9));
+   plot(d(:,2), smoothLine(d(:,9),16));
    xlabel('Sim Time');
    ylabel('Dens Time (ms)');
    figure;
-   plot(d(:,2), d(:,12));
+   plot(d(:,2), smoothLine(d(:,12),16));
    xlabel('Sim Time');
    ylabel('Movep Time (ms)');
 
+end
+
+function ret = smoothLine(line, window)
+   halfWin = window / 2;
+   lineSize = size(line);
+   lineSize = lineSize(1);
+   ret = zeros(lineSize, 1);
+   for i=1 : lineSize
+       if i < halfWin+1
+           ret(i) = mean(line(1:i+halfWin));
+       elseif i < lineSize-halfWin
+           ret(i) = mean(line(i-halfWin:i+halfWin));
+       else
+           ret(i) = mean(line(i-halfWin:end));
+       end
+   end
 end

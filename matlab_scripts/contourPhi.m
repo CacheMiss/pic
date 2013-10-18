@@ -17,11 +17,16 @@ function ret = contourPhi(fName, titleStr)
 
    xValues = [0:numColumns-1];
    yValues = [0:numRows-1];
+   
+   % Chop things off
+   phi = phi(5077:5117, :);
+   xValues = 1:numColumns;
+   yValues = 5077:5117;
 
-   sliceSize = 4;
-   phi = phi(1:sliceSize:end, 1:sliceSize:end);
-   xValues = xValues(1:sliceSize:end);
-   yValues = yValues(1:sliceSize:end);
+%    sliceSize = 4;
+%    phi = phi(1:sliceSize:end, 1:sliceSize:end);
+%    xValues = xValues(1:sliceSize:end);
+%    yValues = yValues(1:sliceSize:end);
    
    figure;
    contour(xValues, yValues, phi);

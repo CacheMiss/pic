@@ -1,4 +1,4 @@
-function ret = plotPart(fName, titleStr, sliceSize)
+function ret = plotVy(fName, titleStr, sliceSize)
 
    f = fopen(fName, 'rb');
 
