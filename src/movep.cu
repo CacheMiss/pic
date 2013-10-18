@@ -219,11 +219,19 @@ void moveParticles(float2 d_partLoc[], float3 d_partVel[],
       // Enforce periodic boundary condition on x
       if(pLoc.x > D_DX * NX1)
       {
-         pLoc.x= pLoc.x - (D_DX * NX1);
+         pLoc.x = pLoc.x - (D_DX * NX1);
+         while(pLoc.x > D_DX * NX1)
+         {
+            pLoc.x = pLoc.x - (D_DX * NX1);
+         }
       }
       else if (pLoc.x <  0)
       { 
-         pLoc.x= pLoc.x + (D_DX * NX1);
+         pLoc.x = pLoc.x + (D_DX * NX1);
+         while(pLoc.x <  0)
+         {
+            pLoc.x = pLoc.x + (D_DX * NX1);
+         }
       }
 
       if(pLoc.y > D_DY * (NY1-1) || pLoc.y < D_DY)
