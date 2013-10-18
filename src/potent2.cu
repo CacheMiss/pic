@@ -125,7 +125,7 @@ void loadHarmonics(float cokx[], const unsigned int size)
 // Purpose: Calculates the values for phif
 // Parameters:
 // ----------------
-// phif - The phif array which will be set
+// phif - The phif array of NY * NX1 elements which will be set
 // z - The z array is an intermediate working array and is expected to be of
 //     size NX1 * NY1
 // yyy - The yyy array is an intermediate working array and is expected to be of
