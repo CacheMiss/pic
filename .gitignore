@@ -1,0 +1,16 @@
+*~
+run_output/*
+build/windows/Win32*
+*.swp
+*sewells.user
+*.swo
+*.ncb
+*.suo
+*.pdb
+build/windows/x64*
+build/windows/Debug/*
+build/windows/Release/*
+build/windows/binned_memory_test/Debug/*
+build/windows/binned_memory_test/Release/*
+*.csv
+run_output
