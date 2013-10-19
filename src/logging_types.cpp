@@ -268,3 +268,16 @@ void LogForPerformance::logData()
    fclose(fp);
 }
 
+void LogAvgPhi::logData()
+{
+   std::stringstream s;
+   s << outputPath + "/phiAvg_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << idx;
+   std::ofstream f(s.str().c_str(), std::ios::binary | std::ios::in);
+   // Write number of rows
+   s.write(reinterpret_cast<char*>(&y), sizeof(y));
+   // Write number of columns
+   s.write(reinterpret_cast<char*>(&x), sizeof(x));
+   unsigned int columnOrder = 0; // We're writing row order
+   s.write(reinterpret_cast<char*>(&columnOrder), sizeof(columnOrder));
+   s.write(reinterpret_cast<char*>(&data[0]), sizeof(data[0]) * data.size());
+}

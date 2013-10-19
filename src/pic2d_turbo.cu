@@ -44,6 +44,7 @@
 #include "logging_types.h"
 #include "movep.h"
 #include "particle_allocator.h"
+#include "phi_avg.h"
 #include "pic_utils.h"
 #include "potent2.h"
 #include "precisiontimer.h"
@@ -139,6 +140,7 @@ void executePic(int argc, char *argv[])
    DevMem<float2> d_ionColdLoc(initialAllocSize);
    DevMem<float3> d_ionColdVel(initialAllocSize);
    DevMemF dev_phi(NY * NX1);
+   PhiAvg phiAvg(NY * NX1, NX1, NY1);
    PitchedPtr<float> dev_ex(NX1, NY+1); // An extra row is added to pad with zeros
    dev_ex.memset(0);
    PitchedPtr<float> dev_ey(NX1, NY+1); // An extra row is added to pad with zeros
@@ -535,6 +537,12 @@ void executePic(int argc, char *argv[])
       //logger.flush();
       // END DEBUG
 
+      std::size_t iterationsUntilLog = simState.iterationNum % (LF * lfint) + 1;
+      if(iterationsUntilLog < static_cast<std::size_t>(50.0 / D_DELT))
+      {
+         phiAvg.addPhi(dev_phi);
+      }
+
       if (lfd >= LF) 
       {
          iterationTimer.stop();
@@ -600,6 +608,10 @@ void executePic(int argc, char *argv[])
                logger.logRhoBinary(ind, rho, rhoe, rhoi);
                logger.logPhiBinary(ind, phi);
             }
+
+            logger.pushLogItem(new LogAvgPhi(ind, phiAvg));
+            phiAvg.clear();
+
             lfdint = 0;
 
 				// Exit if we've been asked to

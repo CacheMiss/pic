@@ -4,6 +4,7 @@
 #include "array2d.h"
 #include "dev_mem.h"
 #include "typedefs.h"
+#include "phi_avg.h"
 
 class LoggingBase
 {
@@ -243,6 +244,27 @@ class LogForPerformance : public LoggingBase
      ,movepTimeInMs(movepTInMs)
      ,resume(resumeRun)
    {
+   }
+
+   virtual void logData();
+};
+
+class LogAvgPhi : public LoggingBase
+{
+private:
+   unsigned int idx;
+   unsigned int x;
+   unsigned int y;
+   std::vector<float> data;
+
+public:
+   LogAvgPhi(unsigned int iter,
+      const PhiAvg& avgPhi)
+     : idx(iter)
+     , x(avgPhi.getXSize())
+     , y(avgPhi.getYSize())
+   {
+      avgPhi.saveToVector(data);
    }
 
    virtual void logData();
