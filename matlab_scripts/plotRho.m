@@ -42,32 +42,10 @@ function ret = plotRho(index, titleStr, column)
    %axis([max(yValues)-5 max(yValues) min(min(rhoe(5:end)), min(rhoi(5:end))) max(max(rhoe(5:end)), max(rhoi(5:end)))]);
    %axis([0 max(yValues) min(min(rhoe), min(rhoi)) max(max(rhoe), max(rhoi))]);
    
-   window = 64;
-   halfWin = window / 2;
-   rhoeSize = size(rhoe);
-   rhoeSize = rhoeSize(1);
-   smoothE = zeros(rhoeSize, 1);
-   for i=1 : rhoeSize
-       if i < halfWin+1
-           smoothE(i) = mean(rhoe(1:i+halfWin));
-       elseif i < rhoeSize-halfWin
-           smoothE(i) = mean(rhoe(i-halfWin:i+halfWin));
-       else
-           smoothE(i) = mean(rhoe(i-halfWin:end));
-       end
-   end
-   rhoiSize = size(rhoi);
-   rhoiSize = rhoiSize(1);
-   smoothI = zeros(rhoiSize, 1);
-   for i=1 : rhoiSize
-       if i < halfWin+1
-           smoothI(i) = mean(rhoi(1:i+halfWin));
-       elseif i < rhoiSize-halfWin
-           smoothI(i) = mean(rhoi(i-halfWin:i+halfWin));
-       else
-           smoothI(i) = mean(rhoi(i-halfWin:end));
-       end
-   end
+   smoothE = smoothLine(rhoe, 64);
+   smoothI = smoothLine(rhoi, 64);
+   %smoothE = rhoe;
+   %smoothI = rhoi;
    
    figure;
    a1 = semilogy(yValues, smoothE, yValues, smoothI);
@@ -79,9 +57,27 @@ function ret = plotRho(index, titleStr, column)
    %axis([max(yValues)-5 max(yValues) min(min(rhoe(5:end)), min(rhoi(5:end))) max(max(rhoe(5:end)), max(rhoi(5:end)))]);
    %axis([0 max(yValues) min(min(rhoe), min(rhoi)) max(max(rhoe), max(rhoi))]);
    axis([0 max(yValues) 0.001 2]);
+   %axis([0 20 0.001 2]);
 
    fclose(f);
 
+end
+
+function s = smoothLine(yValues, avgWindow)
+   window = avgWindow;
+   halfWin = window / 2;
+   numValues = size(yValues);
+   numValues = numValues(1);
+   s = zeros(numValues, 1);
+   for i=1 : numValues
+       if i < halfWin+1
+           s(i) = mean(yValues(1:i+halfWin));
+       elseif i < numValues-halfWin
+           s(i) = mean(yValues(i-halfWin:i+halfWin));
+       else
+           s(i) = mean(yValues(i-halfWin:end));
+       end
+   end
 end
 
 function r = readRho(fileName, column)
