@@ -10,25 +10,30 @@ function ret = plotPerformance(fName)
 
    figure;
    plot(d(:,2), smoothLine(d(:,7),16));
-   xlabel('Sim Time (s)');
+   xlabel('Sim Time');
    ylabel('Iteration Time (ms)');
+   print('-dpng', 'it_time_vs_sim_time');
    totalParticles = d(:,3) + d(:,4) + d(:,5) + d(:,6);
    figure;
    plot(totalParticles, smoothLine(d(:,7),16));
    xlabel('Num Particles');
    ylabel('Iteration Time (ms)');
+   print('-dpng', 'particles_vs_it_time');
    figure;
    plot(d(:,2), totalParticles);
    xlabel('Sim Time (s)');
    ylabel('Num Particles');
+   print('-dpng', 'particles_vs_sim_time');
    figure;
    plot(d(:,2), smoothLine(d(:,9),16));
    xlabel('Sim Time');
    ylabel('Dens Time (ms)');
+   print('-dpng', 'dens_time_vs_sim_time');
    figure;
    plot(d(:,2), smoothLine(d(:,12),16));
    xlabel('Sim Time');
    ylabel('Movep Time (ms)');
+   print('-dpng', 'movep_time_vs_sim_time');
 
 end
 

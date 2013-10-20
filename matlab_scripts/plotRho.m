@@ -1,4 +1,4 @@
-function ret = plotRho(index, titleStr, column)
+function ret = plotRho(index, column)
 
    rhoName = strcat('rho_', index);
    rhoEName = strcat('rhoe_', index);
@@ -49,8 +49,9 @@ function ret = plotRho(index, titleStr, column)
    
    figure;
    a1 = semilogy(yValues, smoothE, yValues, smoothI);
+   fields = strsplit(rhoName, '_');
    legend('rhoe', 'rhoi');
-   title(strcat([titleStr ' x=' int2str(column)]));
+   title(strcat([fields{1} ' ' fields{2} ' x=' int2str(column)]));
    xlabel('y');
    ylabel('rho');
    %axis([20 max(yValues) min(min(rhoe(5:end)), min(rhoi(5:end))) max(max(rhoe(5:end)), max(rhoi(5:end)))]);
@@ -58,6 +59,7 @@ function ret = plotRho(index, titleStr, column)
    %axis([0 max(yValues) min(min(rhoe), min(rhoi)) max(max(rhoe), max(rhoi))]);
    axis([0 max(yValues) 0.001 2]);
    %axis([0 20 0.001 2]);
+   print('-dpng', rhoName);
 
    fclose(f);
 

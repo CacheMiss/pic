@@ -75,6 +75,9 @@ function ret = plotVyRange(fName, titleStr, midpoint, width, sliceSize)
    %axis([-2.5 2.2 0 yMax]);
    %axis([xMinCold xMaxCold 0 yMax]);
    axis([xMinCold xMaxCold 0 max(coldP(2,:))]);
+   fields = strsplit(fName, '_');
+   outFile = strcat('vy_vs_y_', fields{2});
+   print('-dpng', outFile);
    
    %figure;
    %scatter(hotP(1,:), hotP(2,:), 0.4)
