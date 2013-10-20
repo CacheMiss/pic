@@ -625,6 +625,8 @@ void executePic(int argc, char *argv[])
    fprintf(f, "nit %u reached at %u min %u sec\n", nit, timeMin, timeSec);
    fclose(f);
 
+   logger.flush();
+
 }
 
 int main(int argc, char *argv[])
