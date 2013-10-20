@@ -1,5 +1,5 @@
 
-function ret = contourPhi(fName, titleStr)
+function ret = contourPhi(fName)
 
    f = fopen(fName, 'rb');
 
@@ -19,9 +19,9 @@ function ret = contourPhi(fName, titleStr)
    yValues = [0:numRows-1];
    
    % Chop things off
-   phi = phi(5077:5117, :);
-   xValues = 1:numColumns;
-   yValues = 5077:5117;
+   %phi = phi(5077:5117, :);
+   %xValues = 1:numColumns;
+   %yValues = 5077:5117;
 
 %    sliceSize = 4;
 %    phi = phi(1:sliceSize:end, 1:sliceSize:end);
@@ -31,6 +31,8 @@ function ret = contourPhi(fName, titleStr)
    figure;
    contour(xValues, yValues, phi);
    colorbar;
-   title(titleStr);
+   fields = strsplit(fName, '_');
+   title(strcat([fields{1} ' ' fields{2}]));
+   print('-dpng', strcat(fields{1}, '_contour_', fields{2}));
 
 end

@@ -1,5 +1,5 @@
 
-function ret = plotPhi(fName, titleStr, column)
+function ret = plotPhi(fName, column)
 
    f = fopen(fName, 'rb');
 
@@ -18,10 +18,12 @@ function ret = plotPhi(fName, titleStr, column)
    yValues = 0:numRows-1;
    figure;
    plot(yValues, phi);
-   title(strcat([titleStr ' x=' int2str(column)]));
+   fields = strsplit(fName, '_');
+   title(strcat([fields{1} ' ' fields{2} ' x=' int2str(column)]));
    xlabel('y');
    ylabel('phi');
    axis([0 max(yValues) min(phi) max(phi)])
+   print('-dpng', fName);
 
    fclose(f);
 

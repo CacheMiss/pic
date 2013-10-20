@@ -1,4 +1,4 @@
-function ret = plotPart(fName, titleStr, sliceSize)
+function ret = plotPart(fName, sliceSize)
 
    f = fopen(fName, 'rb');
 
@@ -7,6 +7,8 @@ function ret = plotPart(fName, titleStr, sliceSize)
       fprintf('Unable to open "%s"\n', fName);
       return;
    end
+   
+   fNameTokens = strsplit(fName, '_');
 
    numParticles = fread(f, 1, 'int32');
    numHot = fread(f, 1, 'int32');
@@ -41,10 +43,13 @@ function ret = plotPart(fName, titleStr, sliceSize)
        
        figure;
        scatter(hotP(1,:), hotP(2,:), 0.1)
-       title(strcat([titleStr ' Hot']));
+       titleStr = strcat([fNameTokens{1}, ' hot ', fNameTokens{2}]);
+       title(titleStr);
        xlabel('x');
        ylabel('y');
        axis([0 xMax 0 yMax]);
+       outName = strcat(fNameTokens{1}, '_hot_', fNameTokens{2});
+       print('-dpng', outName);
    end
    
    if ~ isempty(coldP)
@@ -54,10 +59,13 @@ function ret = plotPart(fName, titleStr, sliceSize)
        
        figure;
        scatter(coldP(1,:), coldP(2,:), 0.1)
-       title(strcat([titleStr ' Cold']));
+       titleStr = strcat([fNameTokens{1}, ' hot ', fNameTokens{2}]);
+       title(titleStr);
        xlabel('x');
        ylabel('y');
        axis([0 xMax 0 yMax]);
+       outName = strcat(fNameTokens{1}, '_cold_', fNameTokens{2});
+       print('-dpng', outName);
    end
 
 end
