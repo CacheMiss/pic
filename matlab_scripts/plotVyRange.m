@@ -1,4 +1,4 @@
-function ret = plotVyRange(fName, titleStr, midpoint, width, sliceSize)
+function ret = plotVyRange(fName, midpoint, width, sliceSize)
 
    f = fopen(fName, 'rb');
 
@@ -69,7 +69,11 @@ function ret = plotVyRange(fName, titleStr, midpoint, width, sliceSize)
    
    figure;
    scatter(coldP(1,:), coldP(2,:), 0.4)
-   title(strcat([titleStr ' Cold']));
+   fields = strsplit(fName, '_');
+   windowBegin = int2str(midpoint-width);
+   windowEnd = int2str(midpoint+width);
+   title(strcat([fields{1} ' cold ' fields{2} ...
+       ' Vy (x=' windowBegin ' to x=' windowEnd ')']));
    xlabel('vy');
    ylabel('y');
    %axis([-2.5 2.2 0 yMax]);
