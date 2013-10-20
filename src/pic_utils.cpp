@@ -167,8 +167,8 @@ void loadPrevSimState(const std::string &loadDir,
 
    const std::size_t strSize = 40;
    char infoName[strSize];
-   char eleName[strSize];
-   char ionName[strSize];
+   std::string eleName;
+   std::string ionName;
 
    // Generate file names
    sprintf(infoName, "info");
@@ -198,8 +198,12 @@ void loadPrevSimState(const std::string &loadDir,
    {
       infoStream >> simState.iterationNum >> simState.simTime >> numEle >> numIon;
       index = simState.iterationNum;
-      sprintf(eleName, "ele_%04d", index);
-      sprintf(ionName, "ion_%04d", index);
+      std::stringstream s;
+      s << "ele_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << index;
+      eleName = s.str();
+      s.str("");
+      s << "ion_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << index;
+      ionName = s.str();
       elePath = boost::filesystem::path(loadDir) / eleName;
       ionPath = boost::filesystem::path(loadDir) / ionName;
 

@@ -205,6 +205,12 @@ void executePic(int argc, char *argv[])
       std::cout << "previous run data loaded" << std::endl;
 #endif
    }
+   else if(boost::filesystem::exists(boost::filesystem::path(outputPath) / "info"))
+   {
+      std::cout << "ERROR: There is already run output in " << outputPath
+         << ". Please resolve this before continuing." << std::endl;
+      exit(1);
+   }
    else
    {
       simState.iterationNum = 0;
