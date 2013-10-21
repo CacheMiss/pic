@@ -5,13 +5,13 @@ function plotAllTheThings(startIdx, endIdx, stepSize)
         ionName = strcat('ion_', idxStr);
         %rhoName = strcat('rho_', idxStr);
         phiName = strcat('phi_', idxStr);
-        %phiAvgName = strcat('phiAvg_', idxStr);
+        phiAvgName = strcat('phiAvg_', idxStr);
         
         plotPart(eleName, 128);
         plotPart(ionName, 128);
         plotRho(idxStr, 128);
         plotPhi(phiName, 128);
-        %plotPhi(phiAvgName, 128);
+        plotPhi(phiAvgName, 128);
         plotPhiAll(phiName, 4, 32);
         contourPhi(phiName);
         
