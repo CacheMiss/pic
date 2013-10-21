@@ -1,5 +1,5 @@
 
-function ret = plotPhiAll(fName, titleStr, sliceX, sliceY)
+function ret = plotPhiAll(fName, sliceX, sliceY)
 
    f = fopen(fName, 'rb');
 
@@ -25,7 +25,9 @@ function ret = plotPhiAll(fName, titleStr, sliceX, sliceY)
    figure;
    surf(xValues, yValues, phi);
    colorbar;
-   title(titleStr);
+   fields = strsplit(fName, '_');
+   title(strcat([fields{1} ' ' fields{2}]));
    axis([0 max(xValues) 0 max(yValues)]);
+   print('-dpng', strcat(fields{1}, 'All_', fields{2}));
 
 end

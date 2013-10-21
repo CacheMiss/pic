@@ -23,6 +23,7 @@ function ret = plotPhi(fName, column)
    xlabel('y');
    ylabel('phi');
    axis([0 max(yValues) min(phi) max(phi)])
+   title(fName);
    print('-dpng', fName);
 
    fclose(f);
