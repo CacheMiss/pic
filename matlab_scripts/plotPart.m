@@ -13,6 +13,7 @@ function ret = plotPart(fName, sliceSize)
    numParticles = fread(f, 1, 'int32');
    numHot = fread(f, 1, 'int32');
    numCold = fread(f, 1, 'int32');
+   fprintf('Num hot = %d\nNum cold = %d\n', numHot, numCold);
    finalHot = floor(numHot / sliceSize);
    finalCold = floor(numCold / sliceSize);
    hotP = zeros(2, finalHot);
@@ -59,7 +60,7 @@ function ret = plotPart(fName, sliceSize)
        
        figure;
        scatter(coldP(1,:), coldP(2,:), 0.1)
-       titleStr = strcat([fNameTokens{1}, ' hot ', fNameTokens{2}]);
+       titleStr = strcat([fNameTokens{1}, ' cold ', fNameTokens{2}]);
        title(titleStr);
        xlabel('x');
        ylabel('y');
