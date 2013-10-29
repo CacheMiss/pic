@@ -632,7 +632,6 @@ void executePic(int argc, char *argv[])
          lfd=0 ;
          ind=ind+1;
       }
-      simState.iterationNum++;
    }
 
    stopTime = time(0);
