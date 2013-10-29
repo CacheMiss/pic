@@ -544,12 +544,12 @@ void executePic(int argc, char *argv[])
       // END DEBUG
 
       std::size_t iterationsUntilLog = simState.iterationNum % (LF * lfint) + 1;
-      if(iterationsUntilLog < static_cast<std::size_t>(50.0 / D_DELT))
+      if(iterationsUntilLog < static_cast<std::size_t>(50.0 / DELT))
       {
          phiAvg.addPhi(dev_phi);
       }
 
-      if (lfd >= LF) 
+      if (simState.iterationNum != 0 && simState.iterationNum % LF == 0)
       {
          iterationTimer.stop();
          processingStream[0].synchronize();
@@ -575,7 +575,7 @@ void executePic(int argc, char *argv[])
 #endif
             options.getRestartDir() != "" ? true : false);
          lfdint = lfdint + 1;
-         if (lfdint >= lfint) 
+         if (ind % options.getLogInterval() == 0) 
          {
             Array2dF *phi = new Array2dF(NY, NX1);
             Array2dF *ex = new Array2dF(NY+1, NX1);
@@ -632,6 +632,7 @@ void executePic(int argc, char *argv[])
          lfd=0 ;
          ind=ind+1;
       }
+      simState.iterationNum++;
    }
 
    stopTime = time(0);
