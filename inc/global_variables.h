@@ -21,9 +21,9 @@ const float P0 = static_cast<float>(D_P0);
 const float SCALE = static_cast<float>(D_SCALE);
 const float RATO = static_cast<float>(D_RATO);
 const float DELT = static_cast<float>(D_DELT);
-const float BXM = static_cast<float>(D_BXM);
-const float BYM = static_cast<float>(D_BYM);
-const float BZM = static_cast<float>(D_BZM);
+//const float BXM = static_cast<float>(D_BXM);
+//const float BYM = static_cast<float>(D_BYM);
+//const float BZM = static_cast<float>(D_BZM);
 extern float SIGMA_CE; // sigma for cold electrons
 extern float SIGMA_CI; // sigma for cold ions
 extern float SIGMA_HI; // sigma for hot ions

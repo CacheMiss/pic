@@ -171,12 +171,12 @@ void moveParticles(float2 d_partLoc[], float3 d_partVel[],
          c4 = c1*c2;
          a[0] = 1.0f;         // a[0, 0]
          a[1] = -c3*D_BZM;    // a[0, 1]
-         a[2] = c3*D_BYM;     // a[0, 2]
+         a[2] = c3*bym;       // a[0, 2]
          a[3] = c3*D_BZM;     // a[1, 0]
          a[4] = 1.0f;         // a[1, 1]
-         a[5] = -c3*D_BXM;    // a[1, 2]
-         a[6] = -c3*D_BYM;    // a[2, 0]
-         a[7] = c3*D_BXM;     // a[2, 1]
+         a[5] = -c3*bxm;      // a[1, 2]
+         a[6] = -c3*bym;      // a[2, 0]
+         a[7] = c3*bxm;       // a[2, 1]
          a[8] = 1.0f;         // a[2, 2]
          b[0] = pVel.x + pVel.y*c4*D_BZM - 
             pVel.z*c4*bym + c1*local_expf;
