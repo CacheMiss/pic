@@ -56,6 +56,27 @@ void calcBym(float *bym,
 }
 
 __global__
+void copyBxm(float* out, unsigned int xSize, unsigned int ySize)
+{
+   unsigned int threadX = blockDim.x * blockIdx.x + threadIdx.x;
+   unsigned int threadY = blockDim.y * blockIdx.y + threadIdx.y;
+   if(threadX < xSize && threadY < ySize)
+   {
+      out[xSize * threadY + threadX] = tex2D(texBxm, threadX, threadY);
+   }
+}
+
+__global__
+void copyBym(float* out, unsigned int ySize)
+{
+   unsigned int threadX = blockDim.x * blockIdx.x + threadIdx.x;
+   if(threadX < ySize)
+   {
+      out[threadX] = tex1D(texBym, threadX);
+   }
+}
+
+__global__
 void checkBoundaryConditions(float2 location[], int numParticles, int height, int width, 
                              bool *success)
 {
