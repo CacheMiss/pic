@@ -599,6 +599,53 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
       // Bind the array to the texture
       checkCuda(cudaBindTextureToArray(texBxm, cuArrayBxm, channelDesc));
       checkCuda(cudaBindTextureToArray(texBym, cuArrayBym, channelDesc));
+
+      //////////////////////////////////////////////////////////////////////////
+      //
+      // The following section can be uncommented to dump raw bfield data
+      //
+      //////////////////////////////////////////////////////////////////////////
+      /*
+      DevMem<float> d_bymToLog(NY);
+      DevMem<float> d_bxmToLog(NY * NX1);
+
+      copyBym<<<(NY + 511)/512, 512>>>(d_bymToLog.getPtr(), d_bymToLog.size());
+      dim3 numBlocks;
+      numBlocks.x = (NX1 + 255)/256;
+      numBlocks.y = NY;
+      numBlocks.z = 1;
+      std::cout << "block.x=" << numBlocks.x << " block.y=" << numBlocks.y<< " block.z=" << numBlocks.z << std::endl; 
+      dim3 numThreads;
+      numThreads.x = 256;
+      numThreads.y = 1;
+      numThreads.z = 1;
+      copyBxm<<<numBlocks, numThreads>>>(d_bxmToLog.getPtr(), NX1, NY);
+      stream.synchronize();
+      std::vector<float> h_bymToLog;
+      std::vector<float> h_bxmToLog;
+      d_bymToLog.copyToVector(h_bymToLog);
+      d_bxmToLog.copyToVector(h_bxmToLog);
+
+      std::string fName = outputPath + "/bym.dat";
+      std::ofstream bymFile(fName.c_str(), std::ios::binary);
+      unsigned int bymToLogSize = static_cast<unsigned int>(h_bymToLog.size());
+      bymFile.write(reinterpret_cast<const char*>(&bymToLogSize), sizeof(bymToLogSize));
+      for(std::size_t i = 0; i < h_bymToLog.size(); i++)
+      {
+         bymFile.write(reinterpret_cast<const char*>(&h_bymToLog[i]), sizeof(h_bymToLog[i]));
+      }
+
+      fName = outputPath + "/bxm.dat";
+      std::ofstream bxmFile(fName.c_str(), std::ios::binary);
+      unsigned int bxmX = NX1;
+      unsigned int bxmY = NY;
+      bxmFile.write(reinterpret_cast<const char*>(&bxmX), sizeof(bxmX));
+      bxmFile.write(reinterpret_cast<const char*>(&bxmY), sizeof(bxmY));
+      for(std::size_t i = 0; i < h_bxmToLog.size(); i++)
+      {
+         bxmFile.write(reinterpret_cast<const char*>(&h_bxmToLog[i]), sizeof(h_bxmToLog[i]));
+      }
+      */
    }
 
    if(updateField)
