@@ -9,11 +9,18 @@ function plotAllTheThings(startIdx, endIdx, stepSize)
         phiName = strcat('phi_', idxStr);
         phiAvgName = strcat('phiAvg_', idxStr);
         
-        plotPart(eleName, 128);
-        plotPart(ionName, 128);
+        partStepSize = 512;
+        plotPart(eleName, partStepSize);
+        plotPart(ionName, partStepSize);
+        plotVxRange(eleName, 128, 20, partStepSize, partStepSize);
+        plotVxRange(ionName, 128, 20, partStepSize, partStepSize);
+        plotVyRange(eleName, 128, 20, partStepSize, partStepSize);
+        plotVyRange(ionName, 128, 20, partStepSize, partStepSize);
+        plotVxVy(eleName, partStepSize, partStepSize);
+        plotVxVy(ionName, partStepSize, partStepSize);
         plotRho(idxStr, 128);
         contourPhi(rhoName);
-        %plotPhiAll(rhoiName, 4, 32);
+        plotPhiAll(rhoiName, 4, 32);
         contourRho(rhoiName, 4, 32);
         %contourRhoBottom(rhoiName);
         plotPhi(phiName, 128);
