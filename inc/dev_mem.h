@@ -38,6 +38,7 @@ public:
    DevMem(const DevMem &rhs);
    ~DevMem();
    void copyToHost(T &hostType) const;
+   void copyToVector(std::vector<T> &v) const;
    void copyArrayToHost(T hostType[]) const;
    void copyArrayToHost(T hostType[], std::size_t size) const;
    void copyArrayToDev(T h_array[], std::size_t numElements);
@@ -180,6 +181,13 @@ template<class T, class Allocator>
 void DevMem<T, Allocator>::copyToHost(T &hostType) const
 {
    checkCuda(cudaMemcpy((void*)&hostType, m_ptr, sizeof(T), cudaMemcpyDeviceToHost));
+}
+
+template<class T, class Allocator>
+void DevMem<T, Allocator>::copyToVector(std::vector<T> &v) const
+{
+   v.resize(m_size);
+   checkCuda(cudaMemcpy((void*)&v[0], m_ptr, sizeof(T) * m_size, cudaMemcpyDeviceToHost));
 }
 
 template<class T, class Allocator>
