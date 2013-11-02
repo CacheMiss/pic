@@ -203,6 +203,14 @@ void executePic(int argc, char *argv[])
       lfdint = 0;
       ind = simState.iterationNum / LF + 1;
       percentComplete = (int) simState.iterationNum / percentSize;
+
+      // Restore the random number generator state
+      std::cout << "Restoring random number state... ";
+      for(unsigned int i = 0; i < simState.iterationNum; i++)
+      {
+         curandGenerateUniform(randGenerator, dev_randTable.getPtr(), neededRands);
+      }
+      std::cout << "Finished!" << std::endl;
 #ifdef DEBUG_TRACE
       std::cout << "previous run data loaded" << std::endl;
 #endif
