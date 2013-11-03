@@ -490,6 +490,10 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
            const PitchedPtr<float> &ex, const PitchedPtr<float> &ey,
            DevStream &stream, bool updateField)
 {
+   if(numParticles == 0)
+   {
+      return;
+   }
    static bool first = true;
 
    int numThreads;
