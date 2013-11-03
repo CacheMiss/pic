@@ -591,7 +591,7 @@ void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
          d_bym.size() * sizeof(float),
          cudaMemcpyDeviceToDevice));
 
-      texBxm.addressMode[0] = cudaAddressModeWrap;
+      texBxm.addressMode[0] = cudaAddressModeClamp;
       texBxm.addressMode[1] = cudaAddressModeClamp;
       texBxm.filterMode = cudaFilterModePoint;
       texBxm.normalized = false;
