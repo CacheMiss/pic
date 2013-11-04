@@ -411,7 +411,7 @@ void executePic(int argc, char *argv[])
       densTimer.stop();
 #endif
 
-      unsigned int itRemainder = simState.iterationNum % 100;
+      unsigned int itRemainder = simState.iterationNum % 140;
       switch(itRemainder)
       {
       case 1:
