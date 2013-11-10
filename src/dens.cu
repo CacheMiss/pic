@@ -1080,7 +1080,8 @@ void calcIntermediateRho(DevMemF &dev_rho,
    delete blockSize;
    checkForCudaError("calcA failed");
 
-   threadsInBlock = MAX_THREADS_PER_BLOCK / 8;
+   //threadsInBlock = MAX_THREADS_PER_BLOCK / 8;
+   threadsInBlock = 128;
    //threadsInBlock = dev.maxThreadsPerBlock / 8;
    blockSize = new dim3(threadsInBlock);
    numBlocks = new dim3(static_cast<unsigned int>(calcNumBlocks(threadsInBlock, NY * NX1)));
@@ -1111,12 +1112,14 @@ void calcIntermediateRho(DevMemF &dev_rho,
       );
    delete numBlocks;
    delete blockSize;
+
+   checkCuda(cudaStreamSynchronize(stream));
+   checkForCudaError("sumArea");
    dev_maxMinArray.freeMem();
    dev_a1.freeMem();
    dev_a2.freeMem();
    dev_a3.freeMem();
    dev_a4.freeMem();
-   checkForCudaError("sumArea");
 
    // Calculate the particles effect on rho
    threadsX = MAX_THREADS_PER_BLOCK / 4;
