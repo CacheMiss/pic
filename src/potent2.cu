@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <string>
 
+texture<float, 1, cudaReadModeElementType> texP0;
+
 //******************************************************************************
 // Name: checkCufftStatus
 // Code Type: Kernel
@@ -76,15 +78,14 @@ void checkCufftStatus(cufftResult returnCode)
 // Parameters:
 // ----------------
 // pb - The array of size NX1 to initialize
-// P0 - TBD
 // size - The size of the array to convert
 //******************************************************************************
 __global__
-void initPb(cufftComplex pb[], const float P0, const unsigned int size)
+void initPb(cufftComplex pb[], const unsigned int size)
 {
    unsigned int threadX = blockDim.x * blockIdx.x + threadIdx.x;
    cufftComplex val;
-   val.x = P0;
+   val.x = tex1D(texP0, threadX);
    val.y = 0.0;
 
    if(threadX < size)
@@ -314,6 +315,53 @@ void fixPhiSides(float phi[],
    phi[width * height + y] = phi[y];
 }
 
+void initializeP0()
+{
+   static bool first = true;
+
+   if(first)
+   {
+      cudaChannelFormatDesc channelDesc =
+         cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
+      static cudaArray *d_p0 = NULL;
+      checkCuda(cudaMallocArray(&d_p0,
+         &channelDesc,
+         NX1));
+      std::vector<float> h_p0(NX1);
+
+      for(unsigned int x = 0; x < NX1; x++)
+      {
+         double distFromC = static_cast<double>(x) - static_cast<double>(NX1/2);
+         double p = (distFromC * distFromC) / (100.0 * 100.0);
+         h_p0[x] = static_cast<float>(-15.0 * std::exp(-p));
+      }
+      checkCuda(cudaMemcpyToArray(d_p0,
+         0,
+         0,
+         &h_p0[0],
+         NX1 * sizeof(float),
+         cudaMemcpyHostToDevice));
+
+      texP0.addressMode[0] = cudaAddressModeClamp;
+      texP0.filterMode = cudaFilterModePoint;
+      texP0.normalized = false;
+
+      // Bind the array to the texture
+      checkCuda(cudaBindTextureToArray(texP0, d_p0, channelDesc));
+
+      std::string fName = outputPath + "/p0.dat";
+      std::ofstream p0File(fName.c_str(), std::ios::binary);
+      unsigned int p0Size = static_cast<unsigned int>(h_p0.size());
+      p0File.write(reinterpret_cast<const char*>(&p0Size), sizeof(p0Size));
+      for(std::size_t i = 0; i < h_p0.size(); i++)
+      {
+         p0File.write(reinterpret_cast<const char*>(&h_p0[i]), sizeof(h_p0[i]));
+      }
+      p0File.close();
+      first = false;
+   }
+}
+
 //******************************************************************************
 // Name: potent2
 // Purpose: Calculate the electric potential at all of the grid points and
@@ -329,6 +377,8 @@ void fixPhiSides(float phi[],
 void potent2(DevMemF &dev_phi, const DevMemF &dev_rho, DevStream &stream)
 {
    static bool first = true;
+
+   initializeP0();
 
    unsigned int numThreads;
    dim3 blockSize;
@@ -370,7 +420,7 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho, DevStream &stream)
       numThreads = MAX_THREADS_PER_BLOCK / 4;
       resizeDim3(blockSize, numThreads);
       resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1));
-      initPb<<<numBlocks, blockSize, 0, *stream>>>(dev_pb.getPtr(), P0, static_cast<unsigned int>(dev_pb.size()));
+      initPb<<<numBlocks, blockSize, 0, *stream>>>(dev_pb.getPtr(), static_cast<unsigned int>(dev_pb.size()));
       checkForCudaError("initPb");
 
       static cufftHandle pbTransform;
