@@ -1081,7 +1081,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
    checkForCudaError("calcA failed");
 
    //threadsInBlock = MAX_THREADS_PER_BLOCK / 8;
-   threadsInBlock = 128;
+   threadsInBlock = 64;
    //threadsInBlock = dev.maxThreadsPerBlock / 8;
    blockSize = new dim3(threadsInBlock);
    numBlocks = new dim3(static_cast<unsigned int>(calcNumBlocks(threadsInBlock, NY * NX1)));
