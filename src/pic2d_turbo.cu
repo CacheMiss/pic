@@ -599,6 +599,8 @@ void executePic(int argc, char *argv[])
             *rhoe = dev_rhoe;
             *rhoi = dev_rhoi;
             *phi = dev_phi;
+            *ex = dev_ex;
+            *ey = dev_ey;
       
             if(options.getLogInAscii())
             {
@@ -626,6 +628,7 @@ void executePic(int argc, char *argv[])
             }
 
             logger.pushLogItem(new LogAvgPhi(ind, phiAvg));
+            logger.pushLogItem(new LogFieldBinary(ind, ex, ey));
             phiAvg.clear();
 
             lfdint = 0;

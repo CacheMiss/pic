@@ -229,6 +229,12 @@ void LogRhoBinary::logData()
     out2drBin("rho",m_index,NY,NX1,*m_rho, true);
 }
 
+void LogFieldBinary::logData()
+{
+   out2drBin("ex", m_index, NY, NX1, *m_ex, true);
+   out2drBin("ey", m_index, NY, NX1, *m_ey, true);
+}
+
 void LogPhiBinary::logData()
 {
     out2drBin("phi",m_index,NY,NX1,*m_phi, true);
