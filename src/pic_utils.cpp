@@ -5,6 +5,7 @@
 #include <boost/filesystem.hpp>
 #include <cuda_runtime_api.h>
 #include <fstream>
+#include <sstream>
 #include <stdio.h>
 
 #include "commandline_options.h"
@@ -16,14 +17,14 @@ void checkForCudaError(const char *errorMsg)
    cudaError_t error = cudaGetLastError();
    if(error != cudaSuccess)
    {
-      FILE *file;
+      std::stringstream s;
+      std::ofstream file;
       SimulationState &simState(SimulationState::getRef());
-      fprintf(stderr,"ERROR on iteration %u: %s: %s\n", 
-         simState.iterationNum, errorMsg, cudaGetErrorString(error) );
-      file = fopen(errorLogName.c_str(), "w");
-      fprintf(file,"ERROR on iteration %u: %s\n", simState.iterationNum,
-         cudaGetErrorString(error) );
-      fclose(file);
+      s << "ERROR on iteration " << simState.iterationNum
+        << " " << errorMsg << " " << cudaGetErrorString(error);
+      std::cerr << s.str() << std::endl;;
+      file.open(errorLogName.c_str());
+      file << s.str();
       assert(error == cudaSuccess);
       exit(1);
    }
