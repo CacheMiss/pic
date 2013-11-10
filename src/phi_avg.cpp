@@ -1,7 +1,6 @@
 #include "phi_avg.h"
 
-#include <tbb/parallel_for.h>
-#include <tbb/blocked_range.h>
+#include <tbb/tbb.h>
 
 PhiAvg::PhiAvg(std::size_t phiSize, unsigned int xSize, unsigned int ySize)
   : m_phiStage(phiSize)
@@ -22,19 +21,6 @@ void PhiAvg::addPhi(const DevMem<float> &phi)
 {
    m_phiStage = phi;
 
-   struct AddFunc
-   {
-      float* src;
-      double *dst;
-
-      void operator()(const tbb::blocked_range<std::size_t>& range) const
-      {
-         for(std::size_t i = range.begin(); i != range.end(); i++)
-         {
-            dst[i] += src[i];
-         }
-      }
-   };
    AddFunc addFunc;
    addFunc.src = &m_phiStage[0];
    addFunc.dst = &m_phiTotal[0];
@@ -44,21 +30,6 @@ void PhiAvg::addPhi(const DevMem<float> &phi)
 
 void PhiAvg::saveToVector(std::vector<float> &phiAvg) const
 {
-   struct AvgPhi
-   {
-      const double* total;
-      double avgSize;
-      float* dst;
-
-      void operator()(const tbb::blocked_range<std::size_t>& range) const
-      {
-         for(std::size_t i = range.begin(); i != range.end(); i++)
-         {
-            dst[i] = static_cast<float>(total[i] / avgSize);
-         }
-      }
-   };
-
    if(m_avgSize == 0)
    {
       phiAvg.resize(0);

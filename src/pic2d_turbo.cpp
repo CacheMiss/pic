@@ -36,7 +36,6 @@
 #include "dev_mem_reuse.h"
 #include "dev_stream.h"
 #include "device_stats.h"
-#include "device_utils.h"
 #include "field.h"
 #include "global_variables.h"
 #include "inject.h"
@@ -128,8 +127,6 @@ void executePic(int argc, char *argv[])
 #ifdef DEBUG_TRACE
    std::cout << "Initializing main storage..." << std::endl;
 #endif
-   // CUDA Variables
-   int sharedMemoryBytes;
    // Device Memory Pointers
    DevMem<float2> d_eleHotLoc(initialAllocSize);
    DevMem<float3> d_eleHotVel(initialAllocSize);
@@ -345,39 +342,30 @@ void executePic(int argc, char *argv[])
       // Generate the random numbers inject will need
       curandGenerateUniform(randGenerator, dev_randTable.getPtr(), neededRands);
 
-      const unsigned injectWidth = options.getInjectWidth();
-      const unsigned injectStartX = (NX1 / 2) - (injectWidth / 2);
+      const unsigned int injectWidth = options.getInjectWidth();
+      const unsigned int injectStartX = (NX1 / 2) - (injectWidth / 2);
 #ifdef ENABLE_TIMERS
       injectTimer.start();
 #endif
-      const int injectThreadsPerBlock = MAX_THREADS_PER_BLOCK;
-      dim3 injectNumBlocks(static_cast<unsigned int>(calcNumBlocks(injectThreadsPerBlock, neededParticles)));
-      dim3 injectBlockSize(injectThreadsPerBlock);
-      sharedMemoryBytes = sizeof(float) * 5 * injectThreadsPerBlock;
-      processingStream[0].synchronize();
-      checkForCudaError("RandomGPU");
       // randomly inject new particles in top and bottom 
-      inject<<<injectNumBlocks, injectBlockSize, sharedMemoryBytes, *processingStream[0]>>>(
-         d_eleHotLoc.getPtr(), d_eleHotVel.getPtr(), 
-         d_eleColdLoc.getPtr(), d_eleColdVel.getPtr(), 
-         d_ionHotLoc.getPtr(), d_ionHotVel.getPtr(), 
-         d_ionColdLoc.getPtr(), d_ionColdVel.getPtr(), 
-         injectStartX, injectWidth,
+      inject(
+         d_eleHotLoc, d_eleHotVel, 
+         d_eleColdLoc, d_eleColdVel, 
+         d_ionHotLoc, d_ionHotVel, 
+         d_ionColdLoc, d_ionColdVel, 
          DX, DY,
          simState.numEleHot, simState.numEleCold, 
          simState.numIonHot, simState.numIonCold,
-         dev_randTable.getPtr(),
-         static_cast<unsigned int>(dev_randTable.size()),
+         dev_randTable,
+			neededParticles,
          NX1, NY1, NIJ,
          SIGMA_HE, SIGMA_HI,
-         SIGMA_CE, SIGMA_CI
+         SIGMA_CE, SIGMA_CI,
+			injectWidth,
+			injectStartX,
+			processingStream[0]
          );
-      checkForCudaError("Inject failed");
 
-      simState.numEleHot += neededParticles;
-      simState.numEleCold += neededParticles;
-      simState.numIonHot += neededParticles;
-      simState.numIonCold += neededParticles;
 #ifdef ENABLE_TIMERS
       processingStream[0].synchronize();
       injectTimer.stop();
