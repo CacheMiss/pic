@@ -26,10 +26,10 @@
 //#define D_BXM (0.0f)
 //#define D_BYM (3.0f)
 #define D_BZM (0.0f)
-#define D_SIGMA_CE (10.0f)        // sigma for cold electrons
-#define D_SIGMA_CI (10.0f)       // sigma for cold ions
-#define D_SIGMA_HI (0.3f)        // sigma for hot ions
-#define D_SIGMA_HE (1.0f)        // sigma for hot electrons
+//#define D_SIGMA_CE (10.0f)        // sigma for cold electrons
+//#define D_SIGMA_CI (10.0f)       // sigma for cold ions
+//#define D_SIGMA_HI (0.3f)        // sigma for hot ions
+//#define D_SIGMA_HE (1.0f)        // sigma for hot electrons
 
 #define D_TSTART 0.0f
 //#define D_TMAX 100.0

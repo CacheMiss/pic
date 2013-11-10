@@ -16,10 +16,14 @@ int NY = D_NY;
 int NY1 = D_NY1;
 int NY12 = D_NY12;
 
-float SIGMA_CE = static_cast<float>(D_SIGMA_CE); // sigma for cold electrons
-float SIGMA_CI = static_cast<float>(D_SIGMA_CI); // sigma for cold ions
-float SIGMA_HI = static_cast<float>(D_SIGMA_HI); // sigma for hot ions
-float SIGMA_HE = static_cast<float>(D_SIGMA_HE); // sigma for hot electrons
+float SIGMA_CE;
+float SIGMA_CI;
+float SIGMA_HI;
+float SIGMA_HE;
+//float SIGMA_CE = static_cast<float>(D_SIGMA_CE); // sigma for cold electrons
+//float SIGMA_CI = static_cast<float>(D_SIGMA_CI); // sigma for cold ions
+//float SIGMA_HI = static_cast<float>(D_SIGMA_HI); // sigma for hot ions
+//float SIGMA_HE = static_cast<float>(D_SIGMA_HE); // sigma for hot electrons
 
 float OOB_PARTICLE;
 
