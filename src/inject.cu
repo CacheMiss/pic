@@ -100,7 +100,9 @@ void inject(float2 eleHotLoc[], float3 eleHotVel[],
             const int numIonsHot, const int numIonsCold,
             float randPool[], const int randPoolSize,
             const unsigned int NX1, const unsigned int NY1,
-            const unsigned int NIJ)
+            const unsigned int NIJ,
+            const float SIGMA_HE, const float SIGMA_HI,
+            const float SIGMA_CE, const float SIGMA_CI)
 {
    const int RANDS_PER_THREAD = 24;
    int randOffset = blockIdx.x * blockDim.x * RANDS_PER_THREAD +
@@ -129,16 +131,16 @@ void inject(float2 eleHotLoc[], float3 eleHotVel[],
    {
       posX[threadIdx.x] = (float)(DX*NX1*randPool[randOffset]);
       posY[threadIdx.x] = (float)(DY*(NY1-1)+DY*randPool[randOffset+1]);
-      vpar=(float)((1.414f*rsqrtf(D_SIGMA_HE))*
+      vpar=(float)((1.414f*rsqrtf(SIGMA_HE))*
          sqrtf(-logf(1.0f-randPool[randOffset+2] + FLT_MIN)));
       tpar = (float)(D_TPI*randPool[randOffset+3] - D_PI);
       velX[threadIdx.x] = (float)vpar*__sinf((float)tpar);
-      vpar=(float)((1.414f*rsqrtf(D_SIGMA_HE))*
+      vpar=(float)((1.414f*rsqrtf(SIGMA_HE))*
          sqrtf(-logf(1.0f-randPool[randOffset+4] + FLT_MIN)));
       // For sincos I need a range of -pi to pi
       tpar=(float)(D_TPI*randPool[randOffset+5] - D_PI);
       __sincosf(tpar, &stpar, &ctpar);
-      velY[threadIdx.x] = vpar*stpar - (1.1f*rsqrtf(D_SIGMA_HE));
+      velY[threadIdx.x] = vpar*stpar - (1.1f*rsqrtf(SIGMA_HE));
       velZ[threadIdx.x] = vpar*ctpar;
       posY[threadIdx.x] = posY[threadIdx.x]+D_DELT*velY[threadIdx.x];
 
@@ -154,11 +156,11 @@ void inject(float2 eleHotLoc[], float3 eleHotVel[],
    {
       posX[threadIdx.x] = (float)(DX*injectWidth*randPool[randOffset+6]+botXStart);
       posY[threadIdx.x] = (float)(DY*randPool[randOffset+7]);
-      vpar = (float)((1.414f*rsqrtf(D_SIGMA_CE))*
+      vpar = (float)((1.414f*rsqrtf(SIGMA_CE))*
          sqrtf(-logf(1-randPool[randOffset+8] + FLT_MIN)));
       tpar = (float)(D_TPI*randPool[randOffset+9] - D_PI);
       velX[threadIdx.x] = (float)(vpar*__sinf(tpar));
-      vpar = (float)((1.414f*rsqrtf(D_SIGMA_CE))*
+      vpar = (float)((1.414f*rsqrtf(SIGMA_CE))*
          sqrtf(-logf(1-randPool[randOffset+10] + FLT_MIN)));
       // For sincos I need a range of -pi to pi
       tpar = (float)(D_TPI*randPool[randOffset+11] - D_PI);
@@ -180,11 +182,11 @@ void inject(float2 eleHotLoc[], float3 eleHotVel[],
    {
       posX[threadIdx.x]= (float)(DX*NX1*randPool[randOffset+12]);
       posY[threadIdx.x]= (float)(DY*(NY1-1)+DY*randPool[randOffset+13]);
-      vpar = (float)((1.414f*rsqrtf(velmass*D_SIGMA_HI))*
+      vpar = (float)((1.414f*rsqrtf(velmass*SIGMA_HI))*
          sqrtf(-logf(1.0f-randPool[randOffset+14] + FLT_MIN)));
       tpar = (float)(D_TPI*randPool[randOffset+15] - D_PI);
       velX[threadIdx.x] = (float)vpar*__sinf((float)tpar);
-      vpar = (float)((1.414f*rsqrtf(velmass*D_SIGMA_HI))*
+      vpar = (float)((1.414f*rsqrtf(velmass*SIGMA_HI))*
          sqrtf(-logf(1.0f-randPool[randOffset+16] + FLT_MIN)));
       // For sincos I need a range of -pi to pi
       tpar = (float)(D_TPI*randPool[randOffset+17] - D_PI);
@@ -205,16 +207,16 @@ void inject(float2 eleHotLoc[], float3 eleHotVel[],
    {
       posX[threadIdx.x] = (float)(DX*injectWidth*randPool[randOffset+6]+botXStart);
       posY[threadIdx.x] = (float)(DY*randPool[randOffset+19]);
-      vpar = (float)((1.414f*rsqrtf(D_SIGMA_CI*velmass))*
+      vpar = (float)((1.414f*rsqrtf(SIGMA_CI*velmass))*
          sqrtf(-logf(1.0f-randPool[randOffset+20] + FLT_MIN)));
       tpar = (float)(D_TPI*randPool[randOffset+21] - D_PI);
       velX[threadIdx.x] = (float)vpar*__sinf((float)tpar);
-      vpar = (float)((1.414f*rsqrtf(D_SIGMA_CI*velmass))*
+      vpar = (float)((1.414f*rsqrtf(SIGMA_CI*velmass))*
          sqrtf(-logf(1.0f-randPool[randOffset+22] + FLT_MIN)));
       // For sincos I need a range of -pi to pi
       tpar = (float)(D_TPI*randPool[randOffset+23] - D_PI);
       __sincosf(tpar, &stpar, &ctpar);
-      velY[threadIdx.x] = vpar*stpar + (1.1f*rsqrtf(D_SIGMA_CI*velmass));
+      velY[threadIdx.x] = vpar*stpar + (1.1f*rsqrtf(SIGMA_CI*velmass));
       velZ[threadIdx.x] = vpar*ctpar;
       posY[threadIdx.x] = posY[threadIdx.x]+D_DELT*velY[threadIdx.x];
       posY[threadIdx.x] = max(posY[threadIdx.x], 0.0f);

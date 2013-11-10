@@ -368,7 +368,9 @@ void executePic(int argc, char *argv[])
          simState.numIonHot, simState.numIonCold,
          dev_randTable.getPtr(),
          static_cast<unsigned int>(dev_randTable.size()),
-         NX1, NY1, NIJ
+         NX1, NY1, NIJ,
+         SIGMA_HE, SIGMA_HI,
+         SIGMA_CE, SIGMA_CI
          );
       checkForCudaError("Inject failed");
 

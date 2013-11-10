@@ -12,6 +12,8 @@ void inject(float2 eleHotLoc[], float3 eleHotVel[],
             const int numIonsHot, const int numIonsCold,
             float randPool[], const int randPoolSize,
             const unsigned int NX1, const unsigned int NY1,
-            const unsigned int NIJ);
+            const unsigned int NIJ,
+            const float SIGMA_HE, const float SIGMA_HI,
+            const float SIGMA_CE, const float SIGMA_CI);
 
 #endif
