@@ -137,6 +137,30 @@ class LogRhoBinary : public LoggingBase
    virtual void logData();
 };
 
+class LogFieldBinary : public LoggingBase
+{
+   private:
+   int m_index;
+   const Array2dF *m_ex;
+   const Array2dF *m_ey;
+
+   public:
+   LogFieldBinary(const int idx,
+                  const Array2dF *ex,
+                  const Array2dF *ey)
+     :LoggingBase()
+     , m_index(idx)
+     , m_ex(ex)
+     , m_ey(ey)
+   {}
+   ~LogFieldBinary()
+   {
+      delete m_ex;
+      delete m_ey;
+   }
+   virtual void logData();
+};
+
 class LogPhiAscii : public LoggingBase
 {
    private:
