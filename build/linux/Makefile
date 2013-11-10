@@ -36,7 +36,8 @@ CUOBJ= \
    $(OBJDIR)/potent2.o \
 
 INCLUDE_PATHS=-I$(INC) -I$(CUDADIR)/include -I$(BOOSTDIR)/include -I$(TBB)/include
-LIB_PATHS=-L$(BOOSTDIR)/lib -L$(TBB)/lib
+RPATH=-Wl,-rpath,$(CUDADIR)/lib64,-rpath,$(BOOSTDIR)/lib,-rpath,$(TBB)/lib
+LIB_PATHS=-L$(CUDADIR)/lib64 -L$(BOOSTDIR)/lib -L$(TBB)/lib
 THIRD_PARTY_LIBS=-lboost_thread -lboost_system -lboost_filesystem -lboost_program_options -lcufft -lcurand -ltbb
 #DEBUG_FLAGS=-g -D_DEBUG
 #CUDA_DEBUG_FLAGS=-G
@@ -56,7 +57,7 @@ $(OBJDIR):
 	mkdir -p $(OBJDIR)
 
 $(EXE): $(OBJ) $(CUOBJ) | $(BINDIR)
-	nvcc -o $(EXE) $(CUDA_FLAGS) $(OBJ) $(CUOBJ) $(LIB_PATHS) $(THIRD_PARTY_LIBS)
+	g++ -o $(EXE) $(OBJ) $(CUOBJ) $(LIB_PATHS) $(THIRD_PARTY_LIBS) $(RPATH)
 
 $(OBJDIR)/%.o: $(SRC)/%.cu | $(OBJDIR)
 	nvcc -c -o $@ $< $(INCLUDE_PATHS) $(CUDA_FLAGS)
