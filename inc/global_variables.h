@@ -51,6 +51,8 @@ const int NIJ = D_NIJ; // avg number of particle per cell?
 
 extern float OOB_PARTICLE;
 
+const unsigned int SORT_INTERVAL = 140;
+
 // CUDA Globals
 const int MAX_THREADS_PER_BLOCK = D_MAX_THREADS_PER_BLOCK;
 const int SQUARE_BLOCK_MAX_THREADS_PER_DIM = 
