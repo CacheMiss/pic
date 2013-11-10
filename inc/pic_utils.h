@@ -169,7 +169,7 @@ void outprt(const std::string &fname, int idx_nm, const ArrayType &hot,
    std::stringstream s;
    s << outputPath << "/" << fname << "_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << idx_nm;
    if((fp=fopen(s.str().c_str(),"wt"))==NULL) {
-      printf("Cannot open '%s' file for writing\n",name);
+      printf("Cannot open '%s' file for writing\n",s.str().c_str());
       exit(1);
    }
    for (i=0;i<numHot;i++) {
@@ -219,7 +219,7 @@ void outprtBin(const std::string &fname, int idx_nm, const ArrayType &hot,
    std::stringstream s;
    s << outputPath << "/" << fname << "_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << idx_nm;
    if((fp=fopen(s.str().c_str(),"wb"))==NULL) {
-      printf("Cannot open '%s' file for writing\n",name);
+      printf("Cannot open '%s' file for writing\n",s.str().c_str());
       exit(1);
    }
    int totalPart = numHot + numCold;
