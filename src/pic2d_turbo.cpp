@@ -176,7 +176,7 @@ void executePic(int argc, char *argv[])
 
    simState.simTime = TSTART;
    lfd=LF-1;
-   ind=0;
+   ind=1;
    lfdint=0;
 
    if(options.getRestartDir() != "")

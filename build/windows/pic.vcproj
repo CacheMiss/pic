@@ -260,7 +260,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\pic2d_turbo.cu"
+				RelativePath="..\..\src\pic2d_turbo.cpp"
 				>
 			</File>
 			<File
