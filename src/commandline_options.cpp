@@ -47,6 +47,8 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
        ("sigma-hi", po::value<float>(&m_sigmaHi)->default_value((float)0.3), "Sigma Hot Ions")
        ("sigma-ci", po::value<float>(&m_sigmaCi)->default_value(10.0), "Sigma Cold Ions")
        ("b0", po::value<float>(&m_b0)->default_value(10), "B0 controls the magnetic field strength")
+       ("p0", po::value<double>(&m_p0)->default_value(-15.), "The charge at the top boundary of the grid")
+       ("uniform-p0", po::value<bool>(&m_uniformP0)->default_value(false), "Use a uniform value for p0 instead of a gaussian distribution")
        ("inject-width", po::value<unsigned int>(&m_injectWidth)->default_value(0), "The width of the injection area for cold particles")
        ("restart-dir", po::value<std::string>(&m_restartDir)->default_value(""),
         "The directory the files to restart from are located in.")
@@ -100,6 +102,8 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
    SIGMA_CE = getSigmaCe();
    SIGMA_CI = getSigmaCi();
    B0 = getB0();
+   P0 = getP0();
+   UNIFORM_P0 = getUniformP0();
    OOB_PARTICLE = static_cast<float>(NY1) + 1000.0f;
    outputPath = m_outputPath;
    errorLogName = (boost::filesystem::path(outputPath) /= "errorLog.txt").string();

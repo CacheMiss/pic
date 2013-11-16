@@ -315,7 +315,7 @@ void fixPhiSides(float phi[],
    phi[width * height + y] = phi[y];
 }
 
-void initializeP0()
+void initializeP0(double p0, bool uniformP0=false)
 {
    static bool first = true;
 
@@ -331,9 +331,16 @@ void initializeP0()
 
       for(unsigned int x = 0; x < NX1; x++)
       {
-         double distFromC = static_cast<double>(x) - static_cast<double>(NX1/2);
-         double p = (distFromC * distFromC) / (100.0 * 100.0);
-         h_p0[x] = static_cast<float>(-15.0 * std::exp(-p));
+         if(!uniformP0)
+         {
+            double distFromC = static_cast<double>(x) - static_cast<double>(NX1/2);
+            double p = (distFromC * distFromC) / (100.0 * 100.0);
+            h_p0[x] = static_cast<float>(p0 * std::exp(-p));
+         }
+         else
+         {
+            h_p0[x] = p0;
+         }
       }
       checkCuda(cudaMemcpyToArray(d_p0,
          0,
@@ -378,7 +385,7 @@ void potent2(DevMemF &dev_phi, const DevMemF &dev_rho, DevStream &stream)
 {
    static bool first = true;
 
-   initializeP0();
+   initializeP0(P0, UNIFORM_P0);
 
    unsigned int numThreads;
    dim3 blockSize;

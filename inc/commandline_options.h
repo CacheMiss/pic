@@ -32,6 +32,8 @@ class CommandlineOptions
    inline float getSigmaCi() const;
    inline bool  getParticleBoundCheck() const;
    inline float getB0() const;
+   inline double getP0() const;
+   inline bool getUniformP0() const;
    inline unsigned int getInjectWidth() const;
    inline std::string getOutputPath() const;
    void saveOptions(const char fileName[]) const;
@@ -52,6 +54,8 @@ class CommandlineOptions
    float m_sigmaCe;
    float m_sigmaCi;
    float m_b0;
+   double m_p0;
+   bool m_uniformP0;
    unsigned int m_injectWidth;
    std::string m_restartDir;
    bool m_particleBoundCheck;
@@ -116,6 +120,16 @@ inline bool CommandlineOptions::getParticleBoundCheck() const
 inline float CommandlineOptions::getB0() const
 {
    return m_b0;
+}
+
+inline double CommandlineOptions::getP0() const
+{
+   return m_p0;
+}
+
+inline bool CommandlineOptions::getUniformP0() const
+{
+   return m_uniformP0;
 }
 
 inline unsigned int CommandlineOptions::getInjectWidth() const
