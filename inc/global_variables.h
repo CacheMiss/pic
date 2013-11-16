@@ -17,7 +17,9 @@ const float TPI = static_cast<float>(D_TPI);
 const unsigned int ISEED = static_cast<unsigned int>(D_ISEED);
 
 extern float B0;
-const float P0 = static_cast<float>(D_P0);
+extern double P0;
+extern bool UNIFORM_P0;
+//const float P0 = static_cast<float>(D_P0);
 const float SCALE = static_cast<float>(D_SCALE);
 const float RATO = static_cast<float>(D_RATO);
 const float DELT = static_cast<float>(D_DELT);
@@ -50,6 +52,8 @@ extern int NY12;
 const int NIJ = D_NIJ; // avg number of particle per cell?
 
 extern float OOB_PARTICLE;
+
+const unsigned int SORT_INTERVAL = 140;
 
 // CUDA Globals
 const int MAX_THREADS_PER_BLOCK = D_MAX_THREADS_PER_BLOCK;

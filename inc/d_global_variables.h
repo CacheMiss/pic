@@ -18,7 +18,7 @@
 #define D_ISEED 300085189 // random number seed
 
 // The electric potential at the top of the grid
-#define D_P0 (-10.0f) 
+//#define D_P0 (-10.0f) 
 #define D_SCALE (10.0f)
 #define D_RATO  (1.0f/400.0f)
 //#define D_DELT  (D_TPI/64.0f)  // She simulation step size

@@ -36,7 +36,6 @@
 #include "dev_mem_reuse.h"
 #include "dev_stream.h"
 #include "device_stats.h"
-#include "device_utils.h"
 #include "field.h"
 #include "global_variables.h"
 #include "inject.h"
@@ -128,8 +127,6 @@ void executePic(int argc, char *argv[])
 #ifdef DEBUG_TRACE
    std::cout << "Initializing main storage..." << std::endl;
 #endif
-   // CUDA Variables
-   int sharedMemoryBytes;
    // Device Memory Pointers
    DevMem<float2> d_eleHotLoc(initialAllocSize);
    DevMem<float3> d_eleHotVel(initialAllocSize);
@@ -152,6 +149,15 @@ void executePic(int argc, char *argv[])
    //DevMemF dev_yy(Y_GRD);
    DevMemF dev_randTable(neededRands);
    // End Device Memory Pointers
+
+   unsigned int estHotERemoved = 0;
+   unsigned int estColdERemoved = 0;
+   unsigned int estHotIRemoved = 0;
+   unsigned int estColdIRemoved = 0;
+   unsigned int estHotERemovedPerIt = static_cast<unsigned int>(neededParticles * 0.9);
+   unsigned int estColdERemovedPerIt = static_cast<unsigned int>(neededParticles * 0.9);
+   unsigned int estHotIRemovedPerIt = static_cast<unsigned int>(neededParticles * 0.9);
+   unsigned int estColdIRemovedPerIt = static_cast<unsigned int>(neededParticles * 0.9);
 
 #ifdef DEBUG_TRACE
    std::cout << "Finished main storage" << std::endl;
@@ -179,7 +185,7 @@ void executePic(int argc, char *argv[])
 
    simState.simTime = TSTART;
    lfd=LF-1;
-   ind=0;
+   ind=1;
    lfdint=0;
 
    if(options.getRestartDir() != "")
@@ -345,39 +351,30 @@ void executePic(int argc, char *argv[])
       // Generate the random numbers inject will need
       curandGenerateUniform(randGenerator, dev_randTable.getPtr(), neededRands);
 
-      const unsigned injectWidth = options.getInjectWidth();
-      const unsigned injectStartX = (NX1 / 2) - (injectWidth / 2);
+      const unsigned int injectWidth = options.getInjectWidth();
+      const unsigned int injectStartX = (NX1 / 2) - (injectWidth / 2);
 #ifdef ENABLE_TIMERS
       injectTimer.start();
 #endif
-      const int injectThreadsPerBlock = MAX_THREADS_PER_BLOCK;
-      dim3 injectNumBlocks(static_cast<unsigned int>(calcNumBlocks(injectThreadsPerBlock, neededParticles)));
-      dim3 injectBlockSize(injectThreadsPerBlock);
-      sharedMemoryBytes = sizeof(float) * 5 * injectThreadsPerBlock;
-      processingStream[0].synchronize();
-      checkForCudaError("RandomGPU");
       // randomly inject new particles in top and bottom 
-      inject<<<injectNumBlocks, injectBlockSize, sharedMemoryBytes, *processingStream[0]>>>(
-         d_eleHotLoc.getPtr(), d_eleHotVel.getPtr(), 
-         d_eleColdLoc.getPtr(), d_eleColdVel.getPtr(), 
-         d_ionHotLoc.getPtr(), d_ionHotVel.getPtr(), 
-         d_ionColdLoc.getPtr(), d_ionColdVel.getPtr(), 
-         injectStartX, injectWidth,
+      inject(
+         d_eleHotLoc, d_eleHotVel, 
+         d_eleColdLoc, d_eleColdVel, 
+         d_ionHotLoc, d_ionHotVel, 
+         d_ionColdLoc, d_ionColdVel, 
          DX, DY,
          simState.numEleHot, simState.numEleCold, 
          simState.numIonHot, simState.numIonCold,
-         dev_randTable.getPtr(),
-         static_cast<unsigned int>(dev_randTable.size()),
+         dev_randTable,
+			neededParticles,
          NX1, NY1, NIJ,
          SIGMA_HE, SIGMA_HI,
-         SIGMA_CE, SIGMA_CI
+         SIGMA_CE, SIGMA_CI,
+			injectWidth,
+			injectStartX,
+			processingStream[0]
          );
-      checkForCudaError("Inject failed");
 
-      simState.numEleHot += neededParticles;
-      simState.numEleCold += neededParticles;
-      simState.numIonHot += neededParticles;
-      simState.numIonCold += neededParticles;
 #ifdef ENABLE_TIMERS
       processingStream[0].synchronize();
       injectTimer.stop();
@@ -413,7 +410,7 @@ void executePic(int argc, char *argv[])
       densTimer.stop();
 #endif
 
-      unsigned int itRemainder = simState.iterationNum % 140;
+      unsigned int itRemainder = simState.iterationNum % SORT_INTERVAL;
       switch(itRemainder)
       {
       case 1:
@@ -497,7 +494,14 @@ void executePic(int argc, char *argv[])
 #endif
       if(itRemainder == 1)
       {
-         simState.numIonHot -= static_cast<unsigned int>(sortThread.waitForSort(d_ionHotLoc, d_ionHotVel));
+         unsigned int numRemoved = static_cast<unsigned int>(sortThread.waitForSort(d_ionHotLoc, d_ionHotVel));
+         simState.numIonHot -= numRemoved;
+         estHotIRemoved = 0;
+         estHotIRemovedPerIt = numRemoved / SORT_INTERVAL;
+      }
+      else
+      {
+         estHotIRemoved += estHotIRemovedPerIt;
       }
       processingStream[0].synchronize();
       processingStream[1].synchronize();
@@ -508,7 +512,14 @@ void executePic(int argc, char *argv[])
 #endif
       if(itRemainder == 2)
       {
-         simState.numIonCold -= static_cast<unsigned int>(sortThread.waitForSort(d_ionColdLoc, d_ionColdVel));
+         unsigned int numRemoved = static_cast<unsigned int>(sortThread.waitForSort(d_ionColdLoc, d_ionColdVel));
+         simState.numIonCold -= numRemoved;
+         estColdIRemoved = 0;
+         estColdIRemovedPerIt = numRemoved / SORT_INTERVAL;
+      }
+      else
+      {
+         estColdIRemoved += estColdIRemovedPerIt;
       }
       movep(d_ionColdLoc, d_ionColdVel, simState.numIonCold, 
          RATO, dev_ex, dev_ey, processingStream[1], false);
@@ -519,7 +530,14 @@ void executePic(int argc, char *argv[])
 #endif
       if(itRemainder == 3)
       {
-         simState.numEleHot -= static_cast<unsigned int>(sortThread.waitForSort(d_eleHotLoc, d_eleHotVel));
+         unsigned int numRemoved = static_cast<unsigned int>(sortThread.waitForSort(d_eleHotLoc, d_eleHotVel));
+         simState.numEleHot -= numRemoved;
+         estHotERemoved = 0;
+         estHotERemovedPerIt = numRemoved / SORT_INTERVAL;
+      }
+      else
+      {
+         estHotERemoved += estHotERemovedPerIt;
       }
       movep(d_eleHotLoc, d_eleHotVel, simState.numEleHot, 
          (float) -1.0, dev_ex, dev_ey, processingStream[2], false);
@@ -528,7 +546,14 @@ void executePic(int argc, char *argv[])
 #endif
       if(itRemainder == 4)
       {
-         simState.numEleCold -= static_cast<unsigned int>(sortThread.waitForSort(d_eleColdLoc, d_eleColdVel));
+         unsigned int numRemoved = static_cast<unsigned int>(sortThread.waitForSort(d_eleColdLoc, d_eleColdVel));
+         simState.numEleCold -= numRemoved;
+         estColdERemoved = 0;
+         estColdERemovedPerIt = numRemoved / SORT_INTERVAL;
+      }
+      else
+      {
+         estColdERemoved += estColdERemovedPerIt;
       }
       movep(d_eleColdLoc, d_eleColdVel, simState.numEleCold, 
          (float) -1.0, dev_ex, dev_ey, processingStream[3], false);
@@ -567,12 +592,14 @@ void executePic(int argc, char *argv[])
          processingStream[2].synchronize();
          processingStream[3].synchronize();
          logger.logInfo(ind, simState.simTime, 
-            simState.numEleHot + simState.numEleCold,
-            simState.numIonHot + simState.numIonCold,
+            simState.numEleHot + simState.numEleCold - estHotERemoved - estColdERemoved,
+            simState.numIonHot + simState.numIonCold - estHotIRemoved - estColdIRemoved,
             options.getRestartDir() != "" ? true : false);
          logger.logForPerformance(ind, simState.simTime, 
-            simState.numEleHot, simState.numEleCold, 
-            simState.numIonHot, simState.numIonCold, 
+            simState.numEleHot - estHotERemoved,
+            simState.numEleCold - estColdERemoved, 
+            simState.numIonHot - estHotIRemoved,
+            simState.numIonCold - estColdIRemoved, 
             (unsigned int) iterationTimer.intervalInMilliS() / LF,
 #ifdef ENABLE_TIMERS
             (unsigned int) injectTimer.intervalInMilliS(),

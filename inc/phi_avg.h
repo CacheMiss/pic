@@ -2,6 +2,7 @@
 #define PHI_AVG_H
 
 #include <vector>
+#include <tbb/tbb.h>
 
 #include "host_mem.h"
 
@@ -23,6 +24,36 @@ private:
    double m_avgSize;
    unsigned int  m_xSize;
    unsigned int  m_ySize;
+
+	struct AddFunc
+	{
+		float* src;
+		double *dst;
+
+		void operator()(const tbb::blocked_range<std::size_t>& range) const
+		{
+			for(std::size_t i = range.begin(); i != range.end(); i++)
+			{
+				dst[i] += src[i];
+			}
+		}
+	};
+
+	struct AvgPhi
+	{
+		const double* total;
+		double avgSize;
+		float* dst;
+
+		void operator()(const tbb::blocked_range<std::size_t>& range) const
+		{
+			for(std::size_t i = range.begin(); i != range.end(); i++)
+			{
+				dst[i] = static_cast<float>(total[i] / avgSize);
+			}
+		}
+	};
+
 };
 
 #endif

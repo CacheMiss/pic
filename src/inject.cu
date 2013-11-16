@@ -2,6 +2,9 @@
 #include <float.h>
 
 #include "d_global_variables.h"
+#include "device_utils.h"
+#include "global_variables.h"
+#include "inject.h"
 
 //*****************************************************************************
 //  Function: injectWriteBlock
@@ -90,15 +93,15 @@ void injectWriteBlock(float2 d_loc[], float3 d_vel[],
 //  NIJ - Avg num particles per cell
 //*****************************************************************************
 __global__
-void inject(float2 eleHotLoc[], float3 eleHotVel[], 
+void injectKernel(float2 eleHotLoc[], float3 eleHotVel[], 
             float2 eleColdLoc[], float3 eleColdVel[],
             float2 ionHotLoc[], float3 ionHotVel[], 
             float2 ionColdLoc[], float3 ionColdVel[],
             const int botXStart, const int injectWidth,
             const float DX, const float DY,
-            const int numElectronsHot, const int numElectronsCold, 
-            const int numIonsHot, const int numIonsCold,
-            float randPool[], const int randPoolSize,
+            const unsigned int numElectronsHot, const unsigned int numElectronsCold, 
+            const unsigned int numIonsHot, const unsigned int numIonsCold,
+            const float randPool[], const int randPoolSize,
             const unsigned int NX1, const unsigned int NY1,
             const unsigned int NIJ,
             const float SIGMA_HE, const float SIGMA_HI,
@@ -224,4 +227,51 @@ void inject(float2 eleHotLoc[], float3 eleHotVel[],
       injectWriteBlock(ionColdLoc, ionColdVel, numIonsCold, 
          posX, posY, velX, velY, velZ);
    }
+}
+
+void inject(DevMem<float2>& eleHotLoc, DevMem<float3>& eleHotVel, 
+            DevMem<float2>& eleColdLoc, DevMem<float3>& eleColdVel,
+            DevMem<float2>& ionHotLoc, DevMem<float3>& ionHotVel, 
+            DevMem<float2>& ionColdLoc, DevMem<float3>& ionColdVel,
+            const float DX, const float DY,
+            unsigned int &numElectronsHot, unsigned int &numElectronsCold, 
+            unsigned int &numIonsHot, unsigned int &numIonsCold,
+            const DevMem<float>& randPool,
+				int neededParticles,
+            const unsigned int NX1, const unsigned int NY1,
+            const unsigned int NIJ,
+            const float SIGMA_HE, const float SIGMA_HI,
+            const float SIGMA_CE, const float SIGMA_CI,
+				const unsigned int injectWidth,
+				const unsigned int injectStartX,
+				DevStream &stream)
+{
+      const int injectThreadsPerBlock = MAX_THREADS_PER_BLOCK;
+      dim3 injectNumBlocks(static_cast<unsigned int>(calcNumBlocks(injectThreadsPerBlock, neededParticles)));
+      dim3 injectBlockSize(injectThreadsPerBlock);
+      int sharedMemoryBytes = sizeof(float) * 5 * injectThreadsPerBlock;
+      stream.synchronize();
+      checkForCudaError("RandomGPU");
+
+      injectKernel<<<injectNumBlocks, injectBlockSize, sharedMemoryBytes, *stream>>>(
+         eleHotLoc.getPtr(), eleHotVel.getPtr(), 
+         eleColdLoc.getPtr(), eleColdVel.getPtr(), 
+         ionHotLoc.getPtr(), ionHotVel.getPtr(), 
+         ionColdLoc.getPtr(), ionColdVel.getPtr(), 
+         injectStartX, injectWidth,
+         DX, DY,
+         numElectronsHot, numElectronsCold,
+         numIonsHot, numIonsCold,
+         randPool.getPtr(),
+         static_cast<unsigned int>(randPool.size()),
+         NX1, NY1, NIJ,
+         SIGMA_HE, SIGMA_HI,
+         SIGMA_CE, SIGMA_CI
+         );
+      checkForCudaError("Inject failed");
+
+      numElectronsHot += neededParticles;
+      numElectronsCold += neededParticles;
+      numIonsHot += neededParticles;
+      numIonsCold += neededParticles;
 }

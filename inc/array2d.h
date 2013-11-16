@@ -123,7 +123,7 @@ class Array2d
    {
       if(&rhs == this)
       {
-         return;
+         return *this;
       }
       numRows = rhs.numRows;
       numColumns = rhs.numColumns;

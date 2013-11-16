@@ -15,3 +15,9 @@ build/windows/binned_memory_test/Debug/*
 build/windows/binned_memory_test/Release/*
 *.csv
 run_output
+big_out.txt
+bin/
+build/linux/.obj/
+output/
+utilities/obj/
+utilities/testPartFile

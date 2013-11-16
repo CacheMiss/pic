@@ -3,6 +3,7 @@ CUDADIR=/opt/apps/cuda/5.0
 #BOOSTDIR=/opt/apps/intel13/boost/1.51.0
 BOOSTDIR=/home1/02498/sewells/boost
 #CUDADIR=/usr/local/cuda
+TBB=/home1/02498/sewells/tbb
 SRC=$(ROOT)/src
 INC=$(ROOT)/inc
 BINDIR=$(ROOT)/bin
@@ -19,22 +20,25 @@ OBJ= \
    $(OBJDIR)/logging_thread.o \
    $(OBJDIR)/logging_types.o \
    $(OBJDIR)/particle_allocator.o \
+   $(OBJDIR)/phi_avg.o \
+   $(OBJDIR)/pic2d_turbo.o \
    $(OBJDIR)/pic_utils.o \
    $(OBJDIR)/pitched_ptr.o \
    $(OBJDIR)/precisiontimer.o \
    $(OBJDIR)/simulation_state.o \
+   $(OBJDIR)/sort_thread.o \
 
 CUOBJ= \
    $(OBJDIR)/dens.o \
    $(OBJDIR)/field.o \
    $(OBJDIR)/inject.o \
    $(OBJDIR)/movep.o \
-   $(OBJDIR)/pic2d_turbo.o \
    $(OBJDIR)/potent2.o \
 
-INCLUDE_PATHS=-I$(INC) -I$(CUDADIR)/include -I$(BOOSTDIR)/include
-LIB_PATHS=-L$(BOOSTDIR)/lib
-THIRD_PARTY_LIBS=-lboost_thread -lboost_system -lboost_filesystem -lboost_program_options -lcufft -lcurand
+INCLUDE_PATHS=-I$(INC) -I$(CUDADIR)/include -I$(BOOSTDIR)/include -I$(TBB)/include
+RPATH=-Wl,-rpath,$(CUDADIR)/lib64,-rpath,$(BOOSTDIR)/lib,-rpath,$(TBB)/lib
+LIB_PATHS=-L$(CUDADIR)/lib64 -L$(BOOSTDIR)/lib -L$(TBB)/lib
+THIRD_PARTY_LIBS=-lboost_thread -lboost_system -lboost_filesystem -lboost_program_options -lcufft -lcurand -ltbb
 #DEBUG_FLAGS=-g -D_DEBUG
 #CUDA_DEBUG_FLAGS=-G
 OPTIMIZATION=-O2 -DNDEBUG
@@ -53,7 +57,7 @@ $(OBJDIR):
 	mkdir -p $(OBJDIR)
 
 $(EXE): $(OBJ) $(CUOBJ) | $(BINDIR)
-	nvcc -o $(EXE) $(CUDA_FLAGS) $(OBJ) $(CUOBJ) $(LIB_PATHS) $(THIRD_PARTY_LIBS)
+	g++ -o $(EXE) $(OBJ) $(CUOBJ) $(LIB_PATHS) $(THIRD_PARTY_LIBS) $(RPATH)
 
 $(OBJDIR)/%.o: $(SRC)/%.cu | $(OBJDIR)
 	nvcc -c -o $@ $< $(INCLUDE_PATHS) $(CUDA_FLAGS)
