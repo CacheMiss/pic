@@ -887,6 +887,8 @@ void findUpperLowerBound(const unsigned int* __restrict__ binList,
 
    if(threadX < numParticles)
    {
+      // Any bin boundary is both the end of one bin
+      // and the start of the next
       if((blockIdx.x > 0 || threadIdx.x != 0) &&
          scratch[index] > scratch[threadIdx.x])
       {
