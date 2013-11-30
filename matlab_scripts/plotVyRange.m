@@ -9,6 +9,7 @@ function ret = plotVyRange(fName, midpoint, width, sliceHot, sliceCold)
    end
    
    sizeOfFloat = 4;
+   maxPlottableParticles = 4000;
 
    numParticles = fread(f, 1, 'int32');
    numHot = fread(f, 1, 'int32');
@@ -16,6 +17,20 @@ function ret = plotVyRange(fName, midpoint, width, sliceHot, sliceCold)
    numCold = fread(f, 1, 'int32');
    numColdCulled = floor(numCold / sliceCold);
    dataStart = ftell(f);
+   
+   if numHotCulled > maxPlottableParticles
+       numHotCulled = maxPlottableParticles;
+       sliceHot = floor(numHot / maxPlottableParticles);
+       fprintf('Limiting number of hot particles plotted to %d\n', ...
+           numHotCulled);
+   end
+   if numColdCulled > maxPlottableParticles
+       numColdCulled = maxPlottableParticles;
+       sliceCold = floor(numCold / maxPlottableParticles);
+       fprintf('Limiting number of cold particles plotted to %d\n', ...
+           numColdCulled);
+   end
+   
    hotP = zeros(2, numHotCulled);
    coldP = zeros(2, numColdCulled);
    nextSpace = 1;
@@ -63,11 +78,17 @@ function ret = plotVyRange(fName, midpoint, width, sliceHot, sliceCold)
    meanHotX = mean(hotP(1,:));
    xMaxHot = meanHotX + stdHotX * stdDevMultiplier;
    xMinHot = meanHotX - stdHotX * stdDevMultiplier;
+   if xMaxHot == xMinHot
+       xMaxHot = xMinHot + 1;
+   end
    
    stdColdX = std(coldP(1,:));
    meanColdX = mean(coldP(1,:));
    xMaxCold = meanColdX + stdColdX * stdDevMultiplier;
    xMinCold = meanColdX - stdColdX * stdDevMultiplier;
+   if xMaxCold == xMinCold
+       xMaxCold = xMinCold + 1;
+   end
    
    figure;
    scatter(coldP(1,:), coldP(2,:), 0.4)

@@ -21,6 +21,25 @@ function ret = plotPart(fName, sliceSize)
    fprintf('Num hot = %d\nNum cold = %d\n', numHot, numCold);
    finalHot = floor(numHot / sliceSize);
    finalCold = floor(numCold / sliceSize);
+   maxPlottableParticles = 4000;
+   sizeOfFloat = 4;
+   
+   sliceHot = sliceSize;
+   sliceCold = sliceSize;
+   
+   dataStart = ftell(f);
+   if finalHot > maxPlottableParticles
+       finalHot = maxPlottableParticles;
+       sliceHot = floor(numHot / maxPlottableParticles);
+       fprintf('Limiting number of hot particles plotted to %d\n', ...
+           finalHot);
+   end
+   if finalCold > maxPlottableParticles
+       finalCold = maxPlottableParticles;
+       sliceCold = floor(numCold / maxPlottableParticles);
+       fprintf('Limiting number of cold particles plotted to %d\n', ...
+           finalCold);
+   end
    hotP = zeros(3, finalHot);
    coldP = zeros(3, finalCold);
    for i=1:finalHot
@@ -29,22 +48,22 @@ function ret = plotPart(fName, sliceSize)
        % e = 1/2 * mv^2
        energy = massRatio * (vel(1)^2 + vel(2)^2 + vel(3)^2) / 2;
        hotP(3,i) = energy;
-       sizeOfFloat = 4;
        % Skip the velocity plus whatever else I need to reach
        % the next particle I care about
-       skipBytes = sizeOfFloat * 5 * (sliceSize-1);
+       skipBytes = sizeOfFloat * 5 * (sliceHot-1);
        fseek(f, skipBytes, 'cof');
    end
+   fseek(f, dataStart, 'bof');
+   fseek(f, sizeOfFloat * 5 * numHot, 'cof');
    for i=1:finalCold
        coldP(1:2,i) = fread(f, 2, 'float');
        vel = fread(f, 3, 'float');
        % e = 1/2 * mv^2
        energy = massRatio * (vel(1)^2 + vel(2)^2 + vel(3)^2) / 2;
        coldP(3,i) = energy;
-       sizeOfFloat = 4;
        % Skip the velocity plus whatever else I need to reach
        % the next particle I care about
-       skipBytes = sizeOfFloat * 5 * (sliceSize-1);
+       skipBytes = sizeOfFloat * 5 * (sliceCold-1);
        fseek(f, skipBytes, 'cof');
    end
 

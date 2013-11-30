@@ -1,5 +1,5 @@
 
-function ret = contourPhi(fName)
+function ret = contourPhi(fName, sliceX, sliceY)
 
    f = fopen(fName, 'rb');
 
@@ -14,9 +14,10 @@ function ret = contourPhi(fName)
    columnOrder = fread(f, 1, 'int32');
    phi = fread(f, [numRows,numColumns], 'float');
    fclose(f);
-
-   xValues = [0:numColumns-1];
-   yValues = [0:numRows-1];
+   
+   phi = phi(1:sliceY:end, 1:sliceX:end);
+   xValues = 0:sliceX:numColumns-1;
+   yValues = 0:sliceY:numRows-1;
    
    % Chop things off
    %phi = phi(5077:5117, :);
