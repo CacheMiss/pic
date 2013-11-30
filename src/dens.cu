@@ -420,7 +420,7 @@ __global__
 void sumArea(float* __restrict__ a1Sum, float* __restrict__ a2Sum, 
              float* __restrict__ a3Sum, float* __restrict__ a4Sum, 
              const unsigned int* __restrict__ bucketBeg, 
-				 const unsigned int* __restrict__ bucketEnd,
+             const unsigned int* __restrict__ bucketEnd,
              uint2* __restrict__ maxMinArray,
              const float* __restrict__ a1, const float* __restrict__ a2, 
              const float* __restrict__ a3, const float* __restrict__ a4,
@@ -861,9 +861,9 @@ void getFinalRho(float* __restrict__ rho,
 __global__
 void findUpperLowerBound(const unsigned int* __restrict__ binList,
                          unsigned int* __restrict__ beg, 
-								 unsigned int* __restrict__ end,
+                         unsigned int* __restrict__ end,
                          unsigned int numParticles, 
-								 unsigned int numBins)
+                         unsigned int numBins)
 {
    extern __shared__ char bytes[];
    unsigned int *scratch = reinterpret_cast<unsigned int *>(&bytes[0]);
@@ -887,6 +887,8 @@ void findUpperLowerBound(const unsigned int* __restrict__ binList,
 
    if(threadX < numParticles)
    {
+      // Any bin boundary is both the end of one bin
+      // and the start of the next
       if((blockIdx.x > 0 || threadIdx.x != 0) &&
          scratch[index] > scratch[threadIdx.x])
       {
