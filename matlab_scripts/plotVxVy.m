@@ -160,28 +160,28 @@ function ret = plotVxVy(fName, sliceHot, sliceCold)
    outFile = strcat(fields{1}, '_hot_vy_vs_vx_', fields{2});
    print('-dpng', outFile);
    
-   xValues = sqrt(coldP(2,:).^2 + coldP(4,:).^2);
-   figure;
-   scatter(xValues, coldP(3,:), 0.4)
-   fields = strsplit(fName, '_');
-   title(strcat([fields{1} ' cold ' fields{2} ' Vy vs Vperp']));
-   xlabel('vperp');
-   ylabel('vy');
-   axis([min(xValues) max(xValues) vyMinCold vyMaxCold]);
-   fields = strsplit(fName, '_');
-   outFile = strcat(fields{1}, '_cold_vy_vs_vperp_', fields{2});
-   print('-dpng', outFile);
-      
-   xValues = sqrt(hotP(2,:).^2 + hotP(4,:).^2);
-   figure;
-   scatter(xValues, hotP(3,:), 0.4)
-   fields = strsplit(fName, '_');
-   title(strcat([fields{1} ' cold ' fields{2} ' Vy vs Vperp']));
-   xlabel('vperp');
-   ylabel('vy');
-   axis([min(xValues) max(xValues) vyMinHot vyMaxHot]);
-   fields = strsplit(fName, '_');
-   outFile = strcat(fields{1}, '_hot_vy_vs_vperp_', fields{2});
-   print('-dpng', outFile);
+%    xValues = sqrt(coldP(2,:).^2 + coldP(4,:).^2);
+%    figure;
+%    scatter(xValues, coldP(3,:), 0.4)
+%    fields = strsplit(fName, '_');
+%    title(strcat([fields{1} ' cold ' fields{2} ' Vy vs Vperp']));
+%    xlabel('vperp');
+%    ylabel('vy');
+%    axis([min(xValues) max(xValues) vyMinCold vyMaxCold]);
+%    fields = strsplit(fName, '_');
+%    outFile = strcat(fields{1}, '_cold_vy_vs_vperp_', fields{2});
+%    print('-dpng', outFile);
+%       
+%    xValues = sqrt(hotP(2,:).^2 + hotP(4,:).^2);
+%    figure;
+%    scatter(xValues, hotP(3,:), 0.4)
+%    fields = strsplit(fName, '_');
+%    title(strcat([fields{1} ' cold ' fields{2} ' Vy vs Vperp']));
+%    xlabel('vperp');
+%    ylabel('vy');
+%    axis([min(xValues) max(xValues) vyMinHot vyMaxHot]);
+%    fields = strsplit(fName, '_');
+%    outFile = strcat(fields{1}, '_hot_vy_vs_vperp_', fields{2});
+%    print('-dpng', outFile);
 
 end
