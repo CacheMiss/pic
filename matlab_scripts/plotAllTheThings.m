@@ -14,20 +14,20 @@ function plotAllTheThings(startIdx, endIdx, stepSize)
         
         plotPart(eleName, partStepSize);
         plotPart(ionName, partStepSize);
-        plotVxRange(eleName, gridWidth/2, 20, partStepSize, partStepSize);
-        plotVxRange(ionName, gridWidth/2, 20, partStepSize, partStepSize);
-        plotVyRange(eleName, gridWidth/2, 20, partStepSize, partStepSize);
-        plotVyRange(ionName, gridWidth/2, 20, partStepSize, partStepSize);
-        plotVxVy(eleName, partStepSize, partStepSize);
-        plotVxVy(ionName, partStepSize, partStepSize);
+        %plotVxRange(eleName, gridWidth/2, 20, partStepSize, partStepSize);
+        %plotVxRange(ionName, gridWidth/2, 20, partStepSize, partStepSize);
+        %plotVyRange(eleName, gridWidth/2, 20, partStepSize, partStepSize);
+        %plotVyRange(ionName, gridWidth/2, 20, partStepSize, partStepSize);
+        plotVxVy(eleName, 1, 1);
+        plotVxVy(ionName, 1, 1);
         plotRho(idxStr, gridWidth/2);
         contourPhi(rhoName, 4, 32);
-        plotPhiAll(rhoiName, 4, 32);
+        plotPhiAll(rhoiName, 8, 64);
         contourRho(rhoiName, 4, 32);
         %contourRhoBottom(rhoiName);
         plotPhi(phiName, gridWidth/2);
         plotPhi(phiAvgName, gridWidth/2);
-        plotPhiAll(phiName, 4, 32);
+        plotPhiAll(phiName, 8, 64);
         contourPhi(phiName, 4, 32);
         contourPhi(phiAvgName, 4, 32);
         
