@@ -90,7 +90,14 @@ void injectWriteBlock(float2 d_loc[], float3 d_vel[],
 //  randPoolSize - The number of elements in randPool
 //  NX1 - The width of the grid
 //  NY1 - The height of the grid
-//  NIJ - Avg num particles per cell
+//  numToInject - The number of particles to inject
+//  numSecondaryCold - The number of secondary cold particles. The number of
+//     primary cold particles is NIJ * NX1 = numSecondaryCold
+//  SIGMA_HE - Hot Electron Sigma
+//  SIGMA_HI - Hot Ion Sigma
+//  SIGMA_CE - Cold Electron Sigma
+//  SIGMA_CI - Cold Ion Sigma
+//  SIGMA_CE_SECONDARY - The sigma for the secondary cold electrons
 //*****************************************************************************
 __global__
 void injectKernel(float2 eleHotLoc[], float3 eleHotVel[], 
@@ -103,9 +110,11 @@ void injectKernel(float2 eleHotLoc[], float3 eleHotVel[],
             const unsigned int numIonsHot, const unsigned int numIonsCold,
             const float randPool[], const int randPoolSize,
             const unsigned int NX1, const unsigned int NY1,
-            const unsigned int NIJ,
+            const unsigned int numToInject,
+            const unsigned int numSecondaryCold,
             const float SIGMA_HE, const float SIGMA_HI,
-            const float SIGMA_CE, const float SIGMA_CI)
+            const float SIGMA_CE, const float SIGMA_CI,
+            const float SIGMA_CE_SECONDARY)
 {
    const int RANDS_PER_THREAD = 24;
    int randOffset = blockIdx.x * blockDim.x * RANDS_PER_THREAD +
@@ -119,7 +128,8 @@ void injectKernel(float2 eleHotLoc[], float3 eleHotVel[],
    volatile float *velZ = velY + blockDim.x;
    // Check and make sure this thread has work, if it doesn't,
    // return here.
-   bool hasWork = (blockIdx.x*blockDim.x+threadIdx.x < NIJ*NX1) ? true : false;
+   bool hasWork = (blockIdx.x*blockDim.x+threadIdx.x < numToInject) ? true : false;
+   bool injectingSecondary = numToInject - (blockIdx.x*blockDim.x+threadIdx.x) <= numSecondaryCold;
    const float velmass = static_cast<float>(1./D_RATO);
    float vpar;
    float tpar; 
@@ -159,11 +169,11 @@ void injectKernel(float2 eleHotLoc[], float3 eleHotVel[],
    {
       posX[threadIdx.x] = (float)(DX*injectWidth*randPool[randOffset+6]+botXStart);
       posY[threadIdx.x] = (float)(DY*randPool[randOffset+7]);
-      vpar = (float)((1.414f*rsqrtf(SIGMA_CE))*
+      vpar = (float)((1.414f*rsqrtf(!injectingSecondary ? SIGMA_CE : SIGMA_CE_SECONDARY))*
          sqrtf(-logf(1-randPool[randOffset+8] + FLT_MIN)));
       tpar = (float)(D_TPI*randPool[randOffset+9] - D_PI);
       velX[threadIdx.x] = (float)(vpar*__sinf(tpar));
-      vpar = (float)((1.414f*rsqrtf(SIGMA_CE))*
+      vpar = (float)((1.414f*rsqrtf(!injectingSecondary ? SIGMA_CE : SIGMA_CE_SECONDARY))*
          sqrtf(-logf(1-randPool[randOffset+10] + FLT_MIN)));
       // For sincos I need a range of -pi to pi
       tpar = (float)(D_TPI*randPool[randOffset+11] - D_PI);
@@ -236,18 +246,19 @@ void inject(DevMem<float2>& eleHotLoc, DevMem<float3>& eleHotVel,
             const float DX, const float DY,
             unsigned int &numElectronsHot, unsigned int &numElectronsCold, 
             unsigned int &numIonsHot, unsigned int &numIonsCold,
+				const unsigned int numToInject,
+            const unsigned int numSecondaryCold,
             const DevMem<float>& randPool,
-				int neededParticles,
             const unsigned int NX1, const unsigned int NY1,
-            const unsigned int NIJ,
             const float SIGMA_HE, const float SIGMA_HI,
             const float SIGMA_CE, const float SIGMA_CI,
+            const float SIGMA_CE_SECONDARY,
 				const unsigned int injectWidth,
 				const unsigned int injectStartX,
 				DevStream &stream)
 {
       const int injectThreadsPerBlock = MAX_THREADS_PER_BLOCK;
-      dim3 injectNumBlocks(static_cast<unsigned int>(calcNumBlocks(injectThreadsPerBlock, neededParticles)));
+      dim3 injectNumBlocks(static_cast<unsigned int>(calcNumBlocks(injectThreadsPerBlock, numToInject)));
       dim3 injectBlockSize(injectThreadsPerBlock);
       int sharedMemoryBytes = sizeof(float) * 5 * injectThreadsPerBlock;
       stream.synchronize();
@@ -264,14 +275,16 @@ void inject(DevMem<float2>& eleHotLoc, DevMem<float3>& eleHotVel,
          numIonsHot, numIonsCold,
          randPool.getPtr(),
          static_cast<unsigned int>(randPool.size()),
-         NX1, NY1, NIJ,
+         NX1, NY1, 
+         numToInject, numSecondaryCold,
          SIGMA_HE, SIGMA_HI,
-         SIGMA_CE, SIGMA_CI
+         SIGMA_CE, SIGMA_CI,
+         SIGMA_CE_SECONDARY
          );
       checkForCudaError("Inject failed");
 
-      numElectronsHot += neededParticles;
-      numElectronsCold += neededParticles;
-      numIonsHot += neededParticles;
-      numIonsCold += neededParticles;
+      numElectronsHot += numToInject;
+      numElectronsCold += numToInject;
+      numIonsHot += numToInject;
+      numIonsCold += numToInject;
 }

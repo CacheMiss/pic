@@ -356,6 +356,7 @@ void executePic(int argc, char *argv[])
 #ifdef ENABLE_TIMERS
       injectTimer.start();
 #endif
+      unsigned int neededSecondaryParticles = static_cast<unsigned int>(PERCENT_SECONDARY * neededParticles);
       // randomly inject new particles in top and bottom 
       inject(
          d_eleHotLoc, d_eleHotVel, 
@@ -365,11 +366,13 @@ void executePic(int argc, char *argv[])
          DX, DY,
          simState.numEleHot, simState.numEleCold, 
          simState.numIonHot, simState.numIonCold,
-         dev_randTable,
 			neededParticles,
-         NX1, NY1, NIJ,
+         neededSecondaryParticles,
+         dev_randTable,
+         NX1, NY1,
          SIGMA_HE, SIGMA_HI,
          SIGMA_CE, SIGMA_CI,
+         SIGMA_CE_SECONDARY,
 			injectWidth,
 			injectStartX,
 			processingStream[0]

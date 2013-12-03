@@ -30,6 +30,8 @@ class CommandlineOptions
    inline float getSigmaCe() const;
    inline float getSigmaHi() const;
    inline float getSigmaCi() const;
+   inline float getSigmaCeSecondary() const;
+   inline double getPercentageSecondary() const;
    inline bool  getParticleBoundCheck() const;
    inline float getB0() const;
    inline double getP0() const;
@@ -53,6 +55,8 @@ class CommandlineOptions
    float m_sigmaHi;
    float m_sigmaCe;
    float m_sigmaCi;
+   float m_sigmaCeSecondary;
+   double m_percentageSecondary;
    float m_b0;
    double m_p0;
    bool m_uniformP0;
@@ -110,6 +114,16 @@ inline float CommandlineOptions::getSigmaHi() const
 inline float CommandlineOptions::getSigmaCi() const
 {
    return m_sigmaCi;
+}
+
+inline float CommandlineOptions::getSigmaCeSecondary() const
+{
+   return m_sigmaCeSecondary;
+}
+
+inline double CommandlineOptions::getPercentageSecondary() const
+{
+   return m_percentageSecondary;
 }
 
 inline bool CommandlineOptions::getParticleBoundCheck() const

@@ -30,6 +30,9 @@ extern float SIGMA_CE; // sigma for cold electrons
 extern float SIGMA_CI; // sigma for cold ions
 extern float SIGMA_HI; // sigma for hot ions
 extern float SIGMA_HE; // sigma for hot electrons
+extern float SIGMA_CE_SECONDARY; // sigma for secondary cold electrons
+// The percentage (0-1) of the injected particles which are secondary
+extern double PERCENT_SECONDARY;
 
 const float TSTART = static_cast<float>(D_TSTART);
 //float TMAX = static_cast<float>(D_TMAX);

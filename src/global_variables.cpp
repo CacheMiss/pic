@@ -22,6 +22,8 @@ float SIGMA_CE;
 float SIGMA_CI;
 float SIGMA_HI;
 float SIGMA_HE;
+float SIGMA_CE_SECONDARY;
+double PERCENT_SECONDARY;
 //float SIGMA_CE = static_cast<float>(D_SIGMA_CE); // sigma for cold electrons
 //float SIGMA_CI = static_cast<float>(D_SIGMA_CI); // sigma for cold ions
 //float SIGMA_HI = static_cast<float>(D_SIGMA_HI); // sigma for hot ions

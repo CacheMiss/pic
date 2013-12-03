@@ -46,6 +46,10 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
        ("sigma-ce", po::value<float>(&m_sigmaCe)->default_value(10.0), "Sigma Cold Electrons")
        ("sigma-hi", po::value<float>(&m_sigmaHi)->default_value((float)0.3), "Sigma Hot Ions")
        ("sigma-ci", po::value<float>(&m_sigmaCi)->default_value(10.0), "Sigma Cold Ions")
+       ("sigma-ce-secondary", po::value<float>(&m_sigmaCeSecondary)->default_value(10.0), 
+        "Sigma for seondary cold electron injection. Use this in conjunction with the --percent-secondary option.")
+       ("percentage-secondary", po::value<double>(&m_percentageSecondary)->default_value(0), 
+        "The percentage (value 0-1) cold electrons that will use the secondary sigma.")
        ("b0", po::value<float>(&m_b0)->default_value(10), "B0 controls the magnetic field strength")
        ("p0", po::value<double>(&m_p0)->default_value(-15.), "The charge at the top boundary of the grid")
        ("uniform-p0", po::value<bool>(&m_uniformP0)->default_value(false), "Use a uniform value for p0 instead of a gaussian distribution")
@@ -83,6 +87,11 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
    }
    */
 
+   if(m_percentageSecondary > 1 || m_percentageSecondary < 0)
+   {
+      errExit("--percentage-secondary must be 0 <= x <= 1");
+   }
+
    // Inject across the entire bottom of the grid if left unspecified
    if(m_injectWidth == 0)
    {
@@ -101,6 +110,8 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
    SIGMA_HI = getSigmaHi();
    SIGMA_CE = getSigmaCe();
    SIGMA_CI = getSigmaCi();
+   SIGMA_CE_SECONDARY = getSigmaCeSecondary();
+   PERCENT_SECONDARY = getPercentageSecondary();
    B0 = getB0();
    P0 = getP0();
    UNIFORM_P0 = getUniformP0();
