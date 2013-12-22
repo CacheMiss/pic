@@ -30,6 +30,8 @@ class CommandlineOptions
    inline float getSigmaCe() const;
    inline float getSigmaHi() const;
    inline float getSigmaCi() const;
+   inline float getSigmaHePerp() const;
+   inline float getSigmaHiPerp() const;
    inline float getSigmaCeSecondary() const;
    inline double getPercentageSecondary() const;
    inline bool  getParticleBoundCheck() const;
@@ -55,6 +57,8 @@ class CommandlineOptions
    float m_sigmaHi;
    float m_sigmaCe;
    float m_sigmaCi;
+   float m_sigmaHePerp;
+   float m_sigmaHiPerp;
    float m_sigmaCeSecondary;
    double m_percentageSecondary;
    float m_b0;
@@ -154,6 +158,16 @@ inline unsigned int CommandlineOptions::getInjectWidth() const
 inline std::string CommandlineOptions::getOutputPath() const
 {
    return m_outputPath;
+}
+
+inline float CommandlineOptions::getSigmaHePerp() const
+{
+   return m_sigmaHePerp;
+}
+
+inline float CommandlineOptions::getSigmaHiPerp() const
+{
+   return m_sigmaHiPerp;
 }
 
 #endif

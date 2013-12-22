@@ -156,7 +156,7 @@ function ret = plotVyVperp(fName, xMin, xMax, yMin, yMax)
    xlabel('vperp');
    ylabel('vy');
    %axis([min(xValues) max(xValues) min(hotP(3,:)) max(hotP(3,:))]);
-   axis([vperpMin vperpMax vyMin vyMax]);
+   axis([vperpMin+cellSize vperpMax vyMin vyMax]);
    colorbar;
    fields = strsplit(fName, '_');
    outFile = strcat(fields{1}, '_hot_vy_vs_vperp_', fields{2}, ...

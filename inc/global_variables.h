@@ -30,6 +30,12 @@ extern float SIGMA_CE; // sigma for cold electrons
 extern float SIGMA_CI; // sigma for cold ions
 extern float SIGMA_HI; // sigma for hot ions
 extern float SIGMA_HE; // sigma for hot electrons
+// The perpendicular sigma for hot electrons
+// If this is 0 the horizontal sigma is used
+extern float SIGMA_HE_PERP;
+// The perpendicular sigma for hot ions
+// If this is 0 the horizontal sigma is used
+extern float SIGMA_HI_PERP;
 extern float SIGMA_CE_SECONDARY; // sigma for secondary cold electrons
 // The percentage (0-1) of the injected particles which are secondary
 extern double PERCENT_SECONDARY;

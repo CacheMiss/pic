@@ -372,6 +372,7 @@ void executePic(int argc, char *argv[])
          NX1, NY1,
          SIGMA_HE, SIGMA_HI,
          SIGMA_CE, SIGMA_CI,
+         SIGMA_HE_PERP, SIGMA_HI_PERP,
          SIGMA_CE_SECONDARY,
 			injectWidth,
 			injectStartX,

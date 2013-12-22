@@ -46,6 +46,10 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
        ("sigma-ce", po::value<float>(&m_sigmaCe)->default_value(10.0), "Sigma Cold Electrons")
        ("sigma-hi", po::value<float>(&m_sigmaHi)->default_value((float)0.3), "Sigma Hot Ions")
        ("sigma-ci", po::value<float>(&m_sigmaCi)->default_value(10.0), "Sigma Cold Ions")
+       ("sigma-he-perp", po::value<float>(&m_sigmaHePerp)->default_value(0.0), 
+        "Perpendicular sigma of hot electrons. If no value is specified here, perpendicular and horizontal sigma are the same.")
+       ("sigma-hi-perp", po::value<float>(&m_sigmaHiPerp)->default_value(0.0), 
+        "Perpendicular sigma of hot ions. If no value is specified here, perpendicular and horizontal sigma are the same.")
        ("sigma-ce-secondary", po::value<float>(&m_sigmaCeSecondary)->default_value(10.0), 
         "Sigma for seondary cold electron injection. Use this in conjunction with the --percent-secondary option.")
        ("percentage-secondary", po::value<double>(&m_percentageSecondary)->default_value(0), 
@@ -110,6 +114,8 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
    SIGMA_HI = getSigmaHi();
    SIGMA_CE = getSigmaCe();
    SIGMA_CI = getSigmaCi();
+   SIGMA_HE_PERP = getSigmaHePerp();
+   SIGMA_HI_PERP = getSigmaHiPerp();
    SIGMA_CE_SECONDARY = getSigmaCeSecondary();
    PERCENT_SECONDARY = getPercentageSecondary();
    B0 = getB0();

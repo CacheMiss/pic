@@ -97,6 +97,8 @@ void injectWriteBlock(float2 d_loc[], float3 d_vel[],
 //  SIGMA_HI - Hot Ion Sigma
 //  SIGMA_CE - Cold Electron Sigma
 //  SIGMA_CI - Cold Ion Sigma
+//  SIGMA_HE_PERP - The perpendicular sigma for hot electrons (vx & vz)
+//  SIGMA_HI_PERP - The perpendicular sigma for hot ions (vx & vz)
 //  SIGMA_CE_SECONDARY - The sigma for the secondary cold electrons
 //*****************************************************************************
 __global__
@@ -114,6 +116,7 @@ void injectKernel(float2 eleHotLoc[], float3 eleHotVel[],
             const unsigned int numSecondaryCold,
             const float SIGMA_HE, const float SIGMA_HI,
             const float SIGMA_CE, const float SIGMA_CI,
+            const float SIGMA_HE_PERP, const float SIGMA_HI_PERP,
             const float SIGMA_CE_SECONDARY)
 {
    const int RANDS_PER_THREAD = 24;
@@ -142,18 +145,27 @@ void injectKernel(float2 eleHotLoc[], float3 eleHotVel[],
    //--------------------------------------------------------
    if(hasWork)
    {
+      // If SIGMA_HE_PERP is 0, use regular SIGMA_HE
+      const float SIGMA_PERP = SIGMA_HE_PERP == 0 ? SIGMA_HE : SIGMA_HE_PERP;
+      const float SIGMA_VERT = SIGMA_HE;
+      if(blockIdx.x == 0 && threadIdx.x == 0)
+      {
+         printf("SIGMA_HE_PERP = %f\n", SIGMA_PERP);
+      }
       posX[threadIdx.x] = (float)(DX*NX1*randPool[randOffset]);
       posY[threadIdx.x] = (float)(DY*(NY1-1)+DY*randPool[randOffset+1]);
-      vpar=(float)((1.414f*rsqrtf(SIGMA_HE))*
+      vpar=(float)((1.414f*rsqrtf(SIGMA_PERP))*
          sqrtf(-logf(1.0f-randPool[randOffset+2] + FLT_MIN)));
       tpar = (float)(D_TPI*randPool[randOffset+3] - D_PI);
       velX[threadIdx.x] = (float)vpar*__sinf((float)tpar);
-      vpar=(float)((1.414f*rsqrtf(SIGMA_HE))*
-         sqrtf(-logf(1.0f-randPool[randOffset+4] + FLT_MIN)));
       // For sincos I need a range of -pi to pi
       tpar=(float)(D_TPI*randPool[randOffset+5] - D_PI);
       __sincosf(tpar, &stpar, &ctpar);
-      velY[threadIdx.x] = vpar*stpar - (1.1f*rsqrtf(SIGMA_HE));
+      vpar=(float)((1.414f*rsqrtf(SIGMA_VERT))*
+         sqrtf(-logf(1.0f-randPool[randOffset+4] + FLT_MIN)));
+      velY[threadIdx.x] = vpar*stpar - (1.1f*rsqrtf(SIGMA_VERT));
+      vpar=(float)((1.414f*rsqrtf(SIGMA_PERP))*
+         sqrtf(-logf(1.0f-randPool[randOffset+4] + FLT_MIN)));
       velZ[threadIdx.x] = vpar*ctpar;
       posY[threadIdx.x] = posY[threadIdx.x]+D_DELT*velY[threadIdx.x];
 
@@ -193,18 +205,27 @@ void injectKernel(float2 eleHotLoc[], float3 eleHotVel[],
    //---------------------------------------------------------
    if(hasWork)
    {
+      // If SIGMA_HI_PERP is 0, use regular SIGMA_HE
+      const float SIGMA_PERP = SIGMA_HI_PERP == 0 ? SIGMA_HI : SIGMA_HI_PERP;
+      const float SIGMA_VERT = SIGMA_HI;
+      if(blockIdx.x == 0 && threadIdx.x == 0)
+      {
+         printf("SIGMA_HI_PERP = %f\n", SIGMA_PERP);
+      }
       posX[threadIdx.x]= (float)(DX*NX1*randPool[randOffset+12]);
       posY[threadIdx.x]= (float)(DY*(NY1-1)+DY*randPool[randOffset+13]);
-      vpar = (float)((1.414f*rsqrtf(velmass*SIGMA_HI))*
+      vpar = (float)((1.414f*rsqrtf(velmass*SIGMA_PERP))*
          sqrtf(-logf(1.0f-randPool[randOffset+14] + FLT_MIN)));
       tpar = (float)(D_TPI*randPool[randOffset+15] - D_PI);
       velX[threadIdx.x] = (float)vpar*__sinf((float)tpar);
-      vpar = (float)((1.414f*rsqrtf(velmass*SIGMA_HI))*
-         sqrtf(-logf(1.0f-randPool[randOffset+16] + FLT_MIN)));
       // For sincos I need a range of -pi to pi
       tpar = (float)(D_TPI*randPool[randOffset+17] - D_PI);
       __sincosf(tpar, &stpar, &ctpar);
+      vpar = (float)((1.414f*rsqrtf(velmass*SIGMA_VERT))*
+         sqrtf(-logf(1.0f-randPool[randOffset+16] + FLT_MIN)));
       velY[threadIdx.x] = vpar*stpar;
+      vpar = (float)((1.414f*rsqrtf(velmass*SIGMA_PERP))*
+         sqrtf(-logf(1.0f-randPool[randOffset+16] + FLT_MIN)));
       velZ[threadIdx.x] = vpar*ctpar;
       posY[threadIdx.x] = posY[threadIdx.x]+D_DELT*velY[threadIdx.x];
 
@@ -252,6 +273,7 @@ void inject(DevMem<float2>& eleHotLoc, DevMem<float3>& eleHotVel,
             const unsigned int NX1, const unsigned int NY1,
             const float SIGMA_HE, const float SIGMA_HI,
             const float SIGMA_CE, const float SIGMA_CI,
+            const float SIGMA_HE_PERP, const float SIGMA_HI_PERP,
             const float SIGMA_CE_SECONDARY,
 				const unsigned int injectWidth,
 				const unsigned int injectStartX,
@@ -279,6 +301,7 @@ void inject(DevMem<float2>& eleHotLoc, DevMem<float3>& eleHotVel,
          numToInject, numSecondaryCold,
          SIGMA_HE, SIGMA_HI,
          SIGMA_CE, SIGMA_CI,
+         SIGMA_HE_PERP, SIGMA_HI_PERP,
          SIGMA_CE_SECONDARY
          );
       checkForCudaError("Inject failed");
