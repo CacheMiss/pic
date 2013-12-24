@@ -5,8 +5,6 @@
 
 #include "pic_utils.h"
 
-CommandlineOptions* CommandlineOptions::m_ref(NULL);
-
 CommandlineOptions::CommandlineOptions()
 {
    m_description = new po::options_description("Options");
@@ -15,16 +13,6 @@ CommandlineOptions::CommandlineOptions()
 
 CommandlineOptions::~CommandlineOptions()
 {
-}
-
-CommandlineOptions & CommandlineOptions::getRef()
-{
-   if(m_ref == NULL)
-   {
-      m_ref = new CommandlineOptions();
-   }
-
-   return *m_ref;
 }
 
 bool CommandlineOptions::parseArguments(int argc, char * argv[])
@@ -126,8 +114,4 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
    errorLogName = (boost::filesystem::path(outputPath) /= "errorLog.txt").string();
 
    return returnVal;
-}
-
-void CommandlineOptions::saveOptions(const char fileName[]) const
-{
 }

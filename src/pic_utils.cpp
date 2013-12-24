@@ -151,7 +151,142 @@ bool verifyParticles(const float2 partLoc[], std::size_t size,
    return ret;
 }
 
-void loadPrevSimState(const std::string &loadDir,
+void saveConfiguration(const CommandlineOptions &options, const std::string& fileName)
+{
+   std::ofstream outFile(fileName.c_str()); 
+
+   outFile << "--log-interval" << std::endl;
+   outFile << options.getLogInterval() << std::endl;
+   outFile << "--max-time" << std::endl;
+   outFile << options.getMaxSimTime() << std::endl;
+   outFile << "--inject-width" << std::endl;
+   outFile << options.getInjectWidth() << std::endl;
+   outFile << "--ascii" << std::endl;
+   outFile << options.getLogInAscii() << std::endl;
+   outFile << "OPTIONS_FINISHED" << std::endl;
+   outFile << "X_GRD" << std::endl;
+   outFile << X_GRD << std::endl;
+   outFile << "Y_GRD" << std::endl;
+   outFile << Y_GRD << std::endl;
+   outFile << "PI" << std::endl;
+   outFile << PI << std::endl;
+   outFile << "TPI" << std::endl;
+   outFile << TPI << std::endl;
+   outFile << "ISEED" << std::endl;
+   outFile << ISEED << std::endl;
+   outFile << "B0" << std::endl;
+   outFile << B0 << std::endl;
+   outFile << "P0" << std::endl;
+   outFile << P0 << std::endl;
+   outFile << "UNIFORM_P0" << std::endl;
+   outFile << UNIFORM_P0 << std::endl;
+   outFile << "SCALE" << std::endl;
+   outFile << SCALE << std::endl;
+   outFile << "RATO" << std::endl;
+   outFile << RATO << std::endl;
+   outFile << "DELT" << std::endl;
+   outFile << DELT << std::endl;
+   outFile << "SIGMA_CE" << std::endl;
+   outFile << SIGMA_CE << std::endl;
+   outFile << "SIGMA_CI" << std::endl;
+   outFile << SIGMA_CI << std::endl;
+   outFile << "SIGMA_HI" << std::endl;
+   outFile << SIGMA_HI << std::endl;
+   outFile << "SIGMA_HE" << std::endl;
+   outFile << SIGMA_HE << std::endl;
+   outFile << "SIGMA_HE_PERP" << std::endl;
+   outFile << SIGMA_HE_PERP << std::endl;
+   outFile << "SIGMA_HI_PERP" << std::endl;
+   outFile << SIGMA_HI_PERP << std::endl;
+   outFile << "SIGMA_CE_SECONDARY" << std::endl;
+   outFile << SIGMA_CE_SECONDARY << std::endl;
+   outFile << "PERCENT_SECONDARY" << std::endl;
+   outFile << PERCENT_SECONDARY << std::endl;
+   outFile << "TSTART" << std::endl;
+   outFile << TSTART << std::endl;
+   outFile << "LF" << std::endl;
+   outFile << LF << std::endl;
+   outFile << "DX" << std::endl;
+   outFile << DX << std::endl;
+   outFile << "DX2" << std::endl;
+   outFile << DX2 << std::endl;
+   outFile << "DY" << std::endl;
+   outFile << DY << std::endl;
+   outFile << "TOTA" << std::endl;
+   outFile << TOTA << std::endl;
+   outFile << "NX" << std::endl;
+   outFile << NX << std::endl;
+   outFile << "NX1" << std::endl;
+   outFile << NX1 << std::endl;
+   outFile << "NX12" << std::endl;
+   outFile << NX12 << std::endl;
+   outFile << "NY" << std::endl;
+   outFile << NY << std::endl;
+   outFile << "NY1" << std::endl;
+   outFile << NY1 << std::endl;
+   outFile << "NY12" << std::endl;
+   outFile << NY12 << std::endl;
+   outFile << "NIJ" << std::endl;
+   outFile << NIJ << std::endl;
+   outFile << "OOB_PARTICLE" << std::endl;
+   outFile << OOB_PARTICLE << std::endl;
+   outFile << "SORT_INTERVAL" << std::endl;
+   outFile << SORT_INTERVAL << std::endl;
+   outFile << "MAX_THREADS_PER_BLOCK" << std::endl;
+   outFile << MAX_THREADS_PER_BLOCK << std::endl;
+   outFile << "SQUARE_BLOCK_MAX_THREADS_PER_DIM" << std::endl;
+   outFile << SQUARE_BLOCK_MAX_THREADS_PER_DIM << std::endl;
+   outFile << "WARPSIZE" << std::endl;
+   outFile << WARPSIZE << std::endl;
+   outFile << "outputPath" << std::endl;
+   outFile << outputPath << std::endl;
+   outFile << "errorLogName" << std::endl;
+   outFile << errorLogName << std::endl;
+
+   /*
+   int X_GRD;
+   int Y_GRD;
+   float PI;
+   float TPI;
+   unsigned int ISEED;
+   float B0;
+   double P0;
+   bool UNIFORM_P0;
+   float SCALE;
+   float RATO;
+   float DELT;
+   float SIGMA_CE;
+   float SIGMA_CI;
+   float SIGMA_HI;
+   float SIGMA_HE;
+   float SIGMA_HE_PERP;
+   float SIGMA_HI_PERP;
+   float SIGMA_CE_SECONDARY;
+   double PERCENT_SECONDARY;
+   float TSTART;
+   int LF;
+   float DX;
+   float DX2;
+   float DY;
+   float TOTA;
+   int NX;
+   int NX1;
+   int NX12;
+   int NY;
+   int NY1;
+   int NY12;
+   int NIJ;
+   float OOB_PARTICLE;
+   unsigned int SORT_INTERVAL;
+   int MAX_THREADS_PER_BLOCK;
+   int SQUARE_BLOCK_MAX_THREADS_PER_DIM;
+   int WARPSIZE;
+   std::string outputPath;
+   std::string errorLogName;
+   */
+}
+
+void loadPrevSimState(const CommandlineOptions &options,
                       DevMem<float2> &dev_eleHotLoc, DevMem<float3> &dev_eleHotVel, 
                       DevMem<float2> &dev_eleColdLoc, DevMem<float3> &dev_eleColdVel,
                       DevMem<float2> &dev_ionHotLoc, DevMem<float3> &dev_ionHotVel, 
@@ -162,9 +297,9 @@ void loadPrevSimState(const std::string &loadDir,
 {
    const unsigned int FPPF = 6; // Floats Per Particle File
    const unsigned int FPPM = 5; // Floats Per Particle Memory
+   const std::string& loadDir = options.getRestartDir();
 
    SimulationState &simState(SimulationState::getRef());
-   CommandlineOptions &options(CommandlineOptions::getRef());
 
    const std::size_t strSize = 40;
    char infoName[strSize];

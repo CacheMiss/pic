@@ -19,13 +19,10 @@ const unsigned int ISEED = static_cast<unsigned int>(D_ISEED);
 extern float B0;
 extern double P0;
 extern bool UNIFORM_P0;
-//const float P0 = static_cast<float>(D_P0);
 const float SCALE = static_cast<float>(D_SCALE);
 const float RATO = static_cast<float>(D_RATO);
 const float DELT = static_cast<float>(D_DELT);
-//const float BXM = static_cast<float>(D_BXM);
-//const float BYM = static_cast<float>(D_BYM);
-//const float BZM = static_cast<float>(D_BZM);
+const float BZM = static_cast<float>(D_BZM);
 extern float SIGMA_CE; // sigma for cold electrons
 extern float SIGMA_CI; // sigma for cold ions
 extern float SIGMA_HI; // sigma for hot ions
@@ -41,8 +38,8 @@ extern float SIGMA_CE_SECONDARY; // sigma for secondary cold electrons
 extern double PERCENT_SECONDARY;
 
 const float TSTART = static_cast<float>(D_TSTART);
-//float TMAX = static_cast<float>(D_TMAX);
 const int LF = D_LF; // number of iterations between info file outputs
+const unsigned int LOG_IDX_WIDTH = D_LOG_IDX_WIDTH;
 const float DX = static_cast<float>(D_DX);
 const float DX2 = static_cast<float>(D_DX2);
 const float DY = static_cast<float>(D_DY);

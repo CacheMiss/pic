@@ -70,7 +70,7 @@ void printFreeMem()
 
 void executePic(int argc, char *argv[])
 {
-   CommandlineOptions &options(CommandlineOptions::getRef());
+   CommandlineOptions options;
    options.parseArguments(argc, argv);
 
    // Create output directory if necessary
@@ -193,7 +193,7 @@ void executePic(int argc, char *argv[])
 #ifdef DEBUG_TRACE
       std::cout << "Loading previous run data..." << std::endl;
 #endif
-      loadPrevSimState(options.getRestartDir(),
+      loadPrevSimState(options,
          d_eleHotLoc, d_eleHotVel, d_eleColdLoc, d_eleColdVel,
          d_ionHotLoc, d_ionHotVel, d_ionColdLoc, d_ionColdVel,
          simState.numEleHot, simState.numEleCold,
@@ -230,6 +230,9 @@ void executePic(int argc, char *argv[])
    else
    {
       simState.iterationNum = 0;
+      boost::filesystem::path fileName(outputPath);
+      fileName /= "configuration.txt";
+      saveConfiguration(options, fileName.string());
    }
    // DEBUG
    //   {

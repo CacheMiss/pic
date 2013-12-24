@@ -17,8 +17,8 @@ namespace po = boost::program_options;
 class CommandlineOptions
 {
    public:
+   CommandlineOptions();
    ~CommandlineOptions();
-   static CommandlineOptions & getRef();
    bool parseArguments(int argv, char * argc[]);
    inline float getMaxSimTime() const;
    inline bool getLogInAscii() const;
@@ -40,11 +40,8 @@ class CommandlineOptions
    inline bool getUniformP0() const;
    inline unsigned int getInjectWidth() const;
    inline std::string getOutputPath() const;
-   void saveOptions(const char fileName[]) const;
 
    private:
-   CommandlineOptions();
-   static CommandlineOptions *m_ref;
    po::options_description *m_description;
    po::variables_map *m_vm;
 

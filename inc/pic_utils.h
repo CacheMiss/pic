@@ -8,6 +8,7 @@
 #include <string>
 
 #include "array2d.h"
+#include "commandline_options.h"
 #include "global_variables.h"
 
 //void checkForCudaError();
@@ -24,7 +25,8 @@ void outinfo(const std::string &fname,
 void createOutputDir(const char *);
 bool fileExists(const std::string &fileName);
 void resizeDim3(dim3 &rhs, std::size_t x, std::size_t y=1, std::size_t z=1);
-void loadPrevSimState(const std::string &loadDir,
+void saveConfiguration(const CommandlineOptions &options, const std::string& fileName);
+void loadPrevSimState(const CommandlineOptions &options,
                       DevMem<float2> &dev_eleHotLoc, DevMem<float3> &dev_eleHotVel, 
                       DevMem<float2> &dev_eleColdLoc, DevMem<float3> &dev_eleColdVel,
                       DevMem<float2> &dev_ionHotLoc, DevMem<float3> &dev_ionHotVel, 
