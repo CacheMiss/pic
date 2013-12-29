@@ -148,10 +148,6 @@ void injectKernel(float2 eleHotLoc[], float3 eleHotVel[],
       // If SIGMA_HE_PERP is 0, use regular SIGMA_HE
       const float SIGMA_PERP = SIGMA_HE_PERP == 0 ? SIGMA_HE : SIGMA_HE_PERP;
       const float SIGMA_VERT = SIGMA_HE;
-      if(blockIdx.x == 0 && threadIdx.x == 0)
-      {
-         printf("SIGMA_HE_PERP = %f\n", SIGMA_PERP);
-      }
       posX[threadIdx.x] = (float)(DX*NX1*randPool[randOffset]);
       posY[threadIdx.x] = (float)(DY*(NY1-1)+DY*randPool[randOffset+1]);
       vpar=(float)((1.414f*rsqrtf(SIGMA_PERP))*
@@ -208,10 +204,6 @@ void injectKernel(float2 eleHotLoc[], float3 eleHotVel[],
       // If SIGMA_HI_PERP is 0, use regular SIGMA_HE
       const float SIGMA_PERP = SIGMA_HI_PERP == 0 ? SIGMA_HI : SIGMA_HI_PERP;
       const float SIGMA_VERT = SIGMA_HI;
-      if(blockIdx.x == 0 && threadIdx.x == 0)
-      {
-         printf("SIGMA_HI_PERP = %f\n", SIGMA_PERP);
-      }
       posX[threadIdx.x]= (float)(DX*NX1*randPool[randOffset+12]);
       posY[threadIdx.x]= (float)(DY*(NY1-1)+DY*randPool[randOffset+13]);
       vpar = (float)((1.414f*rsqrtf(velmass*SIGMA_PERP))*
