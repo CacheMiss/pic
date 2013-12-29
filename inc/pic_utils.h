@@ -25,7 +25,11 @@ void outinfo(const std::string &fname,
 void createOutputDir(const char *);
 bool fileExists(const std::string &fileName);
 void resizeDim3(dim3 &rhs, std::size_t x, std::size_t y=1, std::size_t z=1);
-void saveConfiguration(const CommandlineOptions &options, const std::string& fileName);
+void saveConfiguration(int argc, char* argv[], 
+                       const CommandlineOptions &options, 
+                       const std::string& fileName);
+bool checkConfiguration(const std::string& fileName,
+                        const CommandlineOptions &options);
 void loadPrevSimState(const CommandlineOptions &options,
                       DevMem<float2> &dev_eleHotLoc, DevMem<float3> &dev_eleHotVel, 
                       DevMem<float2> &dev_eleColdLoc, DevMem<float3> &dev_eleColdVel,

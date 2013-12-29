@@ -232,7 +232,7 @@ void executePic(int argc, char *argv[])
       simState.iterationNum = 0;
       boost::filesystem::path fileName(outputPath);
       fileName /= "configuration.txt";
-      saveConfiguration(options, fileName.string());
+      saveConfiguration(argc, argv, options, fileName.string());
    }
    // DEBUG
    //   {

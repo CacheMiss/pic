@@ -151,10 +151,18 @@ bool verifyParticles(const float2 partLoc[], std::size_t size,
    return ret;
 }
 
-void saveConfiguration(const CommandlineOptions &options, const std::string& fileName)
+void saveConfiguration(int argc, char* argv[], 
+                       const CommandlineOptions &options, 
+                       const std::string& fileName)
 {
    std::ofstream outFile(fileName.c_str()); 
 
+   // Skip the executable name
+   for(int i = 1; i < argc; i++)
+   {
+      outFile << argv[i] << std::endl;
+   }
+   outFile << "ARGUMENTS FINISHED" << std::endl;
    outFile << "--log-interval" << std::endl;
    outFile << options.getLogInterval() << std::endl;
    outFile << "--max-time" << std::endl;
@@ -238,10 +246,6 @@ void saveConfiguration(const CommandlineOptions &options, const std::string& fil
    outFile << SQUARE_BLOCK_MAX_THREADS_PER_DIM << std::endl;
    outFile << "WARPSIZE" << std::endl;
    outFile << WARPSIZE << std::endl;
-   outFile << "outputPath" << std::endl;
-   outFile << outputPath << std::endl;
-   outFile << "errorLogName" << std::endl;
-   outFile << errorLogName << std::endl;
 
    /*
    int X_GRD;
@@ -286,6 +290,236 @@ void saveConfiguration(const CommandlineOptions &options, const std::string& fil
    */
 }
 
+template<class T>
+bool checkConfigValue(std::ifstream &inFile, const char* label, T expectedValue)
+{
+   bool success = true;
+   std::string line;
+   std::getline(inFile, line);
+   T localVal;
+   std::stringstream s;
+   s << line;
+   s >> localVal;
+   // For things like floats, going to text might have hurt them.
+   // For simplicity I mutate the expected value the same way by
+   // going to text and back
+   T softenedExpectedValue;
+   s.str("");
+   s.clear();
+   s << expectedValue;
+   s >> softenedExpectedValue;
+   if(localVal != softenedExpectedValue)
+   {
+      std::cerr << "ERROR: You are attempting to restart with a different value for " << label << std::endl;
+      success = false;
+   }
+   return success;
+}
+
+bool checkConfiguration(const std::string& fileName,
+                        const CommandlineOptions &options)
+{
+   std::ifstream inFile(fileName.c_str());
+   std::string line;
+   bool success = true;
+
+   // Consume the command line arguments at the front
+   while(inFile)
+   {
+      std::getline(inFile, line);
+      if(line == "ARGUMENTS FINISHED")
+      {
+         break;
+      }
+   }
+
+   // Check things only in the commandline options class
+   while(inFile)
+   {
+      std::getline(inFile, line);
+      if(line == "--log-interval")
+      {
+         // Skip the log level
+         // Sometimes there is good reason to use a different one
+         std::getline(inFile, line);
+      }
+      else if(line == "--max-time")
+      {
+         // Skip the max time, we often want to extend it
+         std::getline(inFile, line);
+      }
+      else if(line == "--inject-width")
+      {
+         success &= checkConfigValue(inFile, "--inject-width", options.getInjectWidth());
+      }
+      else if(line == "--ascii")
+      {
+         // Skip the ascii argument, Its just a logging variation
+         std::getline(inFile, line);
+      }
+      else if(line == "OPTIONS_FINISHED")
+      {
+         break;
+      }
+   }
+   // Check all the global variable values
+   while(inFile)
+   {
+      std::getline(inFile, line);
+
+      if(line == "X_GRD")
+      {
+         success &= checkConfigValue(inFile, "X_GRD", X_GRD);
+      }
+      if(line == "Y_GRD")
+      {
+         success &= checkConfigValue(inFile, "Y_GRD", Y_GRD);
+      }
+      if(line == "PI")
+      {
+         success &= checkConfigValue(inFile, "PI", PI);
+      }
+      if(line == "TPI")
+      {
+         success &= checkConfigValue(inFile, "TPI", TPI);
+      }
+      if(line == "ISEED")
+      {
+         success &= checkConfigValue(inFile, "ISEED", ISEED);
+      }
+      if(line == "B0")
+      {
+         success &= checkConfigValue(inFile, "B0", B0);
+      }
+      if(line == "P0")
+      {
+         success &= checkConfigValue(inFile, "P0", P0);
+      }
+      if(line == "UNIFORM_P0")
+      {
+         success &= checkConfigValue(inFile, "UNIFORM_P0", UNIFORM_P0);
+      }
+      if(line == "SCALE")
+      {
+         success &= checkConfigValue(inFile, "SCALE", SCALE);
+      }
+      if(line == "RATO")
+      {
+         success &= checkConfigValue(inFile, "RATO", RATO);
+      }
+      if(line == "DELT")
+      {
+         success &= checkConfigValue(inFile, "DELT", DELT);
+      }
+      if(line == "SIGMA_CE")
+      {
+         success &= checkConfigValue(inFile, "SIGMA_CE", SIGMA_CE);
+      }
+      if(line == "SIGMA_CI")
+      {
+         success &= checkConfigValue(inFile, "SIGMA_CI", SIGMA_CI);
+      }
+      if(line == "SIGMA_HI")
+      {
+         success &= checkConfigValue(inFile, "SIGMA_HI", SIGMA_HI);
+      }
+      if(line == "SIGMA_HE")
+      {
+         success &= checkConfigValue(inFile, "SIGMA_HE", SIGMA_HE);
+      }
+      if(line == "SIGMA_HE_PERP")
+      {
+         success &= checkConfigValue(inFile, "SIGMA_HE_PERP", SIGMA_HE_PERP);
+      }
+      if(line == "SIGMA_HI_PERP")
+      {
+         success &= checkConfigValue(inFile, "SIGMA_HI_PERP", SIGMA_HI_PERP);
+      }
+      if(line == "SIGMA_CE_SECONDARY")
+      {
+         success &= checkConfigValue(inFile, "SIGMA_CE_SECONDARY", SIGMA_CE_SECONDARY);
+      }
+      if(line == "PERCENT_SECONDARY")
+      {
+         success &= checkConfigValue(inFile, "PERCENT_SECONDARY", PERCENT_SECONDARY);
+      }
+      if(line == "TSTART")
+      {
+         success &= checkConfigValue(inFile, "TSTART", TSTART);
+      }
+      if(line == "LF")
+      {
+         success &= checkConfigValue(inFile, "LF", LF);
+      }
+      if(line == "DX")
+      {
+         success &= checkConfigValue(inFile, "DX", DX);
+      }
+      if(line == "DX2")
+      {
+         success &= checkConfigValue(inFile, "DX2", DX2);
+      }
+      if(line == "DY")
+      {
+         success &= checkConfigValue(inFile, "DY", DY);
+      }
+      if(line == "TOTA")
+      {
+         success &= checkConfigValue(inFile, "TOTA", TOTA);
+      }
+      if(line == "NX")
+      {
+         success &= checkConfigValue(inFile, "NX", NX);
+      }
+      if(line == "NX1")
+      {
+         success &= checkConfigValue(inFile, "NX1", NX1);
+      }
+      if(line == "NX12")
+      {
+         success &= checkConfigValue(inFile, "NX12", NX12);
+      }
+      if(line == "NY")
+      {
+         success &= checkConfigValue(inFile, "NY", NY);
+      }
+      if(line == "NY1")
+      {
+         success &= checkConfigValue(inFile, "NY1", NY1);
+      }
+      if(line == "NY12")
+      {
+         success &= checkConfigValue(inFile, "NY12", NY12);
+      }
+      if(line == "NIJ")
+      {
+         success &= checkConfigValue(inFile, "NIJ", NIJ);
+      }
+      if(line == "OOB_PARTICLE")
+      {
+         success &= checkConfigValue(inFile, "OOB_PARTICLE", OOB_PARTICLE);
+      }
+      if(line == "SORT_INTERVAL")
+      {
+         success &= checkConfigValue(inFile, "SORT_INTERVAL", SORT_INTERVAL);
+      }
+      if(line == "MAX_THREADS_PER_BLOCK")
+      {
+         success &= checkConfigValue(inFile, "MAX_THREADS_PER_BLOCK", MAX_THREADS_PER_BLOCK);
+      }
+      if(line == "SQUARE_BLOCK_MAX_THREADS_PER_DIM")
+      {
+         success &= checkConfigValue(inFile, "SQUARE_BLOCK_MAX_THREADS_PER_DIM", SQUARE_BLOCK_MAX_THREADS_PER_DIM);
+      }
+      if(line == "WARPSIZE")
+      {
+         success &= checkConfigValue(inFile, "WARPSIZE", WARPSIZE);
+      }
+   }
+
+   return success;
+}
+
 void loadPrevSimState(const CommandlineOptions &options,
                       DevMem<float2> &dev_eleHotLoc, DevMem<float3> &dev_eleHotVel, 
                       DevMem<float2> &dev_eleColdLoc, DevMem<float3> &dev_eleColdVel,
@@ -301,16 +535,34 @@ void loadPrevSimState(const CommandlineOptions &options,
 
    SimulationState &simState(SimulationState::getRef());
 
-   const std::size_t strSize = 40;
-   char infoName[strSize];
    std::string eleName;
    std::string ionName;
 
    // Generate file names
-   sprintf(infoName, "info");
+   std::string infoName = "info";
    boost::filesystem::path infoPath(loadDir + "/" + infoName);
    boost::filesystem::path elePath;
    boost::filesystem::path ionPath;
+
+   // Generate prev config file name
+   std::string configFileName = "configuration.txt";
+   boost::filesystem::path configPath(loadDir);
+   configPath = configPath / configFileName;
+
+   if(!boost::filesystem::exists(configPath))
+   {
+      std::cerr << "WARNING: There is no configuration file for this run. There is know way"
+         << " to know if these are the right settings to go with this input data" << std::endl;
+   }
+   else
+   {
+      bool matchingConfiguration = checkConfiguration(configPath.string(), options);
+      if(!matchingConfiguration)
+      {
+         // checkConfiguration already printed errors to the screen if there were problems
+         exit(1);
+      }
+   }
 
    if(!boost::filesystem::exists(infoPath))
    {
