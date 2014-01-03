@@ -19,22 +19,23 @@ struct Particle_t
 __host__ __device__
 bool operator<(const Particle_t& lhs, const Particle_t& rhs)
 {
-   if(lhs.pos.y < rhs.pos.y)
+   unsigned int lhsX = static_cast<unsigned int>(lhs.pos.x);
+   unsigned int lhsY = static_cast<unsigned int>(lhs.pos.y);
+   unsigned int rhsX = static_cast<unsigned int>(rhs.pos.x);
+   unsigned int rhsY = static_cast<unsigned int>(rhs.pos.y);
+   bool ret = false;
+   if(lhsY < rhsY)
    {
-      return true;
+      ret = true;
    }
-   else if(lhs.pos.y == rhs.pos.y)
+   else if(lhsY == rhsY)
    {
-      if(lhs.pos.x < rhs.pos.x)
+      if(lhsX < rhsX)
       {
-         return true;
+         ret = true;
       }
    }
-   else
-   {
-      return false;
-   }
-   return false;
+   return ret;
 }
 
 __global__
