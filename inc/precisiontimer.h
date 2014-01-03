@@ -1,7 +1,7 @@
 #ifndef _PRECISIONTIMER_H_
 #define _PRECISIONTIMER_H_
 
-#ifndef WIN32
+#ifndef _WIN32
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #else
 namespace boost
@@ -21,7 +21,7 @@ class PrecisionTimer
 public:
   PrecisionTimer();
   ~PrecisionTimer();
-#ifdef WIN32
+#ifdef _WIN32
   void start();
   void stop();
 #else
@@ -34,7 +34,7 @@ public:
   long intervalInNanoS();
 };
 
-#ifndef WIN32
+#ifndef _WIN32
 void PrecisionTimer::start()
 {
    *start_time = boost::posix_time::microsec_clock::local_time();
