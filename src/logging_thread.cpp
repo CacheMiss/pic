@@ -105,20 +105,6 @@ void LoggingThread::logInfo(unsigned int idx, float sTime,
    pushLogItem(tmp);
 }
 
-void LoggingThread::logForPerformance(unsigned int iter, float sTime,
-        unsigned int nEleHot, unsigned int nEleCold,
-        unsigned int nIonHot, unsigned int nIonCold,
-        unsigned int iterTInMs, unsigned int injectTInMs,
-        unsigned int densTInMs, unsigned int potent2TInMs,
-        unsigned int fieldTInMs, unsigned int movepTInMs,
-        bool resumeRun)
-{
-   LogForPerformance *tmp = new LogForPerformance(iter, sTime, nEleHot,
-      nEleCold, nIonHot, nIonCold, iterTInMs, injectTInMs,
-      densTInMs, potent2TInMs, fieldTInMs, movepTInMs, resumeRun);
-   pushLogItem(tmp);
-}
-
 void LoggingThread::pushLogItem(LoggingBase *item)
 {
    boost::unique_lock<boost::mutex> lock(*m_stackLock);

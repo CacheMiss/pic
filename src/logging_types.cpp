@@ -252,26 +252,34 @@ void LogForPerformance::logData()
 {
    std::string fname = outputPath + "/performance.csv";
    std::string keyFname = outputPath + "/performance_key.csv";
-   FILE *fp;
 
+   std::ofstream logFile;
    if(first)
    {
       first = false;
-      fp = fopen(keyFname.c_str(), "w");
-      fprintf(fp, "Iteration Number,Sim Time,Num Electrons Hot,"
-              "NumElectrons Cold,Num Ions Hot,Num IonsCold,"
-              "Iteration Time (ms)");
-      fclose(fp);
-      fp = fopen(fname.c_str(), resume ? "a" : "w");
+      std::ofstream keyFile(keyFname.c_str());
+      keyFile << "Iteration Number,Sim Time,Num Electrons Hot,"
+                 "NumElectrons Cold,Num Ions Hot,Num IonsCold,"
+                 "Iteration Time (ms),Inject Time (ms),Dens Time (ms),"
+                 "Potent2 Time (ms),Field Time(ms),Movep Time (ms)";
+
+      if(resume)
+      {
+         logFile.open(fname.c_str(), std::ios::out | std::ios::app);
+      }
+      else
+      {
+         logFile.open(fname.c_str(), std::ios::out);
+      }
    }
    else
    {
-      fp = fopen(fname.c_str(), "a");
+      logFile.open(fname.c_str(), std::ios::out);
    }
-   fprintf(fp, "%u,%f,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n", iteration, simTime, numEleHot,
-      numEleCold, numIonHot, numIonCold, iterTimeInMs, injectTimeInMs, densTimeInMs,
-      potent2TimeInMs, fieldTimeInMs, movepTimeInMs);
-   fclose(fp);
+   logFile << iteration << "," << simTime << "," << numEleHot << "," << numEleCold << ","
+      << numIonHot << "," << numIonCold << "," << iterTimeInMs << "," << injectTimeInMs << ","
+      << densTimeInMs << "," << potent2TimeInMs << "," << fieldTimeInMs << "," << movepTimeInMs
+      << std::endl;
 }
 
 void LogAvgPhi::logData()

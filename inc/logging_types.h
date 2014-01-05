@@ -236,12 +236,12 @@ class LogForPerformance : public LoggingBase
    unsigned int numEleCold;
    unsigned int numIonHot;
    unsigned int numIonCold;
-   unsigned int iterTimeInMs;
-   unsigned int injectTimeInMs;
-   unsigned int densTimeInMs;
-   unsigned int potent2TimeInMs;
-   unsigned int fieldTimeInMs;
-   unsigned int movepTimeInMs;
+   double iterTimeInMs;
+   double injectTimeInMs;
+   double densTimeInMs;
+   double potent2TimeInMs;
+   double fieldTimeInMs;
+   double movepTimeInMs;
    bool         resume;
    static bool first;
 
@@ -249,9 +249,9 @@ class LogForPerformance : public LoggingBase
    LogForPerformance(unsigned int iter, float sTime,
       unsigned int nEleHot, unsigned int nEleCold,
       unsigned int nIonHot, unsigned int nIonCold,
-      unsigned int iterTInMs, unsigned int injectTInMs,
-      unsigned int densTInMs, unsigned int potent2TInMs,
-      unsigned int fieldTInMs, unsigned int movepTInMs,
+      double iterTInMs, double injectTInMs,
+      double densTInMs, double potent2TInMs,
+      double fieldTInMs, double movepTInMs,
       bool resumeRun=false)
      :LoggingBase()
      ,iteration(iter)

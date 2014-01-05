@@ -602,22 +602,23 @@ void executePic(int argc, char *argv[])
             simState.numEleHot + simState.numEleCold - estHotERemoved - estColdERemoved,
             simState.numIonHot + simState.numIonCold - estHotIRemoved - estColdIRemoved,
             options.getRestartDir() != "" ? true : false);
-         logger.logForPerformance(ind, simState.simTime, 
+         logger.pushLogItem(new LogForPerformance(
+            ind, simState.simTime, 
             simState.numEleHot - estHotERemoved,
             simState.numEleCold - estColdERemoved, 
             simState.numIonHot - estHotIRemoved,
             simState.numIonCold - estColdIRemoved, 
-            (unsigned int) iterationTimer.intervalInMilliS() / LF,
+            (unsigned int) iterationTimer.intervalInMicroS() / (LF * 1000),
 #ifdef ENABLE_TIMERS
-            (unsigned int) injectTimer.intervalInMilliS(),
-            (unsigned int) densTimer.intervalInMilliS(),
-            (unsigned int) potent2Timer.intervalInMilliS(),
-            (unsigned int) fieldTimer.intervalInMilliS(),
-            (unsigned int) movepTimer.intervalInMilliS(),
+            static_cast<double>(injectTimer.intervalInNanoS()) / 1000000,
+            static_cast<double>(densTimer.intervalInNanoS()) / 1000000,
+            static_cast<double>(potent2Timer.intervalInNanoS()) / 1000000,
+            static_cast<double>(fieldTimer.intervalInNanoS()) / 1000000,
+            static_cast<double>(movepTimer.intervalInNanoS()) / 1000000,
 #else
             0, 0, 0, 0, 0,
 #endif
-            options.getRestartDir() != "" ? true : false);
+            options.getRestartDir() != "" ? true : false));
          lfdint = lfdint + 1;
          if (ind % options.getLogInterval() == 0) 
          {

@@ -34,13 +34,6 @@ class LoggingThread
    void logInfo(unsigned int idx, float sTime, 
            unsigned int nmElectrons, unsigned int nmIons,
            bool resumeRun);
-   void logForPerformance(unsigned int iter, float sTime,
-           unsigned int nEleHot, unsigned int nEleCold,
-           unsigned int nIonHot, unsigned int nIonCold,
-           unsigned int iterTInMs, unsigned int injectTInMs,
-           unsigned int densTInMs, unsigned int potent2TInMs,
-           unsigned int fieldTInMs, unsigned int movepTInMs,
-           bool resumeRun);
    void pushLogItem(LoggingBase *item);
    void flush();
    LoggingBase* popLogItem();
