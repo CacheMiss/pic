@@ -49,25 +49,35 @@ void SortThread::run()
 // Halt and join all the threads in this class
 void SortThread::join()
 {
-   if(m_readThread == NULL)
+   Job emptyJob;
+   CopyRequest emptyRequest;
+   m_keepRunning = false;
+   if(m_readThread != NULL)
    {
-      m_keepRunning = false;
+      m_newRequests.push_back(emptyRequest);
       m_readThread->join();
       delete m_readThread;
       m_readThread = NULL;
    }
-   if(m_writeThread == NULL)
+   if(m_writeThread != NULL)
    {
-      m_keepRunning = false;
+      m_writeJobs.push_back(emptyJob);
       m_writeThread->join();
       delete m_writeThread;
       m_writeThread = NULL;
    }
    for(std::size_t i = 0; i < m_sortThread.size(); i++)
    {
-      if(m_sortThread[i] == NULL)
+      if(m_sortThread[i] != NULL)
       {
-         m_keepRunning = false;
+         m_sortJobs.push_back(emptyJob);
+      }
+   }
+   for(std::size_t i = 0; i < m_sortThread.size(); i++)
+   {
+      if(m_sortThread[i] != NULL)
+      {
+         m_sortJobs.push_back(emptyJob);
          m_sortThread[i]->join();
          delete m_sortThread[i];
          m_sortThread[i] = NULL;
