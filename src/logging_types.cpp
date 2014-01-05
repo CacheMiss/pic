@@ -274,7 +274,7 @@ void LogForPerformance::logData()
    }
    else
    {
-      logFile.open(fname.c_str(), std::ios::out);
+      logFile.open(fname.c_str(), std::ios::out | std::ios::app);
    }
    logFile << iteration << "," << simTime << "," << numEleHot << "," << numEleCold << ","
       << numIonHot << "," << numIonCold << "," << iterTimeInMs << "," << injectTimeInMs << ","
