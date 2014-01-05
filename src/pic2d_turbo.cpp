@@ -608,7 +608,7 @@ void executePic(int argc, char *argv[])
             simState.numEleCold - estColdERemoved, 
             simState.numIonHot - estHotIRemoved,
             simState.numIonCold - estColdIRemoved, 
-            (unsigned int) iterationTimer.intervalInMicroS() / (LF * 1000),
+            static_cast<double>(iterationTimer.intervalInMicroS()) / (LF * 1000),
 #ifdef ENABLE_TIMERS
             static_cast<double>(injectTimer.intervalInNanoS()) / 1000000,
             static_cast<double>(densTimer.intervalInNanoS()) / 1000000,
