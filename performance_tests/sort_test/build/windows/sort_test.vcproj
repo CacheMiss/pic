@@ -113,7 +113,7 @@
 			/>
 			<Tool
 				Name="Cudart Build Rule"
-				Include="../../../../inc;$(CUDA_INC_PATH);$(BOOST)"
+				Include="../../../../inc;../../inc;$(CUDA_INC_PATH);$(BOOST);$(INTEL_TBB)/include"
 				Arch1="0"
 				TargetMachinePlatform="1"
 				Runtime="3"
@@ -131,7 +131,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../../inc;$(CUDA_INC_PATH);$(BOOST)"
+				AdditionalIncludeDirectories="../../../../inc;../../inc;$(CUDA_INC_PATH);$(BOOST);$(INTEL_TBB)/include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -151,9 +151,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cudart.lib cuda.lib curand.lib"
+				AdditionalDependencies="libboost_thread-vc90-mt-gd-1_49.lib libboost_date_time-vc90-mt-gd-1_49.lib libboost_filesystem-vc90-mt-gd-1_49.lib libboost_program_options-vc90-mt-gd-1_49.lib libboost_system-vc90-mt-gd-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib tbb_debug.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\x64&quot;"
+				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\x64&quot;;&quot;$(BOOST)\lib\win64&quot;;&quot;$(INTEL_TBB)\lib\intel64\vc9&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="17"
@@ -274,7 +274,7 @@
 			/>
 			<Tool
 				Name="Cudart Build Rule"
-				Include="../../../../inc;$(CUDA_INC_PATH);$(BOOST)"
+				Include="../../../../inc;../../inc;$(CUDA_INC_PATH);$(BOOST);$(INTEL_TBB)/include"
 				TargetMachinePlatform="1"
 				Runtime="2"
 			/>
@@ -292,7 +292,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../../../../inc;$(CUDA_INC_PATH);$(BOOST)"
+				AdditionalIncludeDirectories="../../../../inc;../../inc;$(CUDA_INC_PATH);$(BOOST);$(INTEL_TBB)/include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -311,9 +311,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cudart.lib cuda.lib curand.lib"
+				AdditionalDependencies="libboost_thread-vc90-mt-1_49.lib libboost_date_time-vc90-mt-1_49.lib libboost_filesystem-vc90-mt-1_49.lib libboost_program_options-vc90-mt-1_49.lib libboost_system-vc90-mt-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib tbb.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\x64&quot;"
+				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\x64&quot;;&quot;$(BOOST)\lib\win64&quot;;&quot;$(INTEL_TBB)\lib\intel64\vc9&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -352,6 +352,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\..\src\cpp_only.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\src\cuda_allocator.cpp"
 				>
 			</File>
@@ -371,12 +375,20 @@
 				RelativePath="..\..\..\..\src\precisiontimer.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\..\src\sort_thread.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath="..\..\inc\cpu_only.h"
+				>
+			</File>
 			<File
 				RelativePath="..\..\..\..\inc\cuda_allocator.h"
 				>
@@ -394,7 +406,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\..\inc\host_mem.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\..\..\inc\precisiontimer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\inc\sort_thread.h"
 				>
 			</File>
 		</Filter>
