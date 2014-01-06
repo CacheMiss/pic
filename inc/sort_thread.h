@@ -15,19 +15,12 @@ public:
    SortThread(float oobValue);
    void run();
    void join();
+   void setNumSortThreads(std::size_t n); // Default 1
+   void enableParticleElimination(); // Default
+   void disableParticleElimination();
    void sortAsync(DevMem<float2> &devPos, DevMem<float3> &devVel, std::size_t numPart);
    // Wait for a sort to finish. Returns the number of particles which were out of bounds.
    std::size_t waitForSort(DevMem<float2> &devPos, DevMem<float3> &devVel);
-private:
-   void readMain();
-   void writeMain();
-   void sortMain();
-   //boost::mutex *m_stackLock;
-   //boost::condition_variable *m_cond;
-   boost::thread *m_readThread;
-   boost::thread *m_writeThread;
-   std::vector<boost::thread*> m_sortThread;
-   std::size_t m_numSortThreads;
 
    class Particle
    {
@@ -171,7 +164,16 @@ private:
       mutable boost::condition_variable m_cond;
    };
 
+private:
+   void readMain();
+   void writeMain();
+   void sortMain();
+   boost::thread *m_readThread;
+   boost::thread *m_writeThread;
+   std::vector<boost::thread*> m_sortThread;
+   std::size_t m_numSortThreads;
    std::size_t m_padding;
+   bool m_enableParticleElimination;
    float m_oobValue;
    HostMem<Particle> m_part[3];
 

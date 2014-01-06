@@ -10,10 +10,11 @@
 SortThread::SortThread(float oobValue)
 : m_readThread(NULL)
 , m_writeThread(NULL)
-, m_numSortThreads(2)
+, m_numSortThreads(1)
 , m_keepRunning(false)
 , m_oobValue(oobValue)
 , m_padding(100000)
+, m_enableParticleElimination(true)
 {
    m_sortThread.resize(m_numSortThreads);
    memset(&m_sortThread[0], 0, sizeof(m_sortThread[0])* m_sortThread.size());
@@ -23,6 +24,22 @@ SortThread::SortThread(float oobValue)
    m_memPool.push_back(Job(&m_part[0], NULL, NULL, 0));
    m_memPool.push_back(Job(&m_part[1], NULL, NULL, 0));
    m_memPool.push_back(Job(&m_part[2], NULL, NULL, 0));
+}
+
+void SortThread::setNumSortThreads(std::size_t n)
+{
+   m_sortThread.resize(m_numSortThreads);
+   memset(&m_sortThread[0], 0, sizeof(m_sortThread[0])* m_sortThread.size());
+}
+
+void SortThread::enableParticleElimination()
+{
+   m_enableParticleElimination = true;
+}
+
+void SortThread::disableParticleElimination()
+{
+   m_enableParticleElimination = false;
 }
 
 // Create all the threads necessary for this class
@@ -150,12 +167,15 @@ void SortThread::writeMain()
                 cudaMemcpyHostToDevice, 
                 *m_writeStream));
       std::size_t numOob = 0;
-      for(int i = static_cast<int>(newJob.part->size()) - 1; i >= 0; i--)
+      if(m_enableParticleElimination)
       {
-         if((*newJob.part)[i].pos.y != m_oobValue)
+         for(int i = static_cast<int>(newJob.part->size()) - 1; i >= 0; i--)
          {
-            numOob = (newJob.part->size() - 1) - i;
-            break;
+            if((*newJob.part)[i].pos.y != m_oobValue)
+            {
+               numOob = (newJob.part->size() - 1) - i;
+               break;
+            }
          }
       }
       m_writeStream.synchronize();
