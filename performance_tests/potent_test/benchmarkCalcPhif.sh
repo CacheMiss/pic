@@ -69,7 +69,7 @@ def runPic(width, height):
 
 def main():
    startWidthPower = 5 # 32
-   endWidthPower = 9 # 512
+   endWidthPower = 10 # 1024
    heightIncrement = 2500
    endHeight = 10000
 
