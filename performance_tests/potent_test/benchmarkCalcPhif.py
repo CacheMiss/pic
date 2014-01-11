@@ -26,7 +26,7 @@ def findAveragePotentTime(dataPath):
    return avgTime
 
 def runPic(width, height):
-   exeName = '../bin/pic'
+   exeName = '../../bin/pic'
    width = str(width)
    height = str(height)
    maxTime =  str(10)
