@@ -8,7 +8,7 @@ import sys
 
 from os.path import sep
 
-outBase = '..' + sep '..' + sep + 'output' + sep + 'calcPhifBenchmark'
+outBase = '..' + sep + '..' + sep + 'output' + sep + 'calcPhifBenchmark'
 
 def findAveragePotentTime(dataPath):
    avgTime = 0
