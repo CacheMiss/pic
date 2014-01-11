@@ -8,7 +8,7 @@ import sys
 
 from os.path import sep
 
-outBase = '..' + sep '..' + sep + 'output' + sep + 'calcPhifBenchmark'
+outBase = '..' + sep + '..' + sep + 'output' + sep + 'calcPhifBenchmark'
 
 def findAveragePotentTime(dataPath):
    avgTime = 0
@@ -26,10 +26,10 @@ def findAveragePotentTime(dataPath):
    return avgTime
 
 def runPic(width, height):
-   exeName = '../bin/pic'
+   exeName = '../../bin/pic'
    width = str(width)
    height = str(height)
-   maxTime =  str(10)
+   maxTime =  str(4)
    logInterval =  str(maxTime)
    b0 =  str(3)
    sigmaHe =  str(1) 
@@ -69,9 +69,9 @@ def runPic(width, height):
 
 def main():
    startWidthPower = 5 # 32
-   endWidthPower = 9 # 512
+   endWidthPower = 10 # 1024
    heightIncrement = 2500
-   endHeight = 10000
+   endHeight = 30000
 
    if os.path.exists(outBase):
       shutil.rmtree(outBase)
