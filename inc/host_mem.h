@@ -169,7 +169,7 @@ HostMem<T>::HostMem(const DevMem<T, Allocator> &rhs)
   : m_ptr(NULL)
   , m_size(0)
   , m_reserved(0)
-  , m_padding(rhs.padding)
+  , m_padding(0)
 {
    operator=(rhs);
 }
