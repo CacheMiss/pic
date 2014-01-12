@@ -48,7 +48,6 @@
 #include "potent2.h"
 #include "precisiontimer.h"
 #include "simulation_state.h"
-#include "sort_thread.h"
 #include "typedefs.h"
 
 #ifdef _DEBUG
@@ -251,9 +250,6 @@ void executePic(int argc, char *argv[])
    //   logger.flush();
    // END DEBUG
 
-   SortThread sortThread(OOB_PARTICLE);
-   sortThread.run();
-
    std::cout << "Free mem after initial allocations:" << std::endl;
    printFreeMem();
 
@@ -399,6 +395,31 @@ void executePic(int argc, char *argv[])
       //logger.flush();
       // END DEBUG
 
+      unsigned int itRemainder = simState.iterationNum % SORT_INTERVAL;
+      bool sortEleHot = false;
+      bool sortIonHot = false;
+      bool sortEleCold = false;
+      bool sortIonCold = false;
+      switch(itRemainder)
+      {
+      case 1:
+         sortIonHot = true;
+         break;
+      case 2:
+         sortIonCold = true;
+         break;
+      case 3:
+         sortEleHot = true;
+         break;
+      case 4:
+         sortEleCold = true;
+         break;
+      }
+
+      unsigned int oldEleHot = simState.numEleHot;
+      unsigned int oldEleCold = simState.numEleCold;
+      unsigned int oldIonHot = simState.numIonHot;
+      unsigned int oldIonCold = simState.numIonCold;
 #ifdef DEBUG_TRACE
       std::cout << "Dens" << std::endl;
 #endif
@@ -407,31 +428,60 @@ void executePic(int argc, char *argv[])
 #endif
       // determine the charge density at the grid points
       dens(dev_rho, dev_rhoe,dev_rhoi, 
-           d_eleHotLoc, d_eleColdLoc,
-           d_ionHotLoc, d_ionColdLoc,
+           d_eleHotLoc, d_eleHotVel,
+           d_eleColdLoc, d_eleColdVel,
+           d_ionHotLoc, d_ionHotVel,
+           d_ionColdLoc, d_ionColdVel,
            simState.numEleHot, simState.numEleCold, 
            simState.numIonHot, simState.numIonCold,
-           processingStream[0]);
+           sortEleHot, sortEleCold,
+           sortIonHot, sortIonCold,
+           processingStream[0],
+           processingStream[1]);
 #ifdef ENABLE_TIMERS
       processingStream[0].synchronize();
       densTimer.stop();
 #endif
 
-      unsigned int itRemainder = simState.iterationNum % SORT_INTERVAL;
-      switch(itRemainder)
+      // Hot Electron Count Update
+      if(oldEleHot != simState.numEleHot)
       {
-      case 1:
-         sortThread.sortAsync(d_ionHotLoc, d_ionHotVel, simState.numIonHot);
-         break;
-      case 2:
-         sortThread.sortAsync(d_ionColdLoc, d_ionColdVel, simState.numIonCold);
-         break;
-      case 3:
-         sortThread.sortAsync(d_eleHotLoc, d_eleHotVel, simState.numEleHot);
-         break;
-      case 4:
-         sortThread.sortAsync(d_eleColdLoc, d_eleColdVel, simState.numEleCold);
-         break;
+         estHotERemoved = 0;
+         estHotERemovedPerIt = (oldEleHot - simState.numEleHot) / SORT_INTERVAL;
+      }
+      else
+      {
+         estHotERemoved += estHotERemovedPerIt;
+      }
+      // Cold Electron Count Update
+      if(oldEleCold != simState.numEleCold)
+      {
+         estColdERemoved = 0;
+         estColdERemovedPerIt = (oldEleCold - simState.numEleCold) / SORT_INTERVAL;
+      }
+      else
+      {
+         estColdERemoved += estColdERemovedPerIt;
+      }
+      // Hot Ion Count Update
+      if(oldIonHot != simState.numIonHot)
+      {
+         estHotIRemoved = 0;
+         estHotIRemovedPerIt = (oldIonHot - simState.numIonHot) / SORT_INTERVAL;
+      }
+      else
+      {
+         estHotIRemoved += estHotIRemovedPerIt;
+      }
+      // Cold Ion Count Update
+      if(oldIonCold != simState.numIonCold)
+      {
+         estColdIRemoved = 0;
+         estColdIRemovedPerIt = (oldIonCold - simState.numIonCold) / SORT_INTERVAL;
+      }
+      else
+      {
+         estColdIRemoved += estColdIRemovedPerIt;
       }
 
       // Start DEBUG
@@ -499,17 +549,6 @@ void executePic(int argc, char *argv[])
 #ifdef DEBUG_TRACE
       std::cout << "MoveHi" << std::endl;
 #endif
-      if(itRemainder == 1)
-      {
-         unsigned int numRemoved = static_cast<unsigned int>(sortThread.waitForSort(d_ionHotLoc, d_ionHotVel));
-         simState.numIonHot -= numRemoved;
-         estHotIRemoved = 0;
-         estHotIRemovedPerIt = numRemoved / SORT_INTERVAL;
-      }
-      else
-      {
-         estHotIRemoved += estHotIRemovedPerIt;
-      }
       processingStream[0].synchronize();
       processingStream[1].synchronize();
       movep(d_ionHotLoc, d_ionHotVel, simState.numIonHot, 
@@ -517,17 +556,6 @@ void executePic(int argc, char *argv[])
 #ifdef DEBUG_TRACE
       std::cout << "MoveCi" << std::endl;
 #endif
-      if(itRemainder == 2)
-      {
-         unsigned int numRemoved = static_cast<unsigned int>(sortThread.waitForSort(d_ionColdLoc, d_ionColdVel));
-         simState.numIonCold -= numRemoved;
-         estColdIRemoved = 0;
-         estColdIRemovedPerIt = numRemoved / SORT_INTERVAL;
-      }
-      else
-      {
-         estColdIRemoved += estColdIRemovedPerIt;
-      }
       movep(d_ionColdLoc, d_ionColdVel, simState.numIonCold, 
          RATO, dev_ex, dev_ey, processingStream[1], false);
 
@@ -535,33 +563,11 @@ void executePic(int argc, char *argv[])
 #ifdef DEBUG_TRACE
       std::cout << "MoveHe" << std::endl;
 #endif
-      if(itRemainder == 3)
-      {
-         unsigned int numRemoved = static_cast<unsigned int>(sortThread.waitForSort(d_eleHotLoc, d_eleHotVel));
-         simState.numEleHot -= numRemoved;
-         estHotERemoved = 0;
-         estHotERemovedPerIt = numRemoved / SORT_INTERVAL;
-      }
-      else
-      {
-         estHotERemoved += estHotERemovedPerIt;
-      }
       movep(d_eleHotLoc, d_eleHotVel, simState.numEleHot, 
          (float) -1.0, dev_ex, dev_ey, processingStream[2], false);
 #ifdef DEBUG_TRACE
       std::cout << "MoveCe" << std::endl;
 #endif
-      if(itRemainder == 4)
-      {
-         unsigned int numRemoved = static_cast<unsigned int>(sortThread.waitForSort(d_eleColdLoc, d_eleColdVel));
-         simState.numEleCold -= numRemoved;
-         estColdERemoved = 0;
-         estColdERemovedPerIt = numRemoved / SORT_INTERVAL;
-      }
-      else
-      {
-         estColdERemoved += estColdERemovedPerIt;
-      }
       movep(d_eleColdLoc, d_eleColdVel, simState.numEleCold, 
          (float) -1.0, dev_ex, dev_ey, processingStream[3], false);
 
@@ -602,19 +608,25 @@ void executePic(int argc, char *argv[])
             simState.numEleHot + simState.numEleCold - estHotERemoved - estColdERemoved,
             simState.numIonHot + simState.numIonCold - estHotIRemoved - estColdIRemoved,
             options.getRestartDir() != "" ? true : false);
+         double iterationTime = static_cast<double>(iterationTimer.intervalInMicroS()) / (LF * 1000);
+         double injectTime = static_cast<double>(injectTimer.intervalInNanoS()) / 1000000;
+         double densTime = static_cast<double>(densTimer.intervalInNanoS()) / 1000000;
+         double potent2Time = static_cast<double>(potent2Timer.intervalInNanoS()) / 1000000;
+         double fieldTime = static_cast<double>(fieldTimer.intervalInNanoS()) / 1000000;
+         double movepTime = static_cast<double>(movepTimer.intervalInNanoS()) / 1000000;
          logger.pushLogItem(new LogForPerformance(
             ind, simState.simTime, 
             simState.numEleHot - estHotERemoved,
             simState.numEleCold - estColdERemoved, 
             simState.numIonHot - estHotIRemoved,
             simState.numIonCold - estColdIRemoved, 
-            static_cast<double>(iterationTimer.intervalInMicroS()) / (LF * 1000),
+            iterationTime,
 #ifdef ENABLE_TIMERS
-            static_cast<double>(injectTimer.intervalInNanoS()) / 1000000,
-            static_cast<double>(densTimer.intervalInNanoS()) / 1000000,
-            static_cast<double>(potent2Timer.intervalInNanoS()) / 1000000,
-            static_cast<double>(fieldTimer.intervalInNanoS()) / 1000000,
-            static_cast<double>(movepTimer.intervalInNanoS()) / 1000000,
+            injectTime,
+            densTime,
+            potent2Time,
+            fieldTime,
+            movepTime,
 #else
             0, 0, 0, 0, 0,
 #endif
