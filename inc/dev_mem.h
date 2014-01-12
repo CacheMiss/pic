@@ -45,10 +45,13 @@ public:
    void copyArrayToDev(const HostMem<T> &h_array);
    const T* getPtr() const;
    T* getPtr();
+   const T* getPtrUnsafe() const;
+   T* getPtrUnsafe();
    void setPtr(T *newPtr);
 #ifndef NO_THRUST
    const thrust::device_ptr<T> getThrustPtr() const;
    thrust::device_ptr<T> getThrustPtr();
+   std::size_t getElementSize() const;
    void fill(T val);
 #endif
    void freeMem();
@@ -204,7 +207,7 @@ void DevMem<T, Allocator>::copyArrayToHost(T hostType[], std::size_t size) const
    {
       return;
    }
-   assert(size < m_size);
+   assert(size <= m_size);
    checkCuda(cudaMemcpy((void*)hostType, m_ptr, size * sizeof(T), 
                         cudaMemcpyDeviceToHost));
 }
@@ -243,6 +246,12 @@ thrust::device_ptr<T> DevMem<T, Allocator>::getThrustPtr()
 }
 
 template<class T, class Allocator>
+std::size_t DevMem<T, Allocator>::getElementSize() const
+{
+   return sizeof(T);
+}
+
+template<class T, class Allocator>
 const thrust::device_ptr<T> DevMem<T, Allocator>::getThrustPtr() const
 {
    if(m_ptr == NULL)
@@ -260,6 +269,20 @@ T* DevMem<T, Allocator>::getPtr()
    {
       throw CudaRuntimeError("DevMem<T, Allocator>::getPtr() was called after the device memory was freed!");
    }
+   return m_ptr;
+}
+
+// This won't throw an exception is m_ptr is NULL
+template<class T, class Allocator>
+const T* DevMem<T, Allocator>::getPtrUnsafe() const
+{
+   return m_ptr;
+}
+
+// This won't throw an exception is m_ptr is NULL
+template<class T, class Allocator>
+T* DevMem<T, Allocator>::getPtrUnsafe()
+{
    return m_ptr;
 }
 
