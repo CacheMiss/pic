@@ -1,4 +1,4 @@
-function plotAllTheThings(startIdx, endIdx, stepSize)
+function plotAllTheThings(startIdx, endIdx, stepSize, gridWidth)
     for i=startIdx:stepSize:endIdx
         idxStr = sprintf('%06d', i);
         eleName = strcat('ele_', idxStr);
@@ -10,7 +10,6 @@ function plotAllTheThings(startIdx, endIdx, stepSize)
         phiAvgName = strcat('phiAvg_', idxStr);
         
         partStepSize = 512;
-        gridWidth = 512;
         
         plotPart(eleName, partStepSize);
         plotPart(ionName, partStepSize);
