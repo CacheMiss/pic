@@ -1,49 +1,31 @@
 #ifndef _PRECISIONTIMER_H_
 #define _PRECISIONTIMER_H_
 
-#ifndef _WIN32
-#include <boost/date_time/posix_time/posix_time_types.hpp>
-#else
-namespace boost
-{
-   namespace posix_time
-   {
-      class ptime;
-   };
-};
-#endif
+#include <boost/timer/timer.hpp>
 
 class PrecisionTimer
 {
-  boost::posix_time::ptime  *start_time;
-  boost::posix_time::ptime  *end_time;
+   boost::timer::cpu_timer m_timer;
 
 public:
   PrecisionTimer();
   ~PrecisionTimer();
-#ifdef _WIN32
-  void start();
-  void stop();
-#else
   inline void start();
   inline void stop();
-#endif
-  long intervalInS();
-  long intervalInMilliS();
-  long intervalInMicroS();
-  long intervalInNanoS();
+  boost::timer::nanosecond_type intervalInS();
+  boost::timer::nanosecond_type intervalInMilliS();
+  boost::timer::nanosecond_type intervalInMicroS();
+  boost::timer::nanosecond_type intervalInNanoS();
 };
 
-#ifndef _WIN32
 void PrecisionTimer::start()
 {
-   *start_time = boost::posix_time::microsec_clock::local_time();
+   m_timer.start();
 }
 
 void PrecisionTimer::stop()
 {
-   *end_time = boost::posix_time::microsec_clock::local_time();
+   m_timer.stop();
 }
-#endif
 
 #endif // _PRECISIONTIMER_H_

@@ -4,49 +4,33 @@
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 
 PrecisionTimer::PrecisionTimer()
-  :start_time(new boost::posix_time::ptime), 
-   end_time(new boost::posix_time::ptime)
 {
 }
 
 PrecisionTimer::~PrecisionTimer()
 {
-   delete start_time;
-   delete end_time;
 }
 
-#ifdef WIN32
-void PrecisionTimer::start()
+boost::timer::nanosecond_type PrecisionTimer::intervalInS()
 {
-   *start_time = boost::posix_time::microsec_clock::local_time();
+   boost::timer::cpu_times interval = m_timer.elapsed();
+   return interval.wall / 1000000000;
 }
 
-void PrecisionTimer::stop()
+boost::timer::nanosecond_type PrecisionTimer::intervalInMilliS()
 {
-   *end_time = boost::posix_time::microsec_clock::local_time();
-}
-#endif
-
-long PrecisionTimer::intervalInS()
-{
-   boost::posix_time::time_duration interval(*end_time - *start_time);
-   return interval.total_seconds();
+   boost::timer::cpu_times interval = m_timer.elapsed();
+   return interval.wall / 1000000;
 }
 
-long PrecisionTimer::intervalInMilliS()
+boost::timer::nanosecond_type PrecisionTimer::intervalInMicroS()
 {
-   boost::posix_time::time_duration interval(*end_time - *start_time);
-   return (long)interval.total_milliseconds();
+   boost::timer::cpu_times interval = m_timer.elapsed();
+   return interval.wall / 1000;
 }
 
-long PrecisionTimer::intervalInMicroS()
+boost::timer::nanosecond_type PrecisionTimer::intervalInNanoS()
 {
-   boost::posix_time::time_duration interval(*end_time - *start_time);
-   return (long)interval.total_microseconds();
-}
-
-long PrecisionTimer::intervalInNanoS()
-{
-   boost::posix_time::time_duration interval(*end_time - *start_time);
-   return (long)interval.total_nanoseconds();
+   boost::timer::cpu_times interval = m_timer.elapsed();
+   return interval.wall;
 }

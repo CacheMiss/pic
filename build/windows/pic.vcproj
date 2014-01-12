@@ -75,7 +75,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt-gd-1_49.lib libboost_date_time-vc90-mt-gd-1_49.lib libboost_filesystem-vc90-mt-gd-1_49.lib libboost_program_options-vc90-mt-gd-1_49.lib libboost_system-vc90-mt-gd-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib tbb_debug.lib"
+				AdditionalDependencies="libboost_thread-vc90-mt-gd-1_49.lib libboost_date_time-vc90-mt-gd-1_49.lib libboost_filesystem-vc90-mt-gd-1_49.lib libboost_program_options-vc90-mt-gd-1_49.lib libboost_system-vc90-mt-gd-1_49.lib libboost_chrono-vc90-mt-gd-1_49.lib libboost_timer-vc90-mt-gd-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib tbb_debug.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\x64&quot;;&quot;$(BOOST)\lib\win64&quot;;&quot;$(INTEL_TBB)\lib\intel64\vc9&quot;"
 				GenerateDebugInformation="true"
@@ -159,7 +159,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt-1_49.lib libboost_date_time-vc90-mt-1_49.lib libboost_filesystem-vc90-mt-1_49.lib libboost_program_options-vc90-mt-1_49.lib libboost_system-vc90-mt-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib tbb.lib"
+				AdditionalDependencies="libboost_thread-vc90-mt-1_49.lib libboost_date_time-vc90-mt-1_49.lib libboost_filesystem-vc90-mt-1_49.lib libboost_program_options-vc90-mt-1_49.lib libboost_system-vc90-mt-1_49.lib libboost_chrono-vc90-mt-1_49.lib libboost_timer-vc90-mt-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib tbb.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\x64&quot;;&quot;$(BOOST)\lib\win64&quot;;&quot;$(INTEL_TBB)\lib\intel64\vc9&quot;"
 				GenerateDebugInformation="true"
