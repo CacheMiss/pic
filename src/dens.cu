@@ -664,11 +664,9 @@ void loadParticleLocations(const float2* __restrict__ d_loc,
          locCopy[index] = loc;
       }
       // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
-      column =
-         static_cast<unsigned int>(__fdividef(loc.x, D_DX));
+      column = static_cast<unsigned int>(__fdividef(loc.x, D_DX));
       // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
-      row =
-         static_cast<unsigned int>(__fdividef(loc.y, D_DY));
+      row = static_cast<unsigned int>(__fdividef(loc.y, D_DY));
       if(coldEle && row == NY)
       {
          row = 0;
@@ -1139,9 +1137,18 @@ void calcIntermediateRho(DevMemF &dev_rho,
    // Calculate a1, a2, a3, and a4 for the now sorted particles
    threadsInBlock = MAX_THREADS_PER_BLOCK;
    blockSize = dim3(threadsInBlock);
+   float2 *locToUse;
+   if(!sortParticleArray)
+   {
+      locToUse = dev_particleLocations.getPtr();
+   }
+   else
+   {
+      locToUse = d_partLoc.getPtr();
+   }
    numBlocks = dim3(static_cast<unsigned int>(calcNumBlocks(threadsInBlock, numParticles)));
    calcA<<<numBlocks, blockSize, 0, stream1>>>(
-      sortParticleArray ? d_partLoc.getPtr() : dev_particleLocations.getPtr(),
+      locToUse,
       dev_a1.getPtr(),
       dev_a2.getPtr(),
       dev_a3.getPtr(),
@@ -1159,7 +1166,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
    DevMem<unsigned int, DevMemReuse> d_firstOob(1);
    d_firstOob.copyArrayToDev(&numParticles, 1);
    findFirstOob<<<numBlocks, blockSize, sharedMemoryBytes, stream2>>>(
-      sortParticleArray ? d_partLoc.getPtr() : dev_particleLocations.getPtr(),
+      locToUse,
       numParticles,
       OOB_PARTICLE,
       d_firstOob.getPtr()
