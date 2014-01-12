@@ -1152,29 +1152,25 @@ void calcIntermediateRho(DevMemF &dev_rho,
       );
    checkForCudaError("calcA failed");
 
+   threadsInBlock = 256;
+   blockSize = dim3(threadsInBlock);
+   numBlocks = dim3(static_cast<unsigned int>(calcNumBlocks(threadsInBlock, numParticles)));
+   sharedMemoryBytes = d_partLoc.getElementSize() * (threadsInBlock + 1);
+   DevMem<unsigned int, DevMemReuse> d_firstOob(1);
+   d_firstOob.copyArrayToDev(&numParticles, 1);
+   findFirstOob<<<numBlocks, blockSize, sharedMemoryBytes, stream2>>>(
+      sortParticleArray ? d_partLoc.getPtr() : dev_particleLocations.getPtr(),
+      numParticles,
+      OOB_PARTICLE,
+      d_firstOob.getPtr()
+      );
+   checkForCudaError("findFirstOob failed");
+   checkCuda(cudaStreamSynchronize(stream2));
+   unsigned int numRemainingParticles;
+   d_firstOob.copyArrayToHost(&numRemainingParticles, 1);
    if(sortParticleArray)
    {
-      assert(numParticles < 1000000);
-      //std::cout << "Sorting!" << std::endl;
-      threadsInBlock = 256;
-      blockSize = dim3(threadsInBlock);
-      numBlocks = dim3(static_cast<unsigned int>(calcNumBlocks(threadsInBlock, numParticles)));
-      sharedMemoryBytes = d_partLoc.getElementSize() * (threadsInBlock + 1);
-      DevMem<unsigned int, DevMemReuse> d_firstOob(1);
-      d_firstOob.copyArrayToDev(&numParticles, 1);
-      //std::cout << "numParticles=" << numParticles << " OOB_PARTICLE=" << OOB_PARTICLE << std::endl;
-      //std::cout << "blockSize.x=" << blockSize.x << " numBlocks=" << numBlocks.x << " sharedMem=" << sharedMemoryBytes << std::endl;
-      //std::cout << "dev_particleLocations.size()=" << dev_particleLocations.size() << std::endl;
-      findFirstOob<<<numBlocks, blockSize, sharedMemoryBytes, stream2>>>(
-         d_partLoc.getPtr(),
-         numParticles,
-         OOB_PARTICLE,
-         d_firstOob.getPtr()
-         );
-      checkForCudaError("findFirstOob failed");
-      checkCuda(cudaStreamSynchronize(stream2));
-      d_firstOob.copyArrayToHost(&numParticles, 1);
-      assert(numParticles < 1000000);
+      numParticles = numRemainingParticles;
    }
 
 
@@ -1187,7 +1183,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
       4 * sizeof(float) * threadsInBlock * particlesToBuffer + 
       2 * sizeof(uint2);
    uint2 tmpVal;
-   tmpVal.x = numParticles;
+   tmpVal.x = numRemainingParticles;
    tmpVal.y = 0;
 #ifndef NO_THRUST
    DevMem<uint2, ParticleAllocator> dev_maxMinArray(numBlocks.x, tmpVal);
@@ -1206,7 +1202,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
       dev_maxMinArray.getPtr(),
       dev_a1.getPtr(), dev_a2.getPtr(), 
       dev_a3.getPtr(), dev_a4.getPtr(),
-      NY * NX1, numParticles, particlesToBuffer
+      NY * NX1, numRemainingParticles, particlesToBuffer
       );
 
    checkCuda(cudaStreamSynchronize(stream1));
@@ -1225,7 +1221,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
                     static_cast<unsigned int>(calcNumBlocks(threadsY, NY)));
    sharedMemoryBytes = 8 * (threadsX + 1) * sizeof(float);
    uint2 tmpUint2;
-   tmpUint2.x = numParticles;
+   tmpUint2.x = numRemainingParticles;
    tmpUint2.y = 0;
 #ifndef NO_THRUST
    DevMem<uint2, ParticleAllocator> topRowBlockBoundaries(numBlocks.x * numBlocks.y, tmpUint2);
@@ -1247,7 +1243,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
       dev_a3Sum.getPtr(),
       dev_a4Sum.getPtr(),
       cold,
-      numParticles,
+      numRemainingParticles,
       NIJ
       );
    topRowBlockBoundaries.freeMem();
