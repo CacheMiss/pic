@@ -15,7 +15,6 @@ void dens(DevMemF &dev_rho,
           unsigned int& numHotIons,      unsigned int& numColdIons,
           bool sortEleHot, bool sortEleCold,
           bool sortIonHot, bool sortIonCold,
-          DevStream &stream1,
-          DevStream &stream2);
+          DevStream &stream1);
 
 #endif

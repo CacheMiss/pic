@@ -149,15 +149,6 @@ void executePic(int argc, char *argv[])
    DevMemF dev_randTable(neededRands);
    // End Device Memory Pointers
 
-   unsigned int estHotERemoved = 0;
-   unsigned int estColdERemoved = 0;
-   unsigned int estHotIRemoved = 0;
-   unsigned int estColdIRemoved = 0;
-   unsigned int estHotERemovedPerIt = static_cast<unsigned int>(neededParticles * 0.9);
-   unsigned int estColdERemovedPerIt = static_cast<unsigned int>(neededParticles * 0.9);
-   unsigned int estHotIRemovedPerIt = static_cast<unsigned int>(neededParticles * 0.9);
-   unsigned int estColdIRemovedPerIt = static_cast<unsigned int>(neededParticles * 0.9);
-
 #ifdef DEBUG_TRACE
    std::cout << "Finished main storage" << std::endl;
 #endif
@@ -416,10 +407,10 @@ void executePic(int argc, char *argv[])
          break;
       }
 
-      unsigned int oldEleHot = simState.numEleHot;
-      unsigned int oldEleCold = simState.numEleCold;
-      unsigned int oldIonHot = simState.numIonHot;
-      unsigned int oldIonCold = simState.numIonCold;
+      unsigned int activeEleHot = simState.numEleHot;
+      unsigned int activeEleCold = simState.numEleCold;
+      unsigned int activeIonHot = simState.numIonHot;
+      unsigned int activeIonCold = simState.numIonCold;
 #ifdef DEBUG_TRACE
       std::cout << "Dens" << std::endl;
 #endif
@@ -432,56 +423,35 @@ void executePic(int argc, char *argv[])
            d_eleColdLoc, d_eleColdVel,
            d_ionHotLoc, d_ionHotVel,
            d_ionColdLoc, d_ionColdVel,
-           simState.numEleHot, simState.numEleCold, 
-           simState.numIonHot, simState.numIonCold,
+           activeEleHot, activeEleCold, 
+           activeIonHot, activeIonCold,
            sortEleHot, sortEleCold,
            sortIonHot, sortIonCold,
-           processingStream[0],
-           processingStream[1]);
+           processingStream[0]);
 #ifdef ENABLE_TIMERS
       processingStream[0].synchronize();
       densTimer.stop();
 #endif
 
       // Hot Electron Count Update
-      if(oldEleHot != simState.numEleHot)
+      if(sortEleHot)
       {
-         estHotERemoved = 0;
-         estHotERemovedPerIt = (oldEleHot - simState.numEleHot) / SORT_INTERVAL;
-      }
-      else
-      {
-         estHotERemoved += estHotERemovedPerIt;
+         simState.numEleHot = activeEleHot;
       }
       // Cold Electron Count Update
-      if(oldEleCold != simState.numEleCold)
+      if(sortEleCold)
       {
-         estColdERemoved = 0;
-         estColdERemovedPerIt = (oldEleCold - simState.numEleCold) / SORT_INTERVAL;
-      }
-      else
-      {
-         estColdERemoved += estColdERemovedPerIt;
+         simState.numEleCold = activeEleCold;
       }
       // Hot Ion Count Update
-      if(oldIonHot != simState.numIonHot)
+      if(sortIonHot)
       {
-         estHotIRemoved = 0;
-         estHotIRemovedPerIt = (oldIonHot - simState.numIonHot) / SORT_INTERVAL;
-      }
-      else
-      {
-         estHotIRemoved += estHotIRemovedPerIt;
+         simState.numIonHot = activeIonHot;
       }
       // Cold Ion Count Update
-      if(oldIonCold != simState.numIonCold)
+      if(sortIonCold)
       {
-         estColdIRemoved = 0;
-         estColdIRemovedPerIt = (oldIonCold - simState.numIonCold) / SORT_INTERVAL;
-      }
-      else
-      {
-         estColdIRemoved += estColdIRemovedPerIt;
+         simState.numIonCold = activeIonCold;
       }
 
       // Start DEBUG
@@ -605,8 +575,8 @@ void executePic(int argc, char *argv[])
          processingStream[2].synchronize();
          processingStream[3].synchronize();
          logger.logInfo(ind, simState.simTime, 
-            simState.numEleHot + simState.numEleCold - estHotERemoved - estColdERemoved,
-            simState.numIonHot + simState.numIonCold - estHotIRemoved - estColdIRemoved,
+            activeEleHot + activeEleCold,
+            activeIonHot + activeIonCold,
             options.getRestartDir() != "" ? true : false);
          double iterationTime = static_cast<double>(iterationTimer.intervalInMicroS()) / (LF * 1000);
          double injectTime = static_cast<double>(injectTimer.intervalInNanoS()) / 1000000;
@@ -616,10 +586,10 @@ void executePic(int argc, char *argv[])
          double movepTime = static_cast<double>(movepTimer.intervalInNanoS()) / 1000000;
          logger.pushLogItem(new LogForPerformance(
             ind, simState.simTime, 
-            simState.numEleHot - estHotERemoved,
-            simState.numEleCold - estColdERemoved, 
-            simState.numIonHot - estHotIRemoved,
-            simState.numIonCold - estColdIRemoved, 
+            activeEleHot,
+            activeEleCold, 
+            activeIonHot,
+            activeIonCold, 
             iterationTime,
 #ifdef ENABLE_TIMERS
             injectTime,

@@ -727,81 +727,117 @@ void findFirstOob(const float2* __restrict__ pos,
    }
 }
 
-//******************************************************************************
-// Name: calcA
-// Code Type: Kernel
-// Block Structure: 1 thread per particle
-// Shared Memory Requirements: threadDim.x * sizeof(float2)
-// Purpose: Calculates a1/tota, a2/tota, a3/tota, and a4/tota for every particle 
-//          listed in particleLocations. These values are used in densElectron 
-//          and densIon
-// Input Parameters:
-// ----------------
-// particleLocations - xy pairs of all the particles to be calculated
-// NY - THe height of the grid
-// DX - The horizontal grid spacing
-// DY - The veritcal grid spacing
-// numParticles - The number of particles
-//
-// Output Parameters:
-// ----------------
-// area - A float4 array to store the area values in; a1 = area.x, a2 = area.y
-//        a3 = area.z, a4 = area.w
-//******************************************************************************
+////////////////////////////////////////////////////////////////////////////////
+/// @brief
+/// Calculates a1/tota, a2/tota, a3/tota, and a4/tota for every particle listed
+/// in particleLocations. These values are used in densElectron and densIon.
+/// This kernel also finds the number of particles actually stored in the
+/// particle array
+///
+/// @pre
+/// Block Structure: 1 thread per particle
+/// Needs (8 * numThreads+1) bytes of shared memory per block
+///
+/// @param[in] pos
+///    xy pairs of all the particles to be calculated
+/// @param[out] area1
+///    The area calculation for quadrant 3
+/// @param[out] area2
+///    The area calculation for quadrant 4
+/// @param[out] area3
+///    The area calculation for quadrant 2
+/// @param[out] area4
+///    The area calculation for quadrant 1
+/// @param[out] firstOobIdx
+///    The index of the first particle which has a y value of oobValue
+/// @param[in] oobValue
+///    The y value a location will have if it is out of bounds
+/// @param[in] NY
+///    The height of the grid
+/// @param[in] DX
+///    The horizontal grid spacing
+/// @param[in] DY
+///    The vertical grid spacing
+/// @param[in] numParticles
+///    The number of particles
+///
+/// Output Parameters:
+/// ----------------
+/// area - A float4 array to store the area values in; a1 = area.x, a2 = area.y
+///        a3 = area.z, a4 = area.w
+////////////////////////////////////////////////////////////////////////////////
 __global__
-void calcA(const float2* __restrict__ particleLocations,
+void calcA(const float2* __restrict__ pos,
            float* __restrict__ area1,
            float* __restrict__ area2,
            float* __restrict__ area3,
            float* __restrict__ area4,
+           unsigned int *firstOobIdx,
+           const float oobValue,
            const unsigned int numParticles,
            const unsigned int NY,
            const float DX,
            const float DY,
            const bool coldElectrons)
 {
-   int index = blockDim.x * blockIdx.x + threadIdx.x;
-   float2 location;
+   extern __shared__ float2 s_loc[];
+   int threadX = blockDim.x * blockIdx.x + threadIdx.x;
 
-   if(index >= numParticles)
+   if(threadX < numParticles)
    {
-      return;
+      s_loc[threadIdx.x] = pos[threadX];
+      if(threadIdx.x + 1 == blockDim.x && threadX + 1 < numParticles)
+      {
+         s_loc[threadIdx.x+1] = pos[threadX + 1];
+      }
    }
-
-   location = particleLocations[index];
-   int2 gridIndex;
-   // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
-   gridIndex.x = __fdividef(location.x, DX);
-   // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
-   gridIndex.y = __fdividef(location.y, DX);
-   if (coldElectrons && gridIndex.y == NY)
+   __syncthreads();
+   if(threadX < numParticles)
    {
-      gridIndex.y = 0; 
+      int2 gridIndex;
+      // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
+      gridIndex.x = __fdividef(s_loc[threadIdx.x].x, DX);
+      // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
+      gridIndex.y = __fdividef(s_loc[threadIdx.x].y, DX);
+      if (coldElectrons && gridIndex.y == NY)
+      {
+         gridIndex.y = 0; 
+      }
+
+      // Find the distance from the associated grid point that the particle is
+      float dela = s_loc[threadIdx.x].x - gridIndex.x * DX;
+      float delb = s_loc[threadIdx.x].y - gridIndex.y * DY;
+      float a1;
+      float a2;
+      float a3;
+      float a4;
+      float tota;
+
+
+      // Calculate the areas for the particle
+      a1 = dela * delb;
+      a2 = DX * delb-a1;
+      a3 = DY * dela-a1;
+      tota = DX * DY;
+      a4 = tota - (a1 + a2 + a3);
+
+      // Write the areas back to global memory
+      // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
+      area1[threadX] = __fdividef(a1, tota);
+      area2[threadX] = __fdividef(a2, tota);
+      area3[threadX] = __fdividef(a3, tota);
+      area4[threadX] = __fdividef(a4, tota);
+
+      bool hasNext = threadX + 1 < numParticles;
+      if(hasNext)
+      {
+         if(s_loc[threadIdx.x+1].y == oobValue && s_loc[threadIdx.x].y != oobValue)
+         {
+            //printf("oob particle found at index %d\n", threadX+1);
+            *firstOobIdx = threadX + 1;
+         }
+      }
    }
-
-   // Find the distance from the associated grid point that the particle is
-   float dela = location.x - gridIndex.x * DX;
-   float delb = location.y - gridIndex.y * DY;
-   float a1;
-   float a2;
-   float a3;
-   float a4;
-   float tota;
-
-
-   // Calculate the areas for the particle
-   a1 = dela * delb;
-   a2 = DX * delb-a1;
-   a3 = DY * dela-a1;
-   tota = DX * DY;
-   a4 = tota - (a1 + a2 + a3);
-
-   // Write the areas back to global memory
-   // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
-   area1[index] = __fdividef(a1, tota);
-   area2[index] = __fdividef(a2, tota);
-   area3[index] = __fdividef(a3, tota);
-   area4[index] = __fdividef(a4, tota);
 }
 
 //******************************************************************************
@@ -985,8 +1021,7 @@ void findBounds(const DevMem<unsigned int, BinListAllocator> &dev_binList,
 // electron - True of the particles are electrons
 // sortParticleArray - Don't make a temporary copy of particle locations.
 //                     Sort the entire particle array.
-// stream1 - Stream for main processing in calcIntermediateRho
-// stream2 - Stream for finding out of bounds particles
+// stream - Stream for processing in calcIntermediateRho
 //******************************************************************************
 void calcIntermediateRho(DevMemF &dev_rho,
                          DevMem<float2> &d_partLoc, 
@@ -995,8 +1030,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
                          bool cold,
                          bool electron,
                          bool sortParticleArray,
-                         cudaStream_t stream1,
-                         cudaStream_t stream2)
+                         cudaStream_t stream)
 {
    DeviceStats &dev(DeviceStats::getRef());
    DevMem<float2, ParticleAllocator> dev_particleLocations(0);
@@ -1026,16 +1060,16 @@ void calcIntermediateRho(DevMemF &dev_rho,
    threadsInBlock = dev.maxThreadsPerBlock / 2;
    blockSize = dim3(threadsInBlock);
    numBlocks = dim3(static_cast<unsigned int>(calcNumBlocks(threadsInBlock, numParticles)));
-   cudaStreamSynchronize(stream1);
+   cudaStreamSynchronize(stream);
    checkForCudaError("Before loadParticleLocations");
-   loadParticleLocations<<<numBlocks, blockSize, 0, stream1>>>(
+   loadParticleLocations<<<numBlocks, blockSize, 0, stream>>>(
       d_partLoc.getPtr(),
       dev_particleLocations.getPtrUnsafe(),
       dev_gridBuckets.getPtr(),
       numParticles,
       NX, NX1, NY,
       cold && electron);
-   cudaStreamSynchronize(stream1);
+   cudaStreamSynchronize(stream);
    checkForCudaError("densLoadSortArrays failed");
 
    // DEBUG
@@ -1078,7 +1112,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
 
    /*
    // Begin DEBUG
-   cudaStreamSynchronize(stream1);
+   cudaStreamSynchronize(stream);
    std::vector<unsigned int> h_gridBuckets(dev_gridBuckets.size());
    std::vector<float2> h_particleLocations(dev_particleLocations.size());
    dev_gridBuckets.copyArrayToHost(&h_gridBuckets[0]);
@@ -1098,11 +1132,11 @@ void calcIntermediateRho(DevMemF &dev_rho,
       dev_bucketEnd,
       numParticles, 
       static_cast<unsigned int>(dev_bucketBegin.size()), 
-      stream1);
+      stream);
 
    /*
    // Begin DEBUG
-   cudaStreamSynchronize(stream1);
+   cudaStreamSynchronize(stream);
    std::vector<unsigned int> h_bucketBegin(dev_bucketBegin.size());
    std::vector<unsigned int> h_bucketEnd(dev_bucketEnd.size());
    dev_bucketBegin.copyArrayToHost(&h_bucketBegin[0]);
@@ -1135,8 +1169,10 @@ void calcIntermediateRho(DevMemF &dev_rho,
    dev_a4Sum.zeroMem();
    
    // Calculate a1, a2, a3, and a4 for the now sorted particles
-   threadsInBlock = MAX_THREADS_PER_BLOCK;
+   threadsInBlock = 512;
    blockSize = dim3(threadsInBlock);
+   numBlocks = dim3(static_cast<unsigned int>(calcNumBlocks(threadsInBlock, numParticles)));
+   sharedMemoryBytes = d_partLoc.getElementSize() * (threadsInBlock + 1);
    float2 *locToUse;
    if(!sortParticleArray)
    {
@@ -1146,39 +1182,27 @@ void calcIntermediateRho(DevMemF &dev_rho,
    {
       locToUse = d_partLoc.getPtr();
    }
-   numBlocks = dim3(static_cast<unsigned int>(calcNumBlocks(threadsInBlock, numParticles)));
-   calcA<<<numBlocks, blockSize, 0, stream1>>>(
+   static HostMem<unsigned int> numRemainingParticles(1);
+   numRemainingParticles[0] = numParticles;
+   DevMem<unsigned int, DevMemReuse> d_firstOob = numRemainingParticles;
+   calcA<<<numBlocks, blockSize, sharedMemoryBytes, stream>>>(
       locToUse,
       dev_a1.getPtr(),
       dev_a2.getPtr(),
       dev_a3.getPtr(),
       dev_a4.getPtr(),
+      d_firstOob.getPtr(),
+      OOB_PARTICLE,
       numParticles, 
       NY, DX, DY,
       cold && electron
       );
    checkForCudaError("calcA failed");
-
-   threadsInBlock = 256;
-   blockSize = dim3(threadsInBlock);
-   numBlocks = dim3(static_cast<unsigned int>(calcNumBlocks(threadsInBlock, numParticles)));
-   sharedMemoryBytes = d_partLoc.getElementSize() * (threadsInBlock + 1);
-   DevMem<unsigned int, DevMemReuse> d_firstOob(1);
-   d_firstOob.copyArrayToDev(&numParticles, 1);
-   findFirstOob<<<numBlocks, blockSize, sharedMemoryBytes, stream2>>>(
-      locToUse,
-      numParticles,
-      OOB_PARTICLE,
-      d_firstOob.getPtr()
-      );
-   checkForCudaError("findFirstOob failed");
-   checkCuda(cudaStreamSynchronize(stream2));
-   unsigned int numRemainingParticles;
-   d_firstOob.copyArrayToHost(&numRemainingParticles, 1);
-   if(sortParticleArray)
-   {
-      numParticles = numRemainingParticles;
-   }
+   checkCuda(cudaStreamSynchronize(stream));
+   numRemainingParticles = d_firstOob;
+   // This value eventually gets set as the active number of particles in main
+   // If the whole particle array was just sorted, it also becomes the total particle count
+   numParticles = numRemainingParticles[0];
 
 
    //threadsInBlock = MAX_THREADS_PER_BLOCK / 8;
@@ -1190,7 +1214,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
       4 * sizeof(float) * threadsInBlock * particlesToBuffer + 
       2 * sizeof(uint2);
    uint2 tmpVal;
-   tmpVal.x = numRemainingParticles;
+   tmpVal.x = numParticles;
    tmpVal.y = 0;
 #ifndef NO_THRUST
    DevMem<uint2, ParticleAllocator> dev_maxMinArray(numBlocks.x, tmpVal);
@@ -1198,21 +1222,20 @@ void calcIntermediateRho(DevMemF &dev_rho,
    DevMem<uint2, ParticleAllocator> dev_maxMinArray(numBlocks.x);
    setDeviceArray(dev_maxMinArray.getPtr(), dev_maxMinArray.size(), tmpVal);
 #endif
-   cudaStreamSynchronize(stream1);
    checkForCudaError("Finished prep for sumArea");
    // For each bin in the grid, sum all the a1-a4 values.
    // Once this is complete, the charge at a point will just be a1+a2+a3+a4.
-   sumArea<<<numBlocks, blockSize, sharedMemoryBytes, stream1>>>(
+   sumArea<<<numBlocks, blockSize, sharedMemoryBytes, stream>>>(
       dev_a1Sum.getPtr(), dev_a2Sum.getPtr(), 
       dev_a3Sum.getPtr(), dev_a4Sum.getPtr(),
       dev_bucketBegin.getPtr(), dev_bucketEnd.getPtr(),
       dev_maxMinArray.getPtr(),
       dev_a1.getPtr(), dev_a2.getPtr(), 
       dev_a3.getPtr(), dev_a4.getPtr(),
-      NY * NX1, numRemainingParticles, particlesToBuffer
+      NY * NX1, numParticles, particlesToBuffer
       );
 
-   checkCuda(cudaStreamSynchronize(stream1));
+   checkCuda(cudaStreamSynchronize(stream));
    checkForCudaError("sumArea");
    dev_maxMinArray.freeMem();
    dev_a1.freeMem();
@@ -1228,7 +1251,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
                     static_cast<unsigned int>(calcNumBlocks(threadsY, NY)));
    sharedMemoryBytes = 8 * (threadsX + 1) * sizeof(float);
    uint2 tmpUint2;
-   tmpUint2.x = numRemainingParticles;
+   tmpUint2.x = numParticles;
    tmpUint2.y = 0;
 #ifndef NO_THRUST
    DevMem<uint2, ParticleAllocator> topRowBlockBoundaries(numBlocks.x * numBlocks.y, tmpUint2);
@@ -1239,9 +1262,9 @@ void calcIntermediateRho(DevMemF &dev_rho,
    setDeviceArray(topRowBlockBoundaries.getPtr(), topRowBlockBoundaries.size(), tmpUint2);
    setDeviceArray(bottomRowBlockBoundaries.getPtr(), bottomRowBlockBoundaries.size(), tmpUint2);
 #endif
-   cudaStreamSynchronize(stream1);
+   cudaStreamSynchronize(stream);
    checkForCudaError("Finished prep for densGridPoints");
-   densGridPoints<<<numBlocks, blockSize, sharedMemoryBytes, stream1>>>(
+   densGridPoints<<<numBlocks, blockSize, sharedMemoryBytes, stream>>>(
       dev_rho.getPtr(),
       NX1,
       NY,
@@ -1250,7 +1273,7 @@ void calcIntermediateRho(DevMemF &dev_rho,
       dev_a3Sum.getPtr(),
       dev_a4Sum.getPtr(),
       cold,
-      numRemainingParticles,
+      numParticles,
       NIJ
       );
    topRowBlockBoundaries.freeMem();
@@ -1315,8 +1338,7 @@ void dens(DevMemF &dev_rho,
           unsigned int& numHotIons, unsigned int& numColdIons,
           bool sortEleHot, bool sortEleCold,
           bool sortIonHot, bool sortIonCold,
-          DevStream &stream1,
-          DevStream &stream2)
+          DevStream &stream)
 {
    dim3 *numBlocks;
    dim3 *blockSize;
@@ -1329,25 +1351,24 @@ void dens(DevMemF &dev_rho,
 
    // Calculate the rho from the hot electrons
    calcIntermediateRho(dev_rhoe, d_eleHotLoc, d_eleHotVel,
-      numHotElectrons, false, true, sortEleHot, *stream1, *stream2);
+      numHotElectrons, false, true, sortEleHot, *stream);
    // Calculate the rho from the cold electrons
    calcIntermediateRho(dev_rhoe, d_eleColdLoc, d_eleColdVel,
-      numColdElectrons, true, true, sortEleCold, *stream1, *stream2);
+      numColdElectrons, true, true, sortEleCold, *stream);
    // Calculate the rho from the hot ions
    calcIntermediateRho(dev_rhoi, d_ionHotLoc, d_ionHotVel,
-      numHotIons, false, false, sortIonHot, *stream1, *stream2);
+      numHotIons, false, false, sortIonHot, *stream);
    // Calculate the rho from the cold ions
    calcIntermediateRho(dev_rhoi, d_ionColdLoc, d_ionColdVel,
-      numColdIons, true, false, sortIonCold, *stream1, *stream2);
+      numColdIons, true, false, sortIonCold, *stream);
 
    // Double the rho at the top and bottom of the grid
    threadsInBlock = MAX_THREADS_PER_BLOCK;
    blockSize = new dim3(threadsInBlock);
    numBlocks = new dim3(static_cast<unsigned int>(calcNumBlocks(threadsInBlock, NX)));
-   stream1.synchronize();
-   stream2.synchronize();
+   stream.synchronize();
    checkForCudaError("Before fixRhoGridTopBottom");
-   fixRhoGridTopBottom<<<*numBlocks, *blockSize, 0, *stream1>>>(
+   fixRhoGridTopBottom<<<*numBlocks, *blockSize, 0, *stream>>>(
       dev_rhoe.getPtr(),
       dev_rhoi.getPtr(),
       NX1, NY);
@@ -1355,7 +1376,7 @@ void dens(DevMemF &dev_rho,
    delete numBlocks;
    checkForCudaError("fixRhoGridTopBottom");
 
-   stream1.synchronize();
+   stream.synchronize();
    checkForCudaError("Before rhoi - rhoe");
    //////////////////////////////////////////////////////
    //
