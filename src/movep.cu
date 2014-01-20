@@ -158,30 +158,48 @@ void moveParticles(float2 d_partLoc[], float3 d_partVel[],
    {
       if(!(pLoc.y > D_DY * (NY1-1) || pLoc.y < D_DY))
       {
-         const int nii = static_cast<int>(pLoc.y/D_DY);  // Y Position of pBuficle
-         const int nj = static_cast<int>((pLoc.x)/D_DX); // X Position of pBuficle
-         // I can't simply add 1 to nj because if I wrap off the edge of the grid I
-         // need to account for that. In that case, nj + 1 should actually be 0.
+         const int nii = static_cast<int>(pLoc.y/D_DY);  // Y Position of particle
+         const int nj = static_cast<int>((pLoc.x)/D_DX); // X Position of particle
+         // I can't simply add 1 to nj because if I wrap off the edge of the grid
+         // I need to account for that. In that case, nj + 1 should actually be 0.
          const int nj1 = (nj == NX1-1) ? 0 : nj + 1;
 
+         // Find the X distance from the nearest grid point
          dela = (float)(fabs((float) (pLoc.x-(D_DX * nj))));
+         // Find the Y distance from the nearest grid point
          delb = (float)(fabs((float) (pLoc.y-(D_DY * nii))));
+         // Percentage of influence contributed by top right grid point
          a1 = dela*delb;
+         // Percentage of influence contributed by top left grid point
          a2 = D_DX * delb - a1;
+         // Percentage of influence contributed by bottom right grid point
          a3 = D_DY * dela - a1;
+         // Percentage of influence contributed by bottom left grid point
          a4 = D_DX * D_DY-(a1+a2+a3);
+         // Interpolate the X component of the electric field from the
+         // four surrounding grid points using linear interpolation then
+         // normalize the eresult.
          local_expf = (a1*tex2D(texEx, nj1, nii+1) + 
             a2*tex2D(texEx, nj, nii+1) +
             a3*tex2D(texEx, nj1, nii) + 
             a4*tex2D(texEx, nj, nii))/D_TOTA;
+         // Interpolate the Y component of the electric field from the
+         // four surrounding grid points using linear interpolation then
+         // normalize the result
          local_eypf = (a1*tex2D(texEy, nj1, nii+1) +
             a2*tex2D(texEy, nj, nii+1) +
             a3*tex2D(texEy, nj1, nii) +
             a4*tex2D(texEy, nj, nii))/D_TOTA;
+         // Interpolate the X component of the magnetic field from the
+         // four surrounding grid points using linear interpolation then
+         // normalize the eresult.
          bxm = a1 * tex2D(texBxm, nj+1, nii+1) +
             a2 * tex2D(texBxm, nj, nii+1) +
             a3 * tex2D(texBxm, nj+1, nii) +
             a4 * tex2D(texBxm, nj, nii) / D_TOTA;
+         // Interpolate the Y component of the magnetic field from the
+         // four surrounding grid points using linear interpolation then
+         // normalize the result
          bym = (a1 * tex1D(texBym, nii+1) +
             a2 * tex1D(texBym, nii+1) +
             a3 * tex1D(texBym, nii) +
