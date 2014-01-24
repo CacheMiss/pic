@@ -9,6 +9,7 @@ function ret = plotVxRange(fName, midpoint, width, sliceHot, sliceCold)
    end
    
    sizeOfFloat = 4;
+   maxPlottableParticles = 4000;
 
    numParticles = fread(f, 1, 'int32');
    numHot = fread(f, 1, 'int32');
@@ -16,6 +17,20 @@ function ret = plotVxRange(fName, midpoint, width, sliceHot, sliceCold)
    numCold = fread(f, 1, 'int32');
    numColdCulled = floor(numCold / sliceCold);
    dataStart = ftell(f);
+   
+   if numHotCulled > maxPlottableParticles
+       numHotCulled = maxPlottableParticles;
+       sliceHot = floor(numHot / maxPlottableParticles);
+       fprintf('Limiting number of hot particles plotted to %d\n', ...
+           numHotCulled);
+   end
+   if numColdCulled > maxPlottableParticles
+       numColdCulled = maxPlottableParticles;
+       sliceCold = floor(numCold / maxPlottableParticles);
+       fprintf('Limiting number of cold particles plotted to %d\n', ...
+           numColdCulled);
+   end
+   
    hotP = zeros(2, numHotCulled);
    coldP = zeros(2, numColdCulled);
    nextSpace = 1;
