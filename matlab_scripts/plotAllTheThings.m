@@ -19,6 +19,8 @@ function plotAllTheThings(startIdx, endIdx, stepSize, gridWidth)
         %plotVyRange(ionName, gridWidth/2, 20, partStepSize, partStepSize);
         plotVxVy(eleName, 1, 1);
         plotVxVy(ionName, 1, 1);
+        %plotVxVyRange(eleName, gridWidth/2-32, gridWidth+32, 0, 3000);
+        %plotVxVyRange(ionName, gridWidth/2-32, gridWidth+32, 0, 3000);
         plotRho(idxStr, gridWidth/2);
         contourPhi(rhoName, 4, 32);
         plotPhiAll(rhoiName, 8, 64);
