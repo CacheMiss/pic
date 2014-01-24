@@ -152,7 +152,7 @@ function ret = plotVxVy(fName, sliceHot, sliceCold)
    figure;
    scatter(hotP(2,:), hotP(3,:), 0.4)
    fields = strsplit(fName, '_');
-   title(strcat([fields{1} ' cold ' fields{2} ' Vy vs Vx']));
+   title(strcat([fields{1} ' hot ' fields{2} ' Vy vs Vx']));
    xlabel('vx');
    ylabel('vy');
    axis([vxMinHot vxMaxHot vyMinHot vyMaxHot]);
