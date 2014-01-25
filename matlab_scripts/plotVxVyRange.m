@@ -1,4 +1,4 @@
-function ret = plotVxVy(fName, xMin, xMax, yMin, yMax)
+function ret = plotVxVy(fName, xMin, xMax, yMin, yMax, varargin)
 
    f = fopen(fName, 'rb');
 
@@ -8,8 +8,10 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax)
       return;
    end
    
+   optArgs = parseArgs(varargin);
+
    sizeOfFloat = 4;
-   maxPlottableParticles = 4000;
+   maxPlottableParticles = optArgs.maxPoints;
    sliceHot = 0;
    sliceCold = 0;
 
@@ -20,70 +22,74 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax)
    numColdCulled = floor(numCold / sliceCold);
    dataStart = ftell(f);
    
-   hotP = zeros(4, numHot);
+   hotP = particleNull(numHot);
    nextSpace = 1;
    for i=1:numHot
-      tmpX = fread(f, 1, 'float'); % Skip x
+      tmpX = fread(f, 1, 'float'); % Read x
       tmpY = fread(f, 1, 'float'); % Read y
       tmpVx = fread(f, 1, 'float'); % Read vx
       tmpVy = fread(f, 1, 'float'); % Read vy
       tmpVz = fread(f, 1, 'float'); % Read vz
       if (xMin <= tmpX) && (tmpX < xMax) && (yMin <= tmpY) && (tmpY < yMax)
-          hotP(1,i) = tmpY;
-          hotP(2,i) = tmpVx;
-          hotP(3,i) = tmpVy;
-          hotP(4,i) = tmpVz;
+          hotP.x(nextSpace) = tmpX;
+          hotP.y(nextSpace) = tmpY;
+          hotP.vx(nextSpace) = tmpVx;
+          hotP.vy(nextSpace) = tmpVy;
+          hotP.vz(nextSpace) = tmpVz;
           nextSpace = nextSpace + 1;
       end
    end
    numHotCulled = nextSpace - 1;
-   hotP = hotP(:,1:numHotCulled);
+   hotP = trimParticles(hotP, numHotCulled);
    fseek(f, dataStart, 'bof');
    fseek(f, sizeOfFloat * 5 * numHot, 'cof');
-   coldP = zeros(4, numCold);
+   coldP = particleNull(numCold);
    nextSpace = 1;
    for i=1:numCold
-       tmpX = fread(f, 1, 'float'); % Skip x
+       tmpX = fread(f, 1, 'float'); % Read x
        tmpY = fread(f, 1, 'float'); % Read y
        tmpVx = fread(f, 1, 'float'); % Read vx
        tmpVy = fread(f, 1, 'float'); % Read vy
        tmpVz = fread(f, 1, 'float'); % Read vz
        if (xMin <= tmpX) && (tmpX < xMax) && (yMin <= tmpY) && (tmpY < yMax)
-           coldP(1,i) = tmpY;
-           coldP(2,i) = tmpVx;
-           coldP(3,i) = tmpVy;
-           coldP(4,i) = tmpVz;
+           coldP.x(nextSpace) = tmpX;
+           coldP.y(nextSpace) = tmpY;
+           coldP.vx(nextSpace) = tmpVx;
+           coldP.vy(nextSpace) = tmpVy;
+           coldP.vz(nextSpace) = tmpVz;
            nextSpace = nextSpace + 1;
        end
    end
    numColdCulled = nextSpace - 1;
-   coldP = coldP(:,1:numColdCulled);
+   coldP = trimParticles(coldP, numColdCulled);
    fclose(f);
    
-   if numHotCulled > maxPlottableParticles
-       sliceHot = floor(numHotCulled / maxPlottableParticles);
-       hotP = hotP(:,1:sliceHot:numHotCulled);
-       numHotCulled = maxPlottableParticles;
-       fprintf('Limiting number of hot particles plotted to %d\n', ...
-           numColdCulled);
-   end
-   if numColdCulled > maxPlottableParticles
-       sliceCold = floor(numColdCulled / maxPlottableParticles);
-       coldP = coldP(:,1:sliceCold:numColdCulled);
-       numColdCulled = maxPlottableParticles;
-       fprintf('Limiting number of cold particles plotted to %d\n', ...
-           numColdCulled);
+   if optArgs.enableCulling
+       if numHotCulled > maxPlottableParticles
+           sliceHot = floor(numHotCulled / maxPlottableParticles);
+           hotP = cullParticles(hotP, sliceHot);
+           numHotCulled = maxPlottableParticles;
+           fprintf('Limiting number of hot particles plotted to %d\n', ...
+               numHotCulled);
+       end
+       if numColdCulled > maxPlottableParticles
+           sliceCold = floor(numColdCulled / maxPlottableParticles);
+           coldP = cullParticles(coldP, sliceCold);
+           numColdCulled = maxPlottableParticles;
+           fprintf('Limiting number of cold particles plotted to %d\n', ...
+               numColdCulled);
+       end
    end
    
    stdDevMultiplier = 6;
    
    if numHotCulled ~= 0
-       stdHotVx = std(hotP(2,:));
-       meanHotVx = mean(hotP(2,:));
+       stdHotVx = std(hotP.vx);
+       meanHotVx = mean(hotP.vx);
        vxMaxHot = meanHotVx + stdHotVx * stdDevMultiplier;
        vxMinHot = meanHotVx - stdHotVx * stdDevMultiplier;
-       stdHotVy = std(hotP(3,:));
-       meanHotVy = mean(hotP(3,:));
+       stdHotVy = std(hotP.vy);
+       meanHotVy = mean(hotP.vy);
        vyMaxHot = meanHotVy + stdHotVy * stdDevMultiplier;
        vyMinHot = meanHotVy - stdHotVy * stdDevMultiplier;
    else
@@ -98,12 +104,12 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax)
    end
    
    if numColdCulled ~= 0
-       stdColdVx = std(coldP(2,:));
-       meanColdVx = mean(coldP(2,:));
+       stdColdVx = std(coldP.vx);
+       meanColdVx = mean(coldP.vx);
        vxMaxCold = meanColdVx + stdColdVx * stdDevMultiplier;
        vxMinCold = meanColdVx - stdColdVx * stdDevMultiplier;
-       stdColdVy = std(coldP(3,:));
-       meanColdVy = mean(coldP(3,:));
+       stdColdVy = std(coldP.vy);
+       meanColdVy = mean(coldP.vy);
        vyMaxCold = meanColdVy + stdColdVy * stdDevMultiplier;
        vyMinCold = meanColdVy - stdColdVy * stdDevMultiplier;
    else
@@ -117,65 +123,74 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax)
        vyMinCold = 0;
    end
    
+   % Randomize these vectors for faster plotting
+   hotP = randomizeParticles(hotP);
+   coldP = randomizeParticles(coldP);
+   
+   % Cold Vx vs. Vy
    figure;
-   scatter(coldP(2,:), coldP(1,:), 0.4)
+   scatter(coldP.vx, coldP.y, 0.4)
    fields = strsplit(fName, '_');
    title(strcat([fields{1} ' cold ' fields{2} ' Vx x=' num2str(xMin) '-'  ...
        num2str(xMax) ' y=' num2str(yMin) '-' num2str(yMax)]));
    xlabel('vx');
    ylabel('y');
-   axis([vxMinCold vxMaxCold 0 yMax]);
+   axis([vxMinCold vxMaxCold yMin yMax]);
    fields = strsplit(fName, '_');
    outFile = strcat(fields{1}, '_cold_vx_vs_y_x', num2str(xMin), ...
        '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
        '_', fields{2});
    print('-dpng', outFile);
    
+   % Hot Vx vs. Vy
    figure;
-   scatter(hotP(2,:), hotP(1,:), 0.4)
+   scatter(hotP.vx, hotP.y, 0.4)
    fields = strsplit(fName, '_');
    title(strcat([fields{1} ' hot ' fields{2} ' Vx x=' num2str(xMin) '-'  ...
        num2str(xMax) ' y=' num2str(yMin) '-' num2str(yMax)]));
    xlabel('vx');
    ylabel('y');
-   axis([vxMinHot vxMaxHot 0 max(hotP(1,:))]);
+   axis([vxMinHot vxMaxHot yMin yMax]);
    fields = strsplit(fName, '_');
    outFile = strcat(fields{1}, '_hot_vx_vs_y_x', num2str(xMin), ...
        '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
        '_', fields{2});
    print('-dpng', outFile);
    
+   % Cold Vy vs. Y
    figure;
-   scatter(coldP(3,:), coldP(1,:), 0.4)
+   scatter(coldP.vy, coldP.y, 0.4)
    fields = strsplit(fName, '_');
    title(strcat([fields{1} ' cold ' fields{2} ' Vy x=' num2str(xMin) '-'  ...
        num2str(xMax) ' y=' num2str(yMin) '-' num2str(yMax)]));
    title(strcat([fields{1} ' cold ' fields{2} ' Vy']));
    xlabel('vy');
    ylabel('y');
-   axis([vyMinCold vyMaxCold 0 yMax]);
+   axis([vyMinCold vyMaxCold yMin yMax]);
    fields = strsplit(fName, '_');
    outFile = strcat(fields{1}, '_cold_vy_vs_y_x', num2str(xMin), ...
        '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
        '_', fields{2});
    print('-dpng', outFile);
    
+   % Hot Vy vs. Y
    figure;
-   scatter(hotP(3,:), hotP(1,:), 0.4)
+   scatter(hotP.vy, hotP.y, 0.4)
    fields = strsplit(fName, '_');
    title(strcat([fields{1} ' hot ' fields{2} ' Vy x=' num2str(xMin) '-'  ...
        num2str(xMax) ' y=' num2str(yMin) '-' num2str(yMax)]));
    xlabel('vy');
    ylabel('y');
-   axis([vyMinHot vyMaxHot 0 max(hotP(1,:))]);
+   axis([vyMinHot vyMaxHot yMin yMax]);
    fields = strsplit(fName, '_');
    outFile = strcat(fields{1}, '_hot_vy_vs_y_x', num2str(xMin), ...
        '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
        '_', fields{2});
    print('-dpng', outFile);
    
+   % Cold Vx vs. Vy
    figure;
-   scatter(coldP(2,:), coldP(3,:), 0.4)
+   scatter(coldP.vx, coldP.vy, 0.4)
    fields = strsplit(fName, '_');
    title(strcat([fields{1} ' cold ' fields{2} ' Vy vs Vx x=' ...
        num2str(xMin) '-'  num2str(xMax) ' y=' num2str(yMin) '-' ...
@@ -189,9 +204,10 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax)
        '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
        '_', fields{2});
    print('-dpng', outFile);
-      
+   
+   % Hot Vx vs. Vy
    figure;
-   scatter(hotP(2,:), hotP(3,:), 0.4)
+   scatter(hotP.vx, hotP.vy, 0.4)
    fields = strsplit(fName, '_');
    title(strcat([fields{1} ' hot ' fields{2} ' Vy vs Vx x=' ...
        num2str(xMin) '-'  num2str(xMax) ' y=' num2str(yMin) '-' ...
@@ -205,4 +221,67 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax)
        '_', fields{2});
    print('-dpng', outFile);
  
+end
+
+function ret = particleNull(numParticles)
+    ret = struct('x', zeros(numParticles, 1), ...
+        'y', zeros(numParticles, 1), ...
+        'vx', zeros(numParticles, 1), ...
+        'vy', zeros(numParticles, 1), ...
+        'vz', zeros(numParticles, 1) ...
+        );
+end
+
+% Resize the arrays cutting off the right side
+function ret = trimParticles(part, newSize)
+    part.x = part.x(1:newSize);
+    part.y = part.y(1:newSize);
+    part.vx = part.vx(1:newSize);
+    part.vy = part.vy(1:newSize);
+    part.vz = part.vz(1:newSize);
+    
+    ret = part;
+end
+
+% Keep every skipSize'th particle
+function ret = cullParticles(part, skipSize)
+    part.x = part.x(1:skipSize:end);
+    part.y = part.y(1:skipSize:end);
+    part.vx = part.vx(1:skipSize:end);
+    part.vy = part.vy(1:skipSize:end);
+    part.vz = part.vz(1:skipSize:end);
+    
+    ret = part;
+end
+
+% Randomize a particle structure to increase printing speed
+function ret = randomizeParticles(part)
+   len = length(part.x);
+   % Create a vector of random integers from 1 to len
+   randInd = randperm(len);
+   % Randomize the input vectors
+   part.x = part.x(randInd);
+   part.y = part.y(randInd);
+   part.vx = part.vx(randInd);
+   part.vy = part.vy(randInd);
+   part.vz = part.vz(randInd);
+   
+   ret = part;
+end
+
+function ret = parseArgs(varargin)
+   ret = struct( ...
+       'enableCulling', true, ...
+       'maxPoints', 4000 ...
+       );
+   i = 1;
+   for i = 1:length(varargin)
+       if strcmp(varargin{i}(1), 'noCull')
+           ret.enableCulling = false;
+       elseif strcmp(varargin{i}(1), 'maxPoints')
+           ret.maxPoints = varargin{i}{2};
+       else
+           error('Invalid option!');
+       end
+   end
 end
