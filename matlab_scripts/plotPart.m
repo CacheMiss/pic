@@ -1,12 +1,4 @@
-function ret = plotPart(fName, sliceSize)
-
-   f = fopen(fName, 'rb');
-
-   if f <= 0
-      ret = -1;
-      fprintf('Unable to open "%s"\n', fName);
-      return;
-   end
+function ret = plotPart(fName)
    
    fNameTokens = strsplit(fName, '_');
    
@@ -14,68 +6,21 @@ function ret = plotPart(fName, sliceSize)
    if strcmp(fNameTokens{1}, 'ele')
        massRatio = 1;
    end
-
-   numParticles = fread(f, 1, 'int32');
-   numHot = fread(f, 1, 'int32');
-   numCold = fread(f, 1, 'int32');
-   fprintf('Num hot = %d\nNum cold = %d\n', numHot, numCold);
-   finalHot = floor(numHot / sliceSize);
-   finalCold = floor(numCold / sliceSize);
-   maxPlottableParticles = 4000;
-   sizeOfFloat = 4;
    
-   sliceHot = sliceSize;
-   sliceCold = sliceSize;
+   [hotP coldP] = loadParticles(fName);
+   hotP = particleMix(hotP);
+   coldP = particleMix(coldP);
+   energyHot = massRatio * (hotP.vx.^2 + hotP.vy.^2 + hotP.vz.^2) / 2;
+   energyCold = massRatio * (coldP.vx.^2 + coldP.vy.^2 + coldP.vz.^2) / 2;
    
-   dataStart = ftell(f);
-   if finalHot > maxPlottableParticles
-       finalHot = maxPlottableParticles;
-       sliceHot = floor(numHot / maxPlottableParticles);
-       fprintf('Limiting number of hot particles plotted to %d\n', ...
-           finalHot);
-   end
-   if finalCold > maxPlottableParticles
-       finalCold = maxPlottableParticles;
-       sliceCold = floor(numCold / maxPlottableParticles);
-       fprintf('Limiting number of cold particles plotted to %d\n', ...
-           finalCold);
-   end
-   hotP = zeros(3, finalHot);
-   coldP = zeros(3, finalCold);
-   for i=1:finalHot
-       hotP(1:2,i) = fread(f, 2, 'float');
-       vel = fread(f, 3, 'float');
-       % e = 1/2 * mv^2
-       energy = massRatio * (vel(1)^2 + vel(2)^2 + vel(3)^2) / 2;
-       hotP(3,i) = energy;
-       % Skip the velocity plus whatever else I need to reach
-       % the next particle I care about
-       skipBytes = sizeOfFloat * 5 * (sliceHot-1);
-       fseek(f, skipBytes, 'cof');
-   end
-   fseek(f, dataStart, 'bof');
-   fseek(f, sizeOfFloat * 5 * numHot, 'cof');
-   for i=1:finalCold
-       coldP(1:2,i) = fread(f, 2, 'float');
-       vel = fread(f, 3, 'float');
-       % e = 1/2 * mv^2
-       energy = massRatio * (vel(1)^2 + vel(2)^2 + vel(3)^2) / 2;
-       coldP(3,i) = energy;
-       % Skip the velocity plus whatever else I need to reach
-       % the next particle I care about
-       skipBytes = sizeOfFloat * 5 * (sliceCold-1);
-       fseek(f, skipBytes, 'cof');
-   end
-
-   fclose(f);
    dotScale = 20;
    if ~ isempty(hotP)
-       xMax = 2^nextpow2(max(hotP(1,:)));
+       xMax = 2^nextpow2(max(hotP.x));
        % yMax = 2^nextpow2(max(hotP(2,:)));
-       yMax = max(hotP(2,:));
+       yMax = max(hotP.y);
        
        figure;
-       scatter(hotP(1,:), hotP(2,:), hotP(3,:)/norm(hotP(3,:))*dotScale, hotP(3,:));
+       scatter(hotP.x, hotP.y, energyHot/norm(energyHot)*dotScale, energyHot);
        colorbar;
        titleStr = strcat([fNameTokens{1}, ' hot ', fNameTokens{2}]);
        title(titleStr);
@@ -87,12 +32,12 @@ function ret = plotPart(fName, sliceSize)
    end
    
    if ~ isempty(coldP)
-       xMax = max(xMax, 2^nextpow2(max(coldP(1,:))));
+       xMax = max(xMax, 2^nextpow2(max(coldP.x)));
        % yMax = max(yMax, 2^nextpow2(max(coldP(2,:))));
-       yMax = max(coldP(2,:));
+       yMax = max(coldP.y);
        
        figure;
-       scatter(coldP(1,:), coldP(2,:), coldP(3,:)/norm(coldP(3,:))*dotScale, coldP(3,:));
+       scatter(coldP.x, coldP.y, energyCold/norm(energyCold)*dotScale, energyCold);
        colorbar;
        titleStr = strcat([fNameTokens{1}, ' cold ', fNameTokens{2}]);
        title(titleStr);
