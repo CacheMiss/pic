@@ -57,7 +57,7 @@ function ret = plotRho(index, column)
    %axis([20 max(yValues) min(min(rhoe(5:end)), min(rhoi(5:end))) max(max(rhoe(5:end)), max(rhoi(5:end)))]);
    %axis([max(yValues)-5 max(yValues) min(min(rhoe(5:end)), min(rhoi(5:end))) max(max(rhoe(5:end)), max(rhoi(5:end)))]);
    %axis([0 max(yValues) min(min(rhoe), min(rhoi)) max(max(rhoe), max(rhoi))]);
-   axis([0 max(yValues) 0.00001 2]);
+   axis([0 max(yValues) 0.001 2]);
    %axis([0 20 0.001 2]);
    print('-dpng', rhoName);
 
