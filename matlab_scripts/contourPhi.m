@@ -32,6 +32,7 @@ function ret = contourPhi(fName, sliceX, sliceY)
    figure;
    contour(xValues, yValues, phi);
    colorbar;
+   caxis([-15 5]);
    fields = strsplit(fName, '_');
    title(strcat([fields{1} ' ' fields{2}]));
    print('-dpng', strcat(fields{1}, '_contour_', fields{2}));
