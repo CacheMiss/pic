@@ -8,7 +8,12 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax, varargin)
       return;
    end
    
-   optArgs = parseArgs(varargin);
+   if isempty(varargin)
+       % I still need initial values, even if I don't have arguments
+       optArgs = parseArgs; 
+   else
+       optArgs = parseArgs(varargin);
+   end
 
    sizeOfFloat = 4;
    maxPlottableParticles = optArgs.maxPoints;
@@ -40,7 +45,7 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax, varargin)
       end
    end
    numHotCulled = nextSpace - 1;
-   hotP = trimParticles(hotP, numHotCulled);
+   hotP = particleTrim(hotP, numHotCulled);
    fseek(f, dataStart, 'bof');
    fseek(f, sizeOfFloat * 5 * numHot, 'cof');
    coldP = particleNull(numCold);
@@ -61,20 +66,20 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax, varargin)
        end
    end
    numColdCulled = nextSpace - 1;
-   coldP = trimParticles(coldP, numColdCulled);
+   coldP = particleTrim(coldP, numColdCulled);
    fclose(f);
    
    if optArgs.enableCulling
        if numHotCulled > maxPlottableParticles
            sliceHot = floor(numHotCulled / maxPlottableParticles);
-           hotP = cullParticles(hotP, sliceHot);
+           hotP = particleCull(hotP, sliceHot);
            numHotCulled = maxPlottableParticles;
            fprintf('Limiting number of hot particles plotted to %d\n', ...
                numHotCulled);
        end
        if numColdCulled > maxPlottableParticles
            sliceCold = floor(numColdCulled / maxPlottableParticles);
-           coldP = cullParticles(coldP, sliceCold);
+           coldP = particleCull(coldP, sliceCold);
            numColdCulled = maxPlottableParticles;
            fprintf('Limiting number of cold particles plotted to %d\n', ...
                numColdCulled);
@@ -124,8 +129,8 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax, varargin)
    end
    
    % Randomize these vectors for faster plotting
-   hotP = randomizeParticles(hotP);
-   coldP = randomizeParticles(coldP);
+   hotP = particleMix(hotP);
+   coldP = particleMix(coldP);
    
    % Cold Vx vs. Vy
    figure;
@@ -223,65 +228,20 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax, varargin)
  
 end
 
-function ret = particleNull(numParticles)
-    ret = struct('x', zeros(numParticles, 1), ...
-        'y', zeros(numParticles, 1), ...
-        'vx', zeros(numParticles, 1), ...
-        'vy', zeros(numParticles, 1), ...
-        'vz', zeros(numParticles, 1) ...
-        );
-end
-
-% Resize the arrays cutting off the right side
-function ret = trimParticles(part, newSize)
-    part.x = part.x(1:newSize);
-    part.y = part.y(1:newSize);
-    part.vx = part.vx(1:newSize);
-    part.vy = part.vy(1:newSize);
-    part.vz = part.vz(1:newSize);
-    
-    ret = part;
-end
-
-% Keep every skipSize'th particle
-function ret = cullParticles(part, skipSize)
-    part.x = part.x(1:skipSize:end);
-    part.y = part.y(1:skipSize:end);
-    part.vx = part.vx(1:skipSize:end);
-    part.vy = part.vy(1:skipSize:end);
-    part.vz = part.vz(1:skipSize:end);
-    
-    ret = part;
-end
-
-% Randomize a particle structure to increase printing speed
-function ret = randomizeParticles(part)
-   len = length(part.x);
-   % Create a vector of random integers from 1 to len
-   randInd = randperm(len);
-   % Randomize the input vectors
-   part.x = part.x(randInd);
-   part.y = part.y(randInd);
-   part.vx = part.vx(randInd);
-   part.vy = part.vy(randInd);
-   part.vz = part.vz(randInd);
-   
-   ret = part;
-end
-
 function ret = parseArgs(varargin)
-   ret = struct( ...
-       'enableCulling', true, ...
-       'maxPoints', 4000 ...
-       );
-   i = 1;
-   for i = 1:length(varargin)
-       if strcmp(varargin{i}(1), 'noCull')
-           ret.enableCulling = false;
-       elseif strcmp(varargin{i}(1), 'maxPoints')
-           ret.maxPoints = varargin{i}{2};
-       else
-           error('Invalid option!');
-       end
-   end
+    ret = struct( ...
+        'enableCulling', true, ...
+        'maxPoints', 4000 ...
+        );
+    if ~isempty(varargin)
+        for i = 1:length(varargin)
+            if strcmp(varargin{i}(1), 'noCull')
+                ret.enableCulling = false;
+            elseif strcmp(varargin{i}(1), 'maxPoints')
+                ret.maxPoints = varargin{i}{2};
+            else
+                error('Invalid option!');
+            end
+        end
+    end
 end
