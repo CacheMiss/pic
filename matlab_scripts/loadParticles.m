@@ -18,14 +18,33 @@ function [hot cold] = loadParticles(fileName, varargin)
    fprintf('Num hot = %d\nNum cold = %d\n', numHot, numCold);
    sizeOfFloat = 4;
    
-   hot = particleNull(numHot);
-   cold = particleNull(numCold);
+   maxHot = optArgs.maxParticles;
+   maxCold = optArgs.maxParticles;
+   sliceHot = 1;
+   sliceCold = 1;
+   
+   if(numHot > optArgs.maxParticles)
+       sliceHot = floor(numHot / maxHot);
+       fprintf('Limiting number of hot particles to %d\n', ...
+           optArgs.maxParticles);
+   end
+   if(numCold > optArgs.maxParticles)
+       sliceCold = floor(numCold / maxCold);
+       fprintf('Limiting number of cold particles to %d\n', ...
+           optArgs.maxParticles);
+   end
+   
+   hot = particleNull(maxHot);
+   cold = particleNull(maxCold);
 
    % Store the location of the beginning of the hot particles
    dataStart = ftell(f);
    
+   floatsPerPart = 5;
+   
    % Read hot particles
-   skipBytes = sizeOfFloat * 4;
+   skipBytes = sizeOfFloat * ...
+       (floatsPerPart - 1 + floatsPerPart * sliceHot);
    hot.x = fread(f, numHot, 'float', skipBytes);
    advanceToField(f, dataStart, 2);
    hot.y = fread(f, numHot, 'float', skipBytes);
@@ -36,19 +55,14 @@ function [hot cold] = loadParticles(fileName, varargin)
    advanceToField(f, dataStart, 5);
    hot.vz = fread(f, numHot, 'float', skipBytes);
    
-   if(numHot > optArgs.maxParticles)
-       hot = particleCull(hot, numHot / optArgs.maxParticles);
-       fprintf('Limiting number of hot particles to %d\n', ...
-           optArgs.maxParticles);
-   end
-   
    % Reposition file pointer to the beginning of the cold particles
    fseek(f, dataStart, 'bof');
    fseek(f, sizeOfFloat * 5 * numHot, 'cof');
    % Store the location of the beginning of the cold particles
    dataStart = ftell(f);
    
-   skipBytes = sizeOfFloat * 4;
+   skipBytes = sizeOfFloat * ...
+       (floatsPerPart - 1 + floatsPerPart * sliceCold);
    cold.x = fread(f, numCold, 'float', skipBytes);
    advanceToField(f, dataStart, 2);
    cold.y = fread(f, numCold, 'float', skipBytes);
@@ -59,12 +73,6 @@ function [hot cold] = loadParticles(fileName, varargin)
    advanceToField(f, dataStart, 5);
    cold.vz = fread(f, numCold, 'float', skipBytes);
    
-   if(numCold > optArgs.maxParticles)
-       cold = particleCull(cold, numCold / optArgs.maxParticles);
-       fprintf('Limiting number of cold particles to %d\n', ...
-           optArgs.maxParticles);
-   end
-
    fclose(f);
 end
 
