@@ -30,7 +30,7 @@ function ret = contourPhi(fName, sliceX, sliceY)
 %    yValues = yValues(1:sliceSize:end);
    
    figure;
-   contour(xValues, yValues, phi);
+   contourf(xValues, yValues, phi);
    colorbar;
    caxis([-15 5]);
    fields = strsplit(fName, '_');
