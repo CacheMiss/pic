@@ -1,4 +1,4 @@
-function ret = plotVxVy(fName, xMin, xMax, yMin, yMax, varargin)
+function ret = plotVxVyRange(fName, xMin, xMax, yMin, yMax, varargin)
 
    f = fopen(fName, 'rb');
 
@@ -91,7 +91,7 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax, varargin)
        end
    end
    
-   stdDevMultiplier = 6;
+   stdDevMultiplier = 3;
    
    if optArgs.plotHot && numHotCulled ~= 0
        stdHotVx = std(hotP.vx);
@@ -141,10 +141,20 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax, varargin)
        coldP = particleMix(coldP);
    end
    
-   if optArgs.plotHot
+   numBins = optArgs.numBins;
+   
+   if optArgs.plotHot && size(hotP.x, 1) ~= 0
        % Hot Vx vs. Vy
        figure;
-       scatter(hotP.vx, hotP.y, 0.4)
+       %scatter(hotP.vx, hotP.y, 0.4);
+       xEdges = linspace(vxMinHot, vxMaxHot, numBins);
+       yEdges = linspace(yMin, yMax, numBins);
+       bins = hist2(hotP.vx, hotP.y, xEdges, yEdges);
+       if optArgs.logScale
+           bins = log(bins);
+       end
+       contourf(xEdges, yEdges, bins);
+       colorbar;
        fields = strsplit(fName, '_');
        title(strcat([fields{1} ' hot ' fields{2} ' Vx x=' num2str(xMin) '-'  ...
            num2str(xMax) ' y=' num2str(yMin) '-' num2str(yMax)]));
@@ -159,7 +169,15 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax, varargin)
        
        % Hot Vy vs. Y
        figure;
-       scatter(hotP.vy, hotP.y, 0.4)
+       %scatter(hotP.vy, hotP.y, 0.4);
+       xEdges = linspace(vyMinHot, vyMaxHot, numBins);
+       yEdges = linspace(yMin, yMax, numBins);
+       bins = hist2(hotP.vy, hotP.y, xEdges, yEdges);
+       if optArgs.logScale
+           bins = log(bins);
+       end
+       contourf(xEdges, yEdges, bins);
+       colorbar;
        fields = strsplit(fName, '_');
        title(strcat([fields{1} ' hot ' fields{2} ' Vy x=' num2str(xMin) '-'  ...
            num2str(xMax) ' y=' num2str(yMin) '-' num2str(yMax)]));
@@ -174,7 +192,15 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax, varargin)
        
         % Hot Vx vs. Vy
        figure;
-       scatter(hotP.vx, hotP.vy, 0.4)
+       %scatter(hotP.vx, hotP.vy, 0.4);
+       xEdges = linspace(vxMinHot, vxMaxHot, numBins);
+       yEdges = linspace(vyMinHot, vyMaxHot, numBins);
+       bins = hist2(hotP.vx, hotP.vy, xEdges, yEdges);
+       if optArgs.logScale
+           bins = log(bins);
+       end
+       contourf(xEdges, yEdges, bins);
+       colorbar;
        fields = strsplit(fName, '_');
        title(strcat([fields{1} ' hot ' fields{2} ' Vy vs Vx x=' ...
            num2str(xMin) '-'  num2str(xMax) ' y=' num2str(yMin) '-' ...
@@ -189,10 +215,18 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax, varargin)
        print('-dpng', outFile);
    end
    
-   if optArgs.plotCold
+   if optArgs.plotCold && size(coldP.x, 1) ~= 0
        % Cold Vx vs. Vy
        figure;
-       scatter(coldP.vx, coldP.y, 0.4)
+       %scatter(coldP.vx, coldP.y, 0.4);
+       xEdges = linspace(vxMinCold, vxMaxCold, numBins);
+       yEdges = linspace(yMin, yMax, numBins);
+       bins = hist2(coldP.vx, coldP.y, xEdges, yEdges);
+       if optArgs.logScale
+           bins = log(bins);
+       end
+       contourf(xEdges, yEdges, bins);
+       colorbar;
        fields = strsplit(fName, '_');
        title(strcat([fields{1} ' cold ' fields{2} ' Vx x=' num2str(xMin) '-'  ...
            num2str(xMax) ' y=' num2str(yMin) '-' num2str(yMax)]));
@@ -207,7 +241,15 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax, varargin)
        
        % Cold Vy vs. Y
        figure;
-       scatter(coldP.vy, coldP.y, 0.4)
+       %scatter(coldP.vy, coldP.y, 0.4);
+       xEdges = linspace(vyMinCold, vyMaxCold, numBins);
+       yEdges = linspace(yMin, yMax, numBins);
+       bins = hist2(coldP.vy, coldP.y, xEdges, yEdges);
+       if optArgs.logScale
+           bins = log(bins);
+       end
+       contourf(xEdges, yEdges, bins);
+       colorbar;
        fields = strsplit(fName, '_');
        title(strcat([fields{1} ' cold ' fields{2} ' Vy x=' num2str(xMin) '-'  ...
            num2str(xMax) ' y=' num2str(yMin) '-' num2str(yMax)]));
@@ -223,7 +265,15 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax, varargin)
        
        % Cold Vx vs. Vy
        figure;
-       scatter(coldP.vx, coldP.vy, 0.4)
+       %scatter(coldP.vx, coldP.vy, 0.4);
+       xEdges = linspace(vxMinCold, vxMaxCold, numBins);
+       yEdges = linspace(vyMinCold, vyMaxCold, numBins);
+       bins = hist2(coldP.vx, coldP.vy, xEdges, yEdges);
+       if optArgs.logScale
+           bins = log(bins);
+       end
+       contourf(xEdges, yEdges, bins);
+       colorbar;
        fields = strsplit(fName, '_');
        title(strcat([fields{1} ' cold ' fields{2} ' Vy vs Vx x=' ...
            num2str(xMin) '-'  num2str(xMax) ' y=' num2str(yMin) '-' ...
@@ -245,7 +295,9 @@ function ret = parseArgs(args)
         'enableCulling', true, ...
         'maxPoints', 4000, ...
         'plotHot', true, ...
-        'plotCold', true ...
+        'plotCold', true, ...
+        'numBins', 100, ...
+        'logScale', false ...
         );
     if ~isempty(args)
         i = 1;
@@ -261,6 +313,14 @@ function ret = parseArgs(args)
             elseif strcmp(args{i}, 'coldOnly')
                 ret.plotHot = false;
                 ret.plotCold = true;
+            % The number of bins to use when constructing
+            % the contour plots. The actual numbere of bins
+            % used is numBins^2
+            elseif strcmp(args{i}, 'numBins')
+                ret.numBins = args{i+1};
+                i = i + 1;
+            elseif strcmp(args{i}, 'logScale')
+                ret.logScale = true;
             else
                 error('Invalid option!');
             end
