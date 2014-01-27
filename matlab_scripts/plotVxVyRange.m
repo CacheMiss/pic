@@ -8,12 +8,7 @@ function ret = plotVxVy(fName, xMin, xMax, yMin, yMax, varargin)
       return;
    end
    
-   if isempty(varargin)
-       % I still need initial values, even if I don't have arguments
-       optArgs = parseArgs; 
-   else
-       optArgs = parseArgs(varargin);
-   end
+   optArgs = parseArgs(varargin);
 
    sizeOfFloat = 4;
    maxPlottableParticles = optArgs.maxPoints;

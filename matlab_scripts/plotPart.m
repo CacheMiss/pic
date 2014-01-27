@@ -1,11 +1,6 @@
 function ret = plotPart(fName, varargin)
 
-   if isempty(varargin)
-       % I still need initial values, even if I don't have arguments
-       optArgs = parseArgs; 
-   else
-       optArgs = parseArgs(varargin);
-   end
+   optArgs = parseArgs(varargin);
    
    fNameTokens = strsplit(fName, '_');
    
