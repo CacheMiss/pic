@@ -88,4 +88,5 @@ clear xy;
 
 histmat = zeros(ynbin,xnbin);
 histmat(xyuni-indexshift) = hstres;
+histmat = transpose(histmat);
 
