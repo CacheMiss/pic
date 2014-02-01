@@ -21,8 +21,10 @@ function ret = plotPart(fName, varargin)
    energyCold = massRatio * (coldP.vx.^2 + coldP.vy.^2 + coldP.vz.^2) / 2;
    
    dotScale = 20;
-   stdDevMultiplier = 3;
+   stdDevMultiplier = 4;
    numBins = optArgs.numBins;
+   kernelSize = 3;
+   kernel = ones(kernelSize,kernelSize) / kernelSize^2; % NxN mean kernel
    
    if size(hotP.x, 1) ~= 0 && optArgs.plotHot
        stdHotVx = std(hotP.vx);
@@ -60,6 +62,7 @@ function ret = plotPart(fName, varargin)
            xEdges = linspace(vxMinHot, vxMaxHot, numBins);
            yEdges = linspace(0, max(hotP.y), numBins);
            bins = hist2(hotP.vx, hotP.y, xEdges, yEdges);
+           bins = conv2(bins, kernel, 'same');
            if optArgs.logScale
                bins = log(bins);
            end
@@ -81,6 +84,7 @@ function ret = plotPart(fName, varargin)
            xEdges = linspace(vyMinHot, vyMaxHot, numBins);
            yEdges = linspace(0, max(hotP.y), numBins);
            bins = hist2(hotP.vx, hotP.y, xEdges, yEdges);
+           bins = conv2(bins, kernel, 'same');
            if optArgs.logScale
                bins = log(bins);
            end
@@ -102,6 +106,7 @@ function ret = plotPart(fName, varargin)
            xEdges = linspace(vxMinHot, vxMaxHot, numBins);
            yEdges = linspace(vyMinHot, vyMaxHot, numBins);
            bins = hist2(hotP.vx, hotP.vy, xEdges, yEdges);
+           bins = conv2(bins, kernel, 'same');
            if optArgs.logScale
                bins = log(bins);
            end
@@ -154,6 +159,7 @@ function ret = plotPart(fName, varargin)
            xEdges = linspace(vxMinCold, vxMaxCold, numBins);
            yEdges = linspace(0, max(coldP.y), numBins);
            bins = hist2(coldP.vx, coldP.y, xEdges, yEdges);
+           bins = conv2(bins, kernel, 'same');
            if optArgs.logScale
                bins = log(bins);
            end
@@ -175,6 +181,7 @@ function ret = plotPart(fName, varargin)
            xEdges = linspace(vyMinCold, vyMaxCold, numBins);
            yEdges = linspace(0, max(coldP.y), numBins);
            bins = hist2(coldP.vx, coldP.y, xEdges, yEdges);
+           bins = conv2(bins, kernel, 'same');
            if optArgs.logScale
                bins = log(bins);
            end
@@ -196,6 +203,7 @@ function ret = plotPart(fName, varargin)
            xEdges = linspace(vxMinCold, vxMaxCold, numBins);
            yEdges = linspace(vyMinCold, vyMaxCold, numBins);
            bins = hist2(coldP.vx, coldP.vy, xEdges, yEdges);
+           bins = conv2(bins, kernel, 'same');
            if optArgs.logScale
                bins = log(bins);
            end
