@@ -9,70 +9,7 @@ function ret = plotVxVyRange(fName, xMin, xMax, yMin, yMax, varargin)
    end
    
    optArgs = parseArgs(varargin);
-
-%    sizeOfFloat = 4;
    maxPlottableParticles = optArgs.maxPoints;
-%    sliceHot = 0;
-%    sliceCold = 0;
-
-%    numParticles = fread(f, 1, 'int32');
-%    numHot = fread(f, 1, 'int32');
-%    numHotCulled = floor(numHot / sliceHot);
-%    numCold = fread(f, 1, 'int32');
-%    numColdCulled = floor(numCold / sliceCold);
-%    dataStart = ftell(f);
-%    
-%    if optArgs.plotHot
-%        hotP = particleNull(numHot);
-%        nextSpace = 1;
-%        for i=1:numHot
-%           tmpX = fread(f, 1, 'float'); % Read x
-%           tmpY = fread(f, 1, 'float'); % Read y
-%           tmpVx = fread(f, 1, 'float'); % Read vx
-%           tmpVy = fread(f, 1, 'float'); % Read vy
-%           tmpVz = fread(f, 1, 'float'); % Read vz
-%           if (xMin <= tmpX) && (tmpX < xMax) && (yMin <= tmpY) && (tmpY < yMax)
-%               hotP.x(nextSpace) = tmpX;
-%               hotP.y(nextSpace) = tmpY;
-%               hotP.vx(nextSpace) = tmpVx;
-%               hotP.vy(nextSpace) = tmpVy;
-%               hotP.vz(nextSpace) = tmpVz;
-%               nextSpace = nextSpace + 1;
-%           end
-%        end
-%        numHotCulled = nextSpace - 1;
-%        hotP = particleTrim(hotP, numHotCulled);
-%    else
-%        hotP = particleNull(0);
-%    end
-%    
-%    if optArgs.plotCold
-%        fseek(f, dataStart, 'bof');
-%        fseek(f, sizeOfFloat * 5 * numHot, 'cof');
-%        coldP = particleNull(numCold);
-%        nextSpace = 1;
-%        for i=1:numCold
-%            tmpX = fread(f, 1, 'float'); % Read x
-%            tmpY = fread(f, 1, 'float'); % Read y
-%            tmpVx = fread(f, 1, 'float'); % Read vx
-%            tmpVy = fread(f, 1, 'float'); % Read vy
-%            tmpVz = fread(f, 1, 'float'); % Read vz
-%            if (xMin <= tmpX) && (tmpX < xMax) && (yMin <= tmpY) && (tmpY < yMax)
-%                coldP.x(nextSpace) = tmpX;
-%                coldP.y(nextSpace) = tmpY;
-%                coldP.vx(nextSpace) = tmpVx;
-%                coldP.vy(nextSpace) = tmpVy;
-%                coldP.vz(nextSpace) = tmpVz;
-%                nextSpace = nextSpace + 1;
-%            end
-%        end
-%        numColdCulled = nextSpace - 1;
-%        coldP = particleTrim(coldP, numColdCulled);
-%    else
-%        coldP = particleNull(0);
-%    end
-%    
-%    fclose(f);
    
    [hotP coldP] = loadParticles(fName, ...
        'enableCulling', false, ...
@@ -100,65 +37,6 @@ function ret = plotVxVyRange(fName, xMin, xMax, yMin, yMax, varargin)
        end
    end
    
-   stdDevMultiplier = 3;
-   
-   if optArgs.plotHot && numHotCulled ~= 0
-       stdHotVx = std(hotP.vx);
-       meanHotVx = mean(hotP.vx);
-       vxMaxHot = meanHotVx + stdHotVx * stdDevMultiplier;
-       vxMinHot = meanHotVx - stdHotVx * stdDevMultiplier;
-       stdHotVy = std(hotP.vy);
-       meanHotVy = mean(hotP.vy);
-       vyMaxHot = meanHotVy + stdHotVy * stdDevMultiplier;
-       vyMinHot = meanHotVy - stdHotVy * stdDevMultiplier;
-   else
-       stdHotVx = 1;
-       meanHotVx = 1;
-       vxMaxHot = 1;
-       vxMinHot = 0;
-       stdHotVy = 1;
-       meanHotVy = 1;
-       vyMaxHot = 1;
-       vyMinHot = 0;
-   end
-   
-   if optArgs.plotCold && numColdCulled ~= 0
-       stdColdVx = std(coldP.vx);
-       meanColdVx = mean(coldP.vx);
-       vxMaxCold = meanColdVx + stdColdVx * stdDevMultiplier;
-       vxMinCold = meanColdVx - stdColdVx * stdDevMultiplier;
-       stdColdVy = std(coldP.vy);
-       meanColdVy = mean(coldP.vy);
-       vyMaxCold = meanColdVy + stdColdVy * stdDevMultiplier;
-       vyMinCold = meanColdVy - stdColdVy * stdDevMultiplier;
-   else
-       stdColdVx = 1;
-       meanColdVx = 1;
-       vxMaxCold = 1;
-       vxMinCold = 0;
-       stdColdVy = 1;
-       meanColdVy = 1;
-       vyMaxCold = 1;
-       vyMinCold = 0;
-   end
-   
-   if optArgs.vxMax ~= Inf
-       vxMaxHot = optArgs.vxMax;
-       vxMaxCold = optArgs.vxMax;
-   end
-   if optArgs.vxMin ~= Inf
-       vxMinHot = optArgs.vxMin;
-       vxMinCold = optArgs.vxMin;
-   end
-   if optArgs.vyMax ~= Inf
-       vyMaxHot = optArgs.vyMax;
-       vyMaxCold = optArgs.vyMax;
-   end
-   if optArgs.vyMin ~= Inf
-       vyMinHot = optArgs.vyMin;
-       vyMinCold = optArgs.vyMin;
-   end
-   
    % Randomize these vectors for faster plotting
    if optArgs.plotHot
        hotP = particleMix(hotP);
@@ -167,300 +45,198 @@ function ret = plotVxVyRange(fName, xMin, xMax, yMin, yMax, varargin)
        coldP = particleMix(coldP);
    end
    
-   numBins = optArgs.numBins;
-   kernelSize = 3;
-   kernel = ones(kernelSize,kernelSize) / kernelSize^2; % NxN mean kernel
-   
-   if optArgs.plotHot && size(hotP.x, 1) ~= 0
-       if optArgs.plotVxY
-           % Hot Vx vs. Y
-           figureOrSubplot(optArgs.useSubplot, optArgs.subplotArgs);
-           %scatter(hotP.vx, hotP.y, 0.4);
-           xEdges = linspace(vxMinHot, vxMaxHot, numBins);
-           yEdges = linspace(yMin, yMax, numBins);
-           bins = hist2(hotP.vx, hotP.y, xEdges, yEdges);
-           bins = conv2(bins, kernel, 'same');
-           if optArgs.logScale
-               bins = log(bins);
-           end
-           contourf(xEdges, yEdges, bins);
-           if optArgs.showColorbar
-               colorbar;
-           end
-           xlabel('vx');
-           ylabel('y');
-           axis([vxMinHot vxMaxHot yMin yMax]);
-           if ~optArgs.useSubplot
-               fields = strsplit(fName, '_');
-               title(strcat([fields{1} ' hot ' fields{2} ' Vx x=' num2str(xMin) '-'  ...
-                   num2str(xMax) ' y=' num2str(yMin) '-' num2str(yMax)]));
-               fields = strsplit(fName, '_');
-               outFile = strcat(fields{1}, '_hot_vx_vs_y_x', num2str(xMin), ...
-                   '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
-                   '_', fields{2});
-               print('-dpng', outFile);
-           elseif~ strcmp(optArgs.subplotTitle, '')
-               title(optArgs.subplotTitle);
-           end
-       end
-       
-       if optArgs.plotVyY
-           % Hot Vy vs. Y
-           figureOrSubplot(optArgs.useSubplot, optArgs.subplotArgs);
-           %scatter(hotP.vy, hotP.y, 0.4);
-           xEdges = linspace(vyMinHot, vyMaxHot, numBins);
-           yEdges = linspace(yMin, yMax, numBins);
-           bins = hist2(hotP.vy, hotP.y, xEdges, yEdges);
-           bins = conv2(bins, kernel, 'same');
-           if optArgs.logScale
-               bins = log(bins);
-           end
-           contourf(xEdges, yEdges, bins);
-           if optArgs.showColorbar
-               colorbar;
-           end
-           xlabel('vy');
-           ylabel('y');
-           axis([vyMinHot vyMaxHot yMin yMax]);
-           if ~optArgs.useSubplot
-               fields = strsplit(fName, '_');
-               title(strcat([fields{1} ' hot ' fields{2} ' Vy x=' num2str(xMin) '-'  ...
-                   num2str(xMax) ' y=' num2str(yMin) '-' num2str(yMax)]));
-               outFile = strcat(fields{1}, '_hot_vy_vs_y_x', num2str(xMin), ...
-                   '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
-                   '_', fields{2});
-               print('-dpng', outFile);
-           elseif~ strcmp(optArgs.subplotTitle, '')
-               title(optArgs.subplotTitle);
-           end
-       end
-       
-       if optArgs.plotVxVy
-           % Hot Vx vs. Vy
-           %figure;
-           %scatter(hotP.vx, hotP.vy, 0.4);
-           figureOrSubplot(optArgs.useSubplot, optArgs.subplotArgs);
-           xEdges = linspace(vxMinHot, vxMaxHot, numBins);
-           yEdges = linspace(vyMinHot, vyMaxHot, numBins);
-           bins = hist2(hotP.vx, hotP.vy, xEdges, yEdges);
-           bins = conv2(bins, kernel, 'same');
-           if optArgs.logScale
-               bins = log(bins);
-           end
-           contourf(xEdges, yEdges, bins);
-           if optArgs.showColorbar
-               colorbar;
-           end
-           xlabel('vx');
-           ylabel('vy');
-           axis([vxMinHot vxMaxHot vyMinHot vyMaxHot]);
-           if ~optArgs.useSubplot
-               fields = strsplit(fName, '_');
-               title(strcat([fields{1} ' hot ' fields{2} ' Vy vs Vx x=' ...
-                   num2str(xMin) '-'  num2str(xMax) ' y=' num2str(yMin) '-' ...
-                   num2str(yMax)]));
-               outFile = strcat(fields{1}, '_hot_vy_vs_vx_x', num2str(xMin), ...
-                   '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
-                   '_', fields{2});
-               print('-dpng', outFile);
-           elseif~ strcmp(optArgs.subplotTitle, '')
-               title(optArgs.subplotTitle);
-           end
-       end
-       
-       if optArgs.plotVxLine ~= Inf
-           % Line plot vx ~= 0 vy
-           if ~optArgs.getVxLineData
-               figureOrSubplot(optArgs.useSubplot, optArgs.subplotArgs);
-           end
-           xEdges = linspace(vxMinHot, vxMaxHot, numBins);
-           yEdges = linspace(vyMinHot, vyMaxHot, numBins);
-           bins = hist2(hotP.vx, hotP.vy, xEdges, yEdges);
-           bins = conv2(bins, kernel, 'same');
-           if optArgs.logScale
-               bins = log(bins);
-           end
-           xValues = yEdges;
-           yValues = getAndAverageBins(bins, xEdges, optArgs.plotVxLine);
-           if ~optArgs.getVxLineData
-               plot(xValues, yValues);
-               if optArgs.logScale
-                   ylabel('numParticles');
-               else
-                   ylabel('numParticles');
-               end
-               xlabel('vy');
-               if ~optArgs.useSubplot
-                   fields = strsplit(fName, '_');
-                   title(strcat([fields{1} ' hot ' fields{2} ' Vy vs density Vx=' ...
-                       num2str(optArgs.plotVxLine) ' x=' ...
-                       num2str(xMin) '-'  num2str(xMax) ' y=' num2str(yMin) '-' ...
-                       num2str(yMax)]));
-                   outFile = strcat(fields{1}, '_hot_vy_vs_density_x', num2str(xMin), ...
-                       '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
-                       '_', fields{2});
-                   print('-dpng', outFile);
-               elseif~ strcmp(optArgs.subplotTitle, '')
-                   title(optArgs.subplotTitle);
-               end
-           else
-               ret.vxLineDataHot.x = xValues;
-               ret.vxLineDataHot.y = yValues;
-           end
-       end
+   if optArgs.plotHot && size(hotP.x, 1) ~= 0 && size(hotP.x, 2) ~= 0
+       ret.hot = plotParticles(fName, hotP, 'hot', xMin, xMax, yMin, yMax, optArgs);
    end
    
-   if optArgs.plotCold && size(coldP.x, 1) ~= 0
-       if optArgs.plotVxY
-           % Cold Vx vs. Y
-           figureOrSubplot(optArgs.useSubplot, optArgs.subplotArgs);
-           %scatter(coldP.vx, coldP.y, 0.4);
-           xEdges = linspace(vxMinCold, vxMaxCold, numBins);
-           yEdges = linspace(yMin, yMax, numBins);
-           bins = hist2(coldP.vx, coldP.y, xEdges, yEdges);
-           bins = conv2(bins, kernel, 'same');
-           if optArgs.logScale
-               bins = log(bins);
-           end
-           contourf(xEdges, yEdges, bins);
-           if optArgs.showColorbar
-               colorbar;
-           end
-           xlabel('vx');
-           ylabel('y');
-           axis([vxMinCold vxMaxCold yMin yMax]);
-           if ~optArgs.useSubplot
-               fields = strsplit(fName, '_');
-               title(strcat([fields{1} ' cold ' fields{2} ' Vx x=' num2str(xMin) '-'  ...
-                   num2str(xMax) ' y=' num2str(yMin) '-' num2str(yMax)]));
-               outFile = strcat(fields{1}, '_cold_vx_vs_y_x', num2str(xMin), ...
-                   '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
-                   '_', fields{2});
-               print('-dpng', outFile);
-           elseif~ strcmp(optArgs.subplotTitle, '')
-               title(optArgs.subplotTitle);
-           end
+   if optArgs.plotCold && size(coldP.x, 1) ~= 0 && size(coldP.x, 2) ~= 0
+       ret.cold = plotParticles(fName, coldP, 'cold', xMin, xMax, yMin, yMax, optArgs);
+   end
+end
+
+function ret = plotParticles(fName, p, descriptor, xMin, xMax, yMin, yMax, optArgs)
+    ret = struct();
+    stdDevMultiplier = 3;
+    numBins = optArgs.numBins;
+    kernelSize = 3;
+    kernel = ones(kernelSize,kernelSize) / kernelSize^2; % NxN mean kernel
+
+    if size(p.x, 1) ~= 0
+       stdVx = std(p.vx);
+       meanVx = mean(p.vx);
+       vxMax = meanVx + stdVx * stdDevMultiplier;
+       vxMin = meanVx - stdVx * stdDevMultiplier;
+       stdVy = std(p.vy);
+       meandVy = mean(p.vy);
+       vyMax = meandVy + stdVy * stdDevMultiplier;
+       vyMin = meandVy - stdVy * stdDevMultiplier;
+   else
+       vxMax = 1;
+       vxMin = 0;
+       vyMax = 1;
+       vyMin = 0;
+    end
+   
+    if optArgs.vxMax ~= Inf
+       vxMax = optArgs.vxMax;
+    end
+    if optArgs.vxMin ~= Inf
+       vxMin = optArgs.vxMin;
+    end
+    if optArgs.vyMax ~= Inf
+       vyMax = optArgs.vyMax;
+    end
+    if optArgs.vyMin ~= Inf
+       vyMin = optArgs.vyMin;
+    end
+
+    if optArgs.plotVxY
+       % Vx vs. Y
+       figureOrSubplot(optArgs.useSubplot, optArgs.subplotArgs);
+       xEdges = linspace(vxMin, vxMax, numBins);
+       yEdges = linspace(yMin, yMax, numBins);
+       bins = hist2(p.vx, p.y, xEdges, yEdges);
+       bins = conv2(bins, kernel, 'same');
+       if optArgs.logScale
+           bins = log(bins);
        end
-       
-       if optArgs.plotVyY
-           % Cold Vy vs. Y
+       contourf(xEdges, yEdges, bins);
+       if optArgs.showColorbar
+           colorbar;
+       end
+       xlabel('vx');
+       ylabel('y');
+       axis([vxMin vxMax yMin yMax]);
+       if ~optArgs.useSubplot
+           fields = strsplit(fName, '_');
+           title(strcat([fields{1} ' ' descriptor ' ' fields{2} ' Vx x=' num2str(xMin) '-'  ...
+               num2str(xMax) ' y=' num2str(yMin) '-' num2str(yMax)]));
+           outFile = strcat(fields{1}, '_', descriptor, '_vx_vs_y_x', num2str(xMin), ...
+               '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
+               '_', fields{2});
+           print('-dpng', outFile);
+       elseif~ strcmp(optArgs.subplotTitle, '')
+           title(optArgs.subplotTitle);
+       end
+   end
+
+   if optArgs.plotVyY
+       % Vy vs. Y
+       figureOrSubplot(optArgs.useSubplot, optArgs.subplotArgs);
+       xEdges = linspace(vyMin, vyMax, numBins);
+       yEdges = linspace(yMin, yMax, numBins);
+       bins = hist2(p.vy, p.y, xEdges, yEdges);
+       bins = conv2(bins, kernel, 'same');
+       if optArgs.logScale
+           bins = log(bins);
+       end
+       contourf(xEdges, yEdges, bins);
+       if optArgs.showColorbar
+           colorbar;
+       end
+       xlabel('vy');
+       ylabel('y');
+       axis([vyMin vyMax yMin yMax]);
+       if ~optArgs.useSubplot
+           fields = strsplit(fName, '_');
+           title(strcat([fields{1} ' ' descriptor ' ' fields{2} ' Vy x=' num2str(xMin) '-'  ...
+               num2str(xMax) ' y=' num2str(yMin) '-' num2str(yMax)]));
+           outFile = strcat(fields{1}, '_', descriptor, '_vy_vs_y_x', num2str(xMin), ...
+               '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
+               '_', fields{2});
+           print('-dpng', outFile);
+       elseif~ strcmp(optArgs.subplotTitle, '')
+           title(optArgs.subplotTitle);
+       end
+   end
+
+   if optArgs.plotVxVy
+       % Vx vs. Vy
+       figureOrSubplot(optArgs.useSubplot, optArgs.subplotArgs);
+       xEdges = linspace(vxMin, vxMax, numBins);
+       yEdges = linspace(vyMin, vyMax, numBins);
+       bins = hist2(p.vx, p.vy, xEdges, yEdges);
+       bins = conv2(bins, kernel, 'same');
+       if optArgs.logScale
+           bins = log(bins);
+       end
+       contourf(xEdges, yEdges, bins);
+       if optArgs.showColorbar
+           colorbar;
+       end
+       xlabel('vx');
+       ylabel('vy');
+       axis([vxMin vxMax vyMin vyMax]);
+       if ~optArgs.useSubplot
+           fields = strsplit(fName, '_');
+           title(strcat([fields{1} ' ' descriptor ' ' fields{2} ' Vy vs Vx x=' ...
+               num2str(xMin) '-'  num2str(xMax) ' y=' num2str(yMin) '-' ...
+               num2str(yMax)]));
+           outFile = strcat(fields{1}, '_', descriptor, '_vy_vs_vx_x', num2str(xMin), ...
+               '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
+               '_', fields{2});
+           print('-dpng', outFile);
+       elseif~ strcmp(optArgs.subplotTitle, '')
+           title(optArgs.subplotTitle);
+       end
+   end
+
+   if optArgs.plotVxLine ~= Inf
+       % Line plot vx ~= 0 vy
+       if ~optArgs.getVxLineData
            figureOrSubplot(optArgs.useSubplot, optArgs.subplotArgs);
-           %scatter(coldP.vy, coldP.y, 0.4);
-           xEdges = linspace(vyMinCold, vyMaxCold, numBins);
-           yEdges = linspace(yMin, yMax, numBins);
-           bins = hist2(coldP.vy, coldP.y, xEdges, yEdges);
-           bins = conv2(bins, kernel, 'same');
+       end
+       xEdges = linspace(vxMin, vxMax, numBins);
+       yEdges = linspace(vyMin, vyMax, numBins);
+       bins = hist2(p.vx, p.vy, xEdges, yEdges);
+       bins = conv2(bins, kernel, 'same');
+       if optArgs.logScale
+           bins = log(bins);
+       end
+       xValues = yEdges;
+       yValues = getAndAverageBins(bins, xEdges, optArgs.plotVxLine);
+       if ~optArgs.getVxLineData
+           plot(xValues, yValues);
            if optArgs.logScale
-               bins = log(bins);
-           end
-           contourf(xEdges, yEdges, bins);
-           if optArgs.showColorbar
-               colorbar;
+               ylabel('numParticles');
+           else
+               ylabel('numParticles');
            end
            xlabel('vy');
-           ylabel('y');
-           axis([vyMinCold vyMaxCold yMin yMax]);
            if ~optArgs.useSubplot
                fields = strsplit(fName, '_');
-               title(strcat([fields{1} ' cold ' fields{2} ' Vy x=' num2str(xMin) '-'  ...
-                   num2str(xMax) ' y=' num2str(yMin) '-' num2str(yMax)]));
-               title(strcat([fields{1} ' cold ' fields{2} ' Vy']));
-               outFile = strcat(fields{1}, '_cold_vy_vs_y_x', num2str(xMin), ...
-                   '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
-                   '_', fields{2});
-               print('-dpng', outFile);
-           elseif~ strcmp(optArgs.subplotTitle, '')
-               title(optArgs.subplotTitle);
-           end
-       end
-     
-       if optArgs.plotVxVy
-           % Cold Vx vs. Vy
-           figureOrSubplot(optArgs.useSubplot, optArgs.subplotArgs);
-           %scatter(coldP.vx, coldP.vy, 0.4);
-           xEdges = linspace(vxMinCold, vxMaxCold, numBins);
-           yEdges = linspace(vyMinCold, vyMaxCold, numBins);
-           bins = hist2(coldP.vx, coldP.vy, xEdges, yEdges);
-           bins = conv2(bins, kernel, 'same');
-           if optArgs.logScale
-               bins = log(bins);
-           end
-           contourf(xEdges, yEdges, bins);
-           if optArgs.showColorbar
-               colorbar;
-           end
-           xlabel('vx');
-           ylabel('vy');
-           axis([vxMinCold vxMaxCold vyMinCold vyMaxCold]);
-           if ~optArgs.useSubplot
-               fields = strsplit(fName, '_');
-               title(strcat([fields{1} ' cold ' fields{2} ' Vy vs Vx x=' ...
+               title(strcat([fields{1} ' ' descriptor ' ' fields{2} ' Vy vs density Vx=' ...
+                   num2str(optArgs.plotVxLine) ' x=' ...
                    num2str(xMin) '-'  num2str(xMax) ' y=' num2str(yMin) '-' ...
                    num2str(yMax)]));
-               title(strcat([fields{1} ' cold ' fields{2} ' Vy']));
-               outFile = strcat(fields{1}, '_cold_vy_vs_vx_x', num2str(xMin), ...
+               outFile = strcat(fields{1}, '_', descriptor, '_vy_vs_density_x', num2str(xMin), ...
                    '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
                    '_', fields{2});
                print('-dpng', outFile);
            elseif~ strcmp(optArgs.subplotTitle, '')
                title(optArgs.subplotTitle);
            end
+       else
+           ret.vxLineData.x = xValues;
+           ret.vxLineData.y = yValues;
        end
-       
-       if optArgs.plotVxLine ~= Inf
-           % Line plot vx ~= 0 vy
-           if ~optArgs.getVxLineData
-               figureOrSubplot(optArgs.useSubplot, optArgs.subplotArgs);
-           end
-           xEdges = linspace(vxMinCold, vxMaxCold, numBins);
-           yEdges = linspace(vyMinCold, vyMaxCold, numBins);
-           bins = hist2(coldP.vx, coldP.vy, xEdges, yEdges);
-           bins = conv2(bins, kernel, 'same');
-           if optArgs.logScale
-               bins = log(bins);
-           end
-           xValues = yEdges;
-           yValues = getAndAverageBins(bins, xEdges, optArgs.plotVxLine);
-           if ~optArgs.getVxLineData
-               plot(xValues, yValues);
-               if optArgs.logScale
-                   ylabel('numParticles');
-               else
-                   ylabel('numParticles');
-               end
-               xlabel('vy');
-               if ~optArgs.useSubplot
-                   fields = strsplit(fName, '_');
-                   title(strcat([fields{1} ' cold ' fields{2} ' Vy vs density Vx=' ...
-                       num2str(optArgs.plotVxLine) ' x=' ...
-                       num2str(xMin) '-'  num2str(xMax) ' y=' num2str(yMin) '-' ...
-                       num2str(yMax)]));
-                   outFile = strcat(fields{1}, '_cold_vy_vs_density_x', num2str(xMin), ...
-                       '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
-                       '_', fields{2});
-                   print('-dpng', outFile);
-               elseif~ strcmp(optArgs.subplotTitle, '')
-                   title(optArgs.subplotTitle);
-               end
-           else
-               ret.vxLineDataCold.x = xValues;
-               ret.vxLineDataCold.y = yValues;
-           end
-       end
-   end 
+   end
+end
+
+function ret = filterParticlesWithLogical(p, logical)
+   ret.x = p.x(logical);
+   ret.y = p.y(logical);
+   ret.vx = p.vx(logical);
+   ret.vy = p.vy(logical);
+   ret.vz = p.vz(logical);
 end
 
 function ret = filterParticles(p, xMin, xMax, yMin, yMax)
-   logicalArray = p.y >= yMin;
-   logicalArray = p.y(logicalArray) <= yMax;
-   logicalArray = p.x(logicalArray) >= xMin;
-   logicalArray = p.x(logicalArray) <= xMax;
-   
-   ret.x = p.x(logicalArray);
-   ret.y = p.y(logicalArray);
-   ret.vx = p.vx(logicalArray);
-   ret.vy = p.vy(logicalArray);
-   ret.vz = p.vz(logicalArray);
+   ret = p;
+   ret = filterParticlesWithLogical(ret, ret.y >= yMin);
+   ret = filterParticlesWithLogical(ret, ret.y <= yMax);
+   ret = filterParticlesWithLogical(ret, ret.x >= xMin);
+   ret = filterParticlesWithLogical(ret, ret.x <= xMax);
 end
 
 function ret = figureOrSubplot(useSubplot, subplotArgs)
@@ -518,7 +294,8 @@ function ret = parseArgs(args)
         'useSubplot', false, ...
         'subplotArgs', [], ...
         'subplotTitle', '', ...
-        'showColorbar', true ...
+        'showColorbar', true, ...
+        'plotDerivative', false ...
         );
     if ~isempty(args)
         i = 1;
