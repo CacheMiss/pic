@@ -10,69 +10,78 @@ function ret = plotVxVyRange(fName, xMin, xMax, yMin, yMax, varargin)
    
    optArgs = parseArgs(varargin);
 
-   sizeOfFloat = 4;
+%    sizeOfFloat = 4;
    maxPlottableParticles = optArgs.maxPoints;
-   sliceHot = 0;
-   sliceCold = 0;
+%    sliceHot = 0;
+%    sliceCold = 0;
 
-   numParticles = fread(f, 1, 'int32');
-   numHot = fread(f, 1, 'int32');
-   numHotCulled = floor(numHot / sliceHot);
-   numCold = fread(f, 1, 'int32');
-   numColdCulled = floor(numCold / sliceCold);
-   dataStart = ftell(f);
+%    numParticles = fread(f, 1, 'int32');
+%    numHot = fread(f, 1, 'int32');
+%    numHotCulled = floor(numHot / sliceHot);
+%    numCold = fread(f, 1, 'int32');
+%    numColdCulled = floor(numCold / sliceCold);
+%    dataStart = ftell(f);
+%    
+%    if optArgs.plotHot
+%        hotP = particleNull(numHot);
+%        nextSpace = 1;
+%        for i=1:numHot
+%           tmpX = fread(f, 1, 'float'); % Read x
+%           tmpY = fread(f, 1, 'float'); % Read y
+%           tmpVx = fread(f, 1, 'float'); % Read vx
+%           tmpVy = fread(f, 1, 'float'); % Read vy
+%           tmpVz = fread(f, 1, 'float'); % Read vz
+%           if (xMin <= tmpX) && (tmpX < xMax) && (yMin <= tmpY) && (tmpY < yMax)
+%               hotP.x(nextSpace) = tmpX;
+%               hotP.y(nextSpace) = tmpY;
+%               hotP.vx(nextSpace) = tmpVx;
+%               hotP.vy(nextSpace) = tmpVy;
+%               hotP.vz(nextSpace) = tmpVz;
+%               nextSpace = nextSpace + 1;
+%           end
+%        end
+%        numHotCulled = nextSpace - 1;
+%        hotP = particleTrim(hotP, numHotCulled);
+%    else
+%        hotP = particleNull(0);
+%    end
+%    
+%    if optArgs.plotCold
+%        fseek(f, dataStart, 'bof');
+%        fseek(f, sizeOfFloat * 5 * numHot, 'cof');
+%        coldP = particleNull(numCold);
+%        nextSpace = 1;
+%        for i=1:numCold
+%            tmpX = fread(f, 1, 'float'); % Read x
+%            tmpY = fread(f, 1, 'float'); % Read y
+%            tmpVx = fread(f, 1, 'float'); % Read vx
+%            tmpVy = fread(f, 1, 'float'); % Read vy
+%            tmpVz = fread(f, 1, 'float'); % Read vz
+%            if (xMin <= tmpX) && (tmpX < xMax) && (yMin <= tmpY) && (tmpY < yMax)
+%                coldP.x(nextSpace) = tmpX;
+%                coldP.y(nextSpace) = tmpY;
+%                coldP.vx(nextSpace) = tmpVx;
+%                coldP.vy(nextSpace) = tmpVy;
+%                coldP.vz(nextSpace) = tmpVz;
+%                nextSpace = nextSpace + 1;
+%            end
+%        end
+%        numColdCulled = nextSpace - 1;
+%        coldP = particleTrim(coldP, numColdCulled);
+%    else
+%        coldP = particleNull(0);
+%    end
+%    
+%    fclose(f);
    
-   if optArgs.plotHot
-       hotP = particleNull(numHot);
-       nextSpace = 1;
-       for i=1:numHot
-          tmpX = fread(f, 1, 'float'); % Read x
-          tmpY = fread(f, 1, 'float'); % Read y
-          tmpVx = fread(f, 1, 'float'); % Read vx
-          tmpVy = fread(f, 1, 'float'); % Read vy
-          tmpVz = fread(f, 1, 'float'); % Read vz
-          if (xMin <= tmpX) && (tmpX < xMax) && (yMin <= tmpY) && (tmpY < yMax)
-              hotP.x(nextSpace) = tmpX;
-              hotP.y(nextSpace) = tmpY;
-              hotP.vx(nextSpace) = tmpVx;
-              hotP.vy(nextSpace) = tmpVy;
-              hotP.vz(nextSpace) = tmpVz;
-              nextSpace = nextSpace + 1;
-          end
-       end
-       numHotCulled = nextSpace - 1;
-       hotP = particleTrim(hotP, numHotCulled);
-   else
-       hotP = particleNull(0);
-   end
-   
-   if optArgs.plotCold
-       fseek(f, dataStart, 'bof');
-       fseek(f, sizeOfFloat * 5 * numHot, 'cof');
-       coldP = particleNull(numCold);
-       nextSpace = 1;
-       for i=1:numCold
-           tmpX = fread(f, 1, 'float'); % Read x
-           tmpY = fread(f, 1, 'float'); % Read y
-           tmpVx = fread(f, 1, 'float'); % Read vx
-           tmpVy = fread(f, 1, 'float'); % Read vy
-           tmpVz = fread(f, 1, 'float'); % Read vz
-           if (xMin <= tmpX) && (tmpX < xMax) && (yMin <= tmpY) && (tmpY < yMax)
-               coldP.x(nextSpace) = tmpX;
-               coldP.y(nextSpace) = tmpY;
-               coldP.vx(nextSpace) = tmpVx;
-               coldP.vy(nextSpace) = tmpVy;
-               coldP.vz(nextSpace) = tmpVz;
-               nextSpace = nextSpace + 1;
-           end
-       end
-       numColdCulled = nextSpace - 1;
-       coldP = particleTrim(coldP, numColdCulled);
-   else
-       coldP = particleNull(0);
-   end
-   
-   fclose(f);
+   [hotP coldP] = loadParticles(fName, ...
+       'enableCulling', false, ...
+       'loadHot', optArgs.plotHot, ...
+       'loadCold', optArgs.plotCold);
+   hotP = filterParticles(hotP, xMin, xMax, yMin, yMax);
+   coldP = filterParticles(coldP, xMin, xMax, yMin, yMax);
+   numHotCulled = size(hotP.x, 1);
+   numColdCulled = size(coldP.x, 1);
    
    if optArgs.enableCulling
        if optArgs.plotHot && numHotCulled > maxPlottableParticles
@@ -441,6 +450,19 @@ function ret = plotVxVyRange(fName, xMin, xMax, yMin, yMax, varargin)
    end 
 end
 
+function ret = filterParticles(p, xMin, xMax, yMin, yMax)
+   logicalArray = p.y >= yMin;
+   logicalArray = p.y(logicalArray) <= yMax;
+   logicalArray = p.x(logicalArray) >= xMin;
+   logicalArray = p.x(logicalArray) <= xMax;
+   
+   ret.x = p.x(logicalArray);
+   ret.y = p.y(logicalArray);
+   ret.vx = p.vx(logicalArray);
+   ret.vy = p.vy(logicalArray);
+   ret.vz = p.vz(logicalArray);
+end
+
 function ret = figureOrSubplot(useSubplot, subplotArgs)
    if ~useSubplot
        ret = figure;
@@ -478,7 +500,7 @@ end
 function ret = parseArgs(args)
     ret = struct( ...
         'enableCulling', true, ...
-        'maxPoints', 4000, ...
+        'maxPoints', 64000, ...
         'plotHot', true, ...
         'plotCold', true, ...
         'numBins', 100, ...
@@ -490,6 +512,7 @@ function ret = parseArgs(args)
         'vxMin', Inf, ...
         'vyMax', Inf, ...
         'vyMin', Inf, ...
+        'getVxLineData', false, ...
         'plotVxLine', Inf, ...
         'getGxLineData', false, ...
         'useSubplot', false, ...
