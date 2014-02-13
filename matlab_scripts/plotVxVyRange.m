@@ -221,6 +221,38 @@ function ret = plotParticles(fName, p, descriptor, xMin, xMax, yMin, yMax, optAr
            ret.vxLineData.y = yValues;
        end
    end
+   
+   if optArgs.plotDerivative
+       figureOrSubplot(optArgs.useSubplot, optArgs.subplotArgs);
+       [xEdges, yEdges, bins] = ...
+           vxDerivative(p, vxMin, vxMax, vyMin, vyMax, numBins, kernel);
+       if optArgs.logScale
+           bins = log(bins);
+       end
+       surf(xEdges(2:end-2), yEdges(1:end-1), bins(1:end-1, 1:end-1));
+       if optArgs.showColorbar
+           colorbar;
+           if size(optArgs.derivativeRange, 1) ~= 0
+               caxis(optArgs.derivativeRange);
+           end
+       end
+       xlabel('vx');
+       ylabel('vy');
+       %axis([vxMin vxMax vyMin vyMax]);
+       axis([xEdges(2) xEdges(end-2) yEdges(1) yEdges(end-1)]);
+       if ~optArgs.useSubplot
+           fields = strsplit(fName, '_');
+           title(strcat([fields{1} ' ' descriptor ' ' fields{2} ' \partialF/\partialV_{x} x=' ...
+               num2str(xMin) '-'  num2str(xMax) ' y=' num2str(yMin) '-' ...
+               num2str(yMax)]));
+           outFile = strcat(fields{1}, '_', descriptor, '_dVx_x', num2str(xMin), ...
+               '-', num2str(xMax), '_y', num2str(yMin), '-', num2str(yMax), ...
+               '_', fields{2});
+           print('-dpng', outFile);
+       elseif~ strcmp(optArgs.subplotTitle, '')
+           title(optArgs.subplotTitle);
+       end
+   end
 end
 
 function ret = filterParticlesWithLogical(p, logical)
@@ -232,11 +264,11 @@ function ret = filterParticlesWithLogical(p, logical)
 end
 
 function ret = filterParticles(p, xMin, xMax, yMin, yMax)
-   ret = p;
-   ret = filterParticlesWithLogical(ret, ret.y >= yMin);
-   ret = filterParticlesWithLogical(ret, ret.y <= yMax);
-   ret = filterParticlesWithLogical(ret, ret.x >= xMin);
-   ret = filterParticlesWithLogical(ret, ret.x <= xMax);
+   logArray = p.y >= yMin & ...
+              p.y <= yMax & ...
+              p.x >= xMin & ...
+              p.x <= xMax;
+   ret = filterParticlesWithLogical(p, logArray);
 end
 
 function ret = figureOrSubplot(useSubplot, subplotArgs)
@@ -264,6 +296,21 @@ function ret = getAndAverageBins(binList, xEdges, xValue)
        end
    end
    ret = binList(:,first) + binList(:,second);
+end
+
+function [xEdges, yEdges, bins] = vxDerivative(p, vxMin, vxMax, vyMin, vyMax, numBins, kernel)
+   xEdges = linspace(vxMin, vxMax, numBins);
+   yEdges = linspace(vyMin, vyMax, numBins);
+   % Bin all the values
+   tmpBins = hist2(p.vx, p.vy, xEdges, yEdges);
+   % Smooth the bins with an average filter
+   tmpBins = conv2(tmpBins, kernel, 'same');
+   
+   % Calculate the derivative
+   bins = (tmpBins(:, 3:end) - tmpBins(:, 1:end-2)) ./ tmpBins(:, 2:end-1) / 2 ;
+   % Remove Infinities and Nans. These are from cells with a value of 0
+   bins(isinf(bins)) = 0;
+   bins(isnan(bins)) = 0;
 end
 
 function ret = clearPlotFlags(options)
@@ -295,7 +342,8 @@ function ret = parseArgs(args)
         'subplotArgs', [], ...
         'subplotTitle', '', ...
         'showColorbar', true, ...
-        'plotDerivative', false ...
+        'plotDerivative', false, ...
+        'derivativeRange', [] ...
         );
     if ~isempty(args)
         i = 1;
@@ -356,6 +404,15 @@ function ret = parseArgs(args)
                     firstClear = true;
                 end
                 ret.plotVxLine = args{i+1};
+                i = i + 1;
+            elseif strcmp(args{i}, 'plotDerivative')
+                if ~firstClear
+                    ret = clearPlotFlags(ret);
+                    firstClear = true;
+                end
+                ret.plotDerivative = true;
+            elseif strcmp(args{i}, 'derivativeRange')
+                ret.derivativeRange = args{i+1};
                 i = i + 1;
             elseif strcmp(args{i}, 'getVxLineData')
                 ret.getVxLineData = true;
