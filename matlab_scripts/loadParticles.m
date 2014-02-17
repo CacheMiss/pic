@@ -2,7 +2,7 @@ function [hot cold] = loadParticles(fileName, varargin)
    f = fopen(fileName, 'rb');
 
    if f <= 0
-      error('Unable to open "%s"\n', fName);
+      error('Unable to open "%s"\n', fileName);
    end
    
    optArgs = parseArgs(varargin);
@@ -53,44 +53,36 @@ function [hot cold] = loadParticles(fileName, varargin)
    % Store the location of the beginning of the hot particles
    dataStart = ftell(f);
    
-   floatsPerPart = 5;
-   
    if optArgs.loadHot
-       % Read hot particles
-       skipBytes = sizeOfFloat * ...
-           (floatsPerPart - 1 + floatsPerPart * sliceHot);
-       hot.x = fread(f, maxHot, 'float', skipBytes);
-       advanceToField(f, dataStart, 2);
-       hot.y = fread(f, maxHot, 'float', skipBytes);
-       advanceToField(f, dataStart, 3);
-       hot.vx = fread(f, maxHot, 'float', skipBytes);
-       advanceToField(f, dataStart, 4);
-       hot.vy = fread(f, maxHot, 'float', skipBytes);
-       advanceToField(f, dataStart, 5);
-       hot.vz = fread(f, maxHot, 'float', skipBytes);
+       hot = readParticles(f, maxHot, sliceHot);
    end
 
    if optArgs.loadCold
        % Reposition file pointer to the beginning of the cold particles
        fseek(f, dataStart, 'bof');
        fseek(f, sizeOfFloat * 5 * numHot, 'cof');
-       % Store the location of the beginning of the cold particles
-       dataStart = ftell(f);
-
-       skipBytes = sizeOfFloat * ...
-           (floatsPerPart - 1 + floatsPerPart * sliceCold);
-       cold.x = fread(f, maxCold, 'float', skipBytes);
-       advanceToField(f, dataStart, 2);
-       cold.y = fread(f, maxCold, 'float', skipBytes);
-       advanceToField(f, dataStart, 3);
-       cold.vx = fread(f, maxCold, 'float', skipBytes);
-       advanceToField(f, dataStart, 4);
-       cold.vy = fread(f, maxCold, 'float', skipBytes);
-       advanceToField(f, dataStart, 5);
-       cold.vz = fread(f, maxCold, 'float', skipBytes);
+       
+       cold = readParticles(f, maxCold, sliceCold);
    end
    
    fclose(f);
+end
+
+function ret = readParticles(f, numParticles, slice)
+       floatsPerPart = 5;
+       sizeOfFloat = 4;
+       skipBytes = sizeOfFloat * ...
+           (floatsPerPart - 1 + floatsPerPart * (slice-1));
+       dataStart = ftell(f);
+       ret.x = fread(f, numParticles, 'float', skipBytes);
+       advanceToField(f, dataStart, 2);
+       ret.y = fread(f, numParticles, 'float', skipBytes);
+       advanceToField(f, dataStart, 3);
+       ret.vx = fread(f, numParticles, 'float', skipBytes);
+       advanceToField(f, dataStart, 4);
+       ret.vy = fread(f, numParticles, 'float', skipBytes);
+       advanceToField(f, dataStart, 5);
+       ret.vz = fread(f, numParticles, 'float', skipBytes);
 end
 
 function advanceToField(f, start, fieldNum)
