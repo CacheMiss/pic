@@ -535,8 +535,6 @@ void loadPrevSimState(const CommandlineOptions &options,
                       unsigned int &numIonHot, unsigned int &numIonCold,
                       const unsigned int allocIncrement)
 {
-   const unsigned int FPPF = 6; // Floats Per Particle File
-   const unsigned int FPPM = 5; // Floats Per Particle Memory
    const std::string& loadDir = options.getRestartDir();
 
    SimulationState &simState(SimulationState::getRef());
