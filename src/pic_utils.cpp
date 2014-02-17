@@ -87,20 +87,20 @@ void outinfo(const std::string &fname,
              int niid,
              bool first)
 {
-   char name[100];
+   std::stringstream name;
    FILE *fp;
-   sprintf(name,"%s/%s",outputPath.c_str(), fname.c_str(), idx_nm);
+   name << outputPath << "/" << fname;
    if(!first)
    {
-      fp = fopen(name, "a");
+      fp = fopen(name.str().c_str(), "a");
    }
    else
    {
-      fp = fopen(name, "w");
+      fp = fopen(name.str().c_str(), "w");
    }
    if(fp==NULL)
    {
-      printf("Cannot open '%s' file for writing\n",name);
+      printf("Cannot open '%s' file for writing\n",name.str().c_str());
       exit(1);
    }
    fprintf(fp,"%d\t%f\t%d\t%d\n",idx_nm,time,need,niid);
