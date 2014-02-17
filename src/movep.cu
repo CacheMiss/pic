@@ -193,10 +193,10 @@ void moveParticles(float2 d_partLoc[], float3 d_partVel[],
          // Interpolate the X component of the magnetic field from the
          // four surrounding grid points using linear interpolation then
          // normalize the eresult.
-         bxm = a1 * tex2D(texBxm, nj+1, nii+1) +
+         bxm = (a1 * tex2D(texBxm, nj+1, nii+1) +
             a2 * tex2D(texBxm, nj, nii+1) +
             a3 * tex2D(texBxm, nj+1, nii) +
-            a4 * tex2D(texBxm, nj, nii) / D_TOTA;
+            a4 * tex2D(texBxm, nj, nii)) / D_TOTA;
          // Interpolate the Y component of the magnetic field from the
          // four surrounding grid points using linear interpolation then
          // normalize the result
