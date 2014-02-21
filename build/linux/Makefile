@@ -26,7 +26,6 @@ OBJ= \
    $(OBJDIR)/pitched_ptr.o \
    $(OBJDIR)/precisiontimer.o \
    $(OBJDIR)/simulation_state.o \
-   $(OBJDIR)/sort_thread.o \
 
 CUOBJ= \
    $(OBJDIR)/dens.o \
