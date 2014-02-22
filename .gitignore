@@ -1,6 +1,7 @@
 *~
 run_output/*
 build/windows/Win32*
+build/linux/Makefile
 *.swp
 *sewells.user
 *.swo
