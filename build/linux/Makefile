@@ -1,5 +1,5 @@
 ROOT=../..
-CUDADIR=/opt/apps/cuda/5.0
+CUDADIR=/opt/apps/cuda/5.5
 #BOOSTDIR=/opt/apps/intel13/boost/1.51.0
 BOOSTDIR=/home1/02498/sewells/boost
 #CUDADIR=/usr/local/cuda
