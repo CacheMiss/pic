@@ -505,10 +505,10 @@ bool checkConfiguration(const std::string& fileName,
       {
          success &= checkConfigValue(inFile, "OOB_PARTICLE", OOB_PARTICLE);
       }
-      else if(line == "SORT_INTERVAL")
-      {
-         success &= checkConfigValue(inFile, "SORT_INTERVAL", SORT_INTERVAL);
-      }
+      //else if(line == "SORT_INTERVAL")
+      //{
+      //   success &= checkConfigValue(inFile, "SORT_INTERVAL", SORT_INTERVAL);
+      //}
       else if(line == "MAX_THREADS_PER_BLOCK")
       {
          success &= checkConfigValue(inFile, "MAX_THREADS_PER_BLOCK", MAX_THREADS_PER_BLOCK);
