@@ -60,29 +60,29 @@ function plotRunHistograph(data, tag)
        data.potentTime + ...
        data.fieldTime + ...
        data.moveTime;
-   move = data.moveTime ./ iterationTimes;
+   field = data.fieldTime ./ iterationTimes;
+   move = data.moveTime ./ iterationTimes + field;
    dens = data.densTime ./ iterationTimes + move;
-   field = data.fieldTime ./ iterationTimes + dens;
-   potent = data.potentTime ./ iterationTimes + field;
+   potent = data.potentTime ./ iterationTimes + dens;
    inject = ones(1, size(dens,1));
    
    injectColor = [1,0,0];
    densColor = [0.2,0.8,0];
    potentColor = [0,0.2,0.8];
-   fieldColor = [0.8, 0.8, 0.8];
-   moveColor = [0.2, 0.2, 0.2];
+   moveColor = [0.8, 0.8, 0.8];
+   fieldColor = [0.2, 0.2, 0.2];
    
    figure;
    area(data.simTime, inject, 'FaceColor', injectColor);
    hold on;
    area(data.simTime, potent, 'FaceColor', potentColor);
-   area(data.simTime, field, 'FaceColor', fieldColor);
    area(data.simTime, dens, 'FaceColor', densColor);
    area(data.simTime, move, 'FaceColor', moveColor);
+   area(data.simTime, field, 'FaceColor', fieldColor);
    title(strcat([tag ' Runtime']));
    xlabel('Sim Time');
    ylabel('Runtime Division');
-   legend('Inject', 'Potent', 'Field', 'Dens', 'Move');
+   legend('Inject', 'Potent', 'Dens', 'Move', 'Field');
    hold off;
 end
 
