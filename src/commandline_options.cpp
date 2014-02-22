@@ -48,6 +48,8 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
        ("inject-width", po::value<unsigned int>(&m_injectWidth)->default_value(0), "The width of the injection area for cold particles")
        ("restart-dir", po::value<std::string>(&m_restartDir)->default_value(""),
         "The directory the files to restart from are located in.")
+       ("restart-idx", po::value<unsigned int>(&m_restartIdx)->default_value(0),
+        "The log index to restart from. This must be used in conjunction with --restart-dir.")
        ("bound-check", po::bool_switch(&m_particleBoundCheck)->default_value(false),
         "Debug option to ensure all particles remain in the grid.")
         ("output-path,o", po::value<std::string>(&m_outputPath)->default_value("run_output"), "The folder to write results to")

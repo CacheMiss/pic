@@ -539,6 +539,9 @@ void loadPrevSimState(const CommandlineOptions &options,
 
    SimulationState &simState(SimulationState::getRef());
 
+   unsigned int index;
+   unsigned int numEle;
+   unsigned int numIon;
    std::string eleName;
    std::string ionName;
 
@@ -568,53 +571,83 @@ void loadPrevSimState(const CommandlineOptions &options,
       }
    }
 
-   if(!boost::filesystem::exists(infoPath))
+   if(options.getRestartIdx() == 0)
    {
-      std::cerr << "ERROR: " << infoPath.string() << " does not exist!" << std::endl;
-      exit(1);
+      if(!boost::filesystem::exists(infoPath))
+      {
+         std::cerr << "ERROR: " << infoPath.string() << " does not exist!" << std::endl;
+         exit(1);
+      }
+
+      // Now I need to find the right files to load
+      std::ifstream infoF(infoPath.string().c_str(), std::ios::binary);
+      infoF.seekg(-1, std::ios_base::end);
+      std::stringstream infoStream;
+      std::string infoLine;
+      bool foundFiles = false;
+
+      infoLine = getPrevLine(infoF);
+      infoStream << infoLine;
+      while(!foundFiles && infoLine != "")
+      {
+         infoStream >> simState.iterationNum >> simState.simTime >> numEle >> numIon;
+         index = simState.iterationNum;
+         std::stringstream s;
+         s << "ele_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << index;
+         eleName = s.str();
+         s.str("");
+         s << "ion_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << index;
+         ionName = s.str();
+         elePath = boost::filesystem::path(loadDir) / eleName;
+         ionPath = boost::filesystem::path(loadDir) / ionName;
+
+         if(boost::filesystem::exists(elePath) &&
+            boost::filesystem::exists(ionPath))
+         {
+            foundFiles = true;
+         }
+         infoLine.clear();
+         infoLine = getPrevLine(infoF);
+   		infoStream.clear();
+         infoStream << infoLine;
+      }
+
+      if(infoLine == "")
+      {
+         std::cerr << "ERROR: " << infoPath.string() 
+            << " is either empty or does not reference any ele or ion files that exist." << std::endl;
+         exit(1);
+      }
    }
-
-   // Now I need to find the right files to load
-   std::ifstream infoF(infoPath.string().c_str(), std::ios::binary);
-   infoF.seekg(-1, std::ios_base::end);
-   std::stringstream infoStream;
-   std::string infoLine;
-   bool foundFiles = false;
-   unsigned int numEle;
-   unsigned int numIon;
-   unsigned int index;
-
-   infoLine = getPrevLine(infoF);
-   infoStream << infoLine;
-   while(!foundFiles && infoLine != "")
+   else
    {
-      infoStream >> simState.iterationNum >> simState.simTime >> numEle >> numIon;
-      index = simState.iterationNum;
+      if(options.getOutputPath() == options.getRestartDir())
+      {
+         std::cerr << "ERROR: When using --restart-idx, you must specify an output path which "
+            << "is different from the path specified in --restart-dir." << std::endl;
+         exit(1);
+      }
       std::stringstream s;
-      s << "ele_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << index;
+      s << "ele_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << options.getRestartIdx();
       eleName = s.str();
       s.str("");
-      s << "ion_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << index;
+      s << "ion_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << options.getRestartIdx();
       ionName = s.str();
       elePath = boost::filesystem::path(loadDir) / eleName;
       ionPath = boost::filesystem::path(loadDir) / ionName;
 
-      if(boost::filesystem::exists(elePath) &&
-         boost::filesystem::exists(ionPath))
+      if(!boost::filesystem::exists(elePath))
       {
-         foundFiles = true;
+         std::cerr << "ERROR: " << eleName << " does not exist!" << std::endl;
+         exit(1);
       }
-      infoLine.clear();
-      infoLine = getPrevLine(infoF);
-		infoStream.clear();
-      infoStream << infoLine;
-   }
-
-   if(infoLine == "")
-   {
-      std::cerr << "ERROR: " << infoPath.string() 
-         << " is either empty or does not reference any ele or ion files that exist." << std::endl;
-      exit(1);
+      if(!boost::filesystem::exists(ionPath))
+      {
+         std::cerr << "ERROR: " << ionName << " does not exist!" << std::endl;
+         exit(1);
+      }
+      index = options.getRestartIdx();
+      simState.iterationNum = options.getRestartIdx();
    }
 
    std::cout << "Restarting run from index " << index << std::endl;

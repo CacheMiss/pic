@@ -26,6 +26,7 @@ class CommandlineOptions
    inline int getNx1() const;
    inline int getNy1() const;
    inline const std::string& getRestartDir() const;
+   inline unsigned int getRestartIdx() const;
    inline float getSigmaHe() const;
    inline float getSigmaCe() const;
    inline float getSigmaHi() const;
@@ -63,6 +64,7 @@ class CommandlineOptions
    bool m_uniformP0;
    unsigned int m_injectWidth;
    std::string m_restartDir;
+   unsigned int m_restartIdx;
    bool m_particleBoundCheck;
    std::string m_outputPath;
 };
@@ -95,6 +97,11 @@ inline int CommandlineOptions::getNy1() const
 inline const std::string& CommandlineOptions::getRestartDir() const
 {
    return m_restartDir;
+}
+
+inline unsigned int CommandlineOptions::getRestartIdx() const
+{
+   return m_restartIdx;
 }
 
 inline float CommandlineOptions::getSigmaHe() const

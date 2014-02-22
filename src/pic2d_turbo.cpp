@@ -193,8 +193,8 @@ void executePic(int argc, char *argv[])
       printf("INFO: Loaded %d cold electrons\n", simState.numEleCold);
       printf("INFO: Loaded %d hot ions\n", simState.numIonHot);
       printf("INFO: Loaded %d cold ions\n", simState.numIonCold);
+      simState.simTime =  (simState.iterationNum * LF + 1) * DELT;
       simState.iterationNum++;
-      simState.simTime += DELT;
       lfd = 0;
       lfdint = 0;
       ind = simState.iterationNum / LF + 1;
