@@ -1,7 +1,7 @@
 ROOT=../..
 CUDADIR=
 BOOSTDIR=
-TBB=/home1/02498/sewells/tbb
+TBB=
 SRC=$(ROOT)/src
 INC=$(ROOT)/inc
 BINDIR=$(ROOT)/bin
