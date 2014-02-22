@@ -67,10 +67,43 @@ void printFreeMem()
              << "%) of device memory is free." << std::endl;
 }
 
-void executePic(int argc, char *argv[])
+void generateAndParseFakeArgs(CommandlineOptions &options, const char* exeName, const char* fileName)
+{
+   std::ifstream f(fileName);
+   std::string line;
+
+   std::vector<std::string> args;
+   std::vector<const char*> fakeArgv;
+
+   std::string exeNameStr = exeName;
+
+   while(f)
+   {
+      std::getline(f, line);
+      std::size_t idx = line.find_first_not_of(' ');
+      if(idx != std::string::npos && line[idx] != '#')
+      {
+         args.push_back(line);
+      }
+   }
+   for(std::size_t i = 0; i < args.size(); i++)
+   {
+      fakeArgv.push_back(args[i].c_str());
+   }
+   options.parseArguments(static_cast<int>(fakeArgv.size()), &fakeArgv[0]);
+}
+
+void executePic(int argc, const char *argv[])
 {
    CommandlineOptions options;
-   options.parseArguments(argc, argv);
+   if(argc == 2 && argv[1][0] != '-')
+   {
+      generateAndParseFakeArgs(options, argv[0], argv[1]);
+   }
+   else
+   {
+      options.parseArguments(argc, argv);
+   }
 
    // Create output directory if necessary
    createOutputDir(outputPath.c_str());
@@ -201,12 +234,15 @@ void executePic(int argc, char *argv[])
       percentComplete = (int) simState.iterationNum / percentSize;
 
       // Restore the random number generator state
-      std::cout << "Restoring random number state... ";
-      for(unsigned int i = 0; i < simState.iterationNum; i++)
+      if(!options.getDisableRandRestore())
       {
-         curandGenerateUniform(randGenerator, dev_randTable.getPtr(), neededRands);
+         std::cout << "Restoring random number state... ";
+         for(unsigned int i = 0; i < simState.iterationNum; i++)
+         {
+            curandGenerateUniform(randGenerator, dev_randTable.getPtr(), neededRands);
+         }
+         std::cout << "Finished!" << std::endl;
       }
-      std::cout << "Finished!" << std::endl;
 #ifdef DEBUG_TRACE
       std::cout << "previous run data loaded" << std::endl;
 #endif
@@ -677,7 +713,7 @@ void executePic(int argc, char *argv[])
 
 }
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
    try
    {

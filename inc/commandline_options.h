@@ -19,7 +19,7 @@ class CommandlineOptions
    public:
    CommandlineOptions();
    ~CommandlineOptions();
-   bool parseArguments(int argv, char * argc[]);
+   bool parseArguments(int argv, const char * argc[]);
    inline float getMaxSimTime() const;
    inline bool getLogInAscii() const;
    inline int getLogInterval() const;
@@ -41,6 +41,7 @@ class CommandlineOptions
    inline bool getUniformP0() const;
    inline unsigned int getInjectWidth() const;
    inline std::string getOutputPath() const;
+   inline bool getDisableRandRestore() const;
 
    private:
    po::options_description *m_description;
@@ -67,6 +68,7 @@ class CommandlineOptions
    unsigned int m_restartIdx;
    bool m_particleBoundCheck;
    std::string m_outputPath;
+   bool m_disableRandRestore;
 };
 
 inline float CommandlineOptions::getMaxSimTime() const
@@ -172,6 +174,11 @@ inline float CommandlineOptions::getSigmaHePerp() const
 inline float CommandlineOptions::getSigmaHiPerp() const
 {
    return m_sigmaHiPerp;
+}
+
+inline bool CommandlineOptions::getDisableRandRestore() const
+{
+   return m_disableRandRestore;
 }
 
 #endif

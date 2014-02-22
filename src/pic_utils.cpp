@@ -151,7 +151,7 @@ bool verifyParticles(const float2 partLoc[], std::size_t size,
    return ret;
 }
 
-void saveConfiguration(int argc, char* argv[], 
+void saveConfiguration(int argc, const char* argv[], 
                        const CommandlineOptions &options, 
                        const std::string& fileName)
 {

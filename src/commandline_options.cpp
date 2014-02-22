@@ -15,7 +15,7 @@ CommandlineOptions::~CommandlineOptions()
 {
 }
 
-bool CommandlineOptions::parseArguments(int argc, char * argv[])
+bool CommandlineOptions::parseArguments(int argc, const char* argv[])
 {
    bool returnVal = true;
 
@@ -52,13 +52,15 @@ bool CommandlineOptions::parseArguments(int argc, char * argv[])
         "The log index to restart from. This must be used in conjunction with --restart-dir.")
        ("bound-check", po::bool_switch(&m_particleBoundCheck)->default_value(false),
         "Debug option to ensure all particles remain in the grid.")
-        ("output-path,o", po::value<std::string>(&m_outputPath)->default_value("run_output"), "The folder to write results to")
+       ("output-path,o", po::value<std::string>(&m_outputPath)->default_value("run_output"), "The folder to write results to")
+       ("disable-rand-restore", po::bool_switch(&m_disableRandRestore)->default_value(false),
+        "Do not restore the random number state when loading a run")
    ;
    try
    {
       po::store(po::parse_command_line(argc, argv, *m_description), *m_vm);
    }
-   catch (po::error err)
+   catch (po::error& err)
    {
       errExit(err.what());
    }

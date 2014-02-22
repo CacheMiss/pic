@@ -25,7 +25,7 @@ void outinfo(const std::string &fname,
 void createOutputDir(const char *);
 bool fileExists(const std::string &fileName);
 void resizeDim3(dim3 &rhs, std::size_t x, std::size_t y=1, std::size_t z=1);
-void saveConfiguration(int argc, char* argv[], 
+void saveConfiguration(int argc, const char* argv[], 
                        const CommandlineOptions &options, 
                        const std::string& fileName);
 bool checkConfiguration(const std::string& fileName,
