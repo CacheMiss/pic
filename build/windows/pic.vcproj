@@ -55,7 +55,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(CUDA_INC_PATH)&quot;;&quot;$(SolutionDir)\..\..\inc&quot;;&quot;$(BOOST)&quot;;&quot;$(INTEL_TBB)/include&quot;"
+				AdditionalIncludeDirectories="&quot;$(CUDA_PATH)\include&quot;;&quot;$(SolutionDir)\..\..\inc&quot;;&quot;$(BOOST)&quot;;&quot;$(INTEL_TBB)/include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -140,7 +140,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(CUDA_INC_PATH)&quot;;&quot;$(SolutionDir)\..\..\inc&quot;;&quot;$(BOOST)&quot;;&quot;$(INTEL_TBB)/include&quot;"
+				AdditionalIncludeDirectories="&quot;$(CUDA_PATH)\include&quot;;&quot;$(SolutionDir)\..\..\inc&quot;;&quot;$(BOOST)&quot;;&quot;$(INTEL_TBB)/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
