@@ -96,9 +96,16 @@ void generateAndParseFakeArgs(CommandlineOptions &options, const char* exeName, 
 void executePic(int argc, const char *argv[])
 {
    CommandlineOptions options;
-   if(argc == 2 && argv[1][0] != '-' && boost::filesystem::exists(argv[1]))
+   if(argc == 2 && argv[1][0] != '-')
    {
-      generateAndParseFakeArgs(options, argv[0], argv[1]);
+      if(boost::filesystem::exists(argv[1]))
+      {
+         generateAndParseFakeArgs(options, argv[0], argv[1]);
+      }
+      else
+      {
+         std::cerr << "ERROR: " << argv[1] << " does not exist!" << std::endl;
+      }
    }
    else
    {
