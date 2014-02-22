@@ -119,24 +119,26 @@ class Array2d
       memcpy(array, rhs, rows*columns*sizeof(Type));
    }
 
-   void operator=(const Array2d<Type, StorageType> &rhs)
+   Array2d<Type>& operator=(const Array2d<Type, StorageType> &rhs)
    {
       if(&rhs == this)
       {
-         return;
+         return *this;
       }
       numRows = rhs.numRows;
       numColumns = rhs.numColumns;
       array = rhs.array;
+      return *this;
    }
 
-   void operator=(const StorageType &rhs)
+   Array2d<Type>& operator=(const StorageType &rhs)
    {
       assert(rhs.size() == array.size());
       array = rhs;
+      return *this;
    }
 
-   void operator=(const DevMem<Type> &rhs)
+   Array2d<Type>& operator=(const DevMem<Type> &rhs)
    {
       cudaError_t error;
       assert(rhs.size() == array.size());
@@ -149,6 +151,17 @@ class Array2d
          assert(error == cudaSuccess);
          exit(1);
       } 
+      return *this;
+   }
+
+   template<class Alloc>
+   Array2d<Type>& operator=(const PitchedPtr<Type, Alloc> &rhs)
+   {
+      checkCuda(cudaMemcpy2D(&array[0], rhs.getWidthBytes(), 
+                             reinterpret_cast<void*>(rhs.getPtr().ptr), rhs.getPitch(), 
+                             rhs.getWidthBytes(), rhs.getY(), 
+                             cudaMemcpyDeviceToHost));
+      return *this;
    }
 
    void loadRows(const DevMem<Type> &rhs, const unsigned int numRows)

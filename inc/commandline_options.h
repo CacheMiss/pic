@@ -17,26 +17,32 @@ namespace po = boost::program_options;
 class CommandlineOptions
 {
    public:
+   CommandlineOptions();
    ~CommandlineOptions();
-   static CommandlineOptions & getRef();
    bool parseArguments(int argv, char * argc[]);
    inline float getMaxSimTime() const;
    inline bool getLogInAscii() const;
    inline int getLogInterval() const;
    inline int getNx1() const;
    inline int getNy1() const;
-   inline unsigned int getRestartPoint() const;
    inline const std::string& getRestartDir() const;
-   inline float getSigma() const;
-   inline float getSigma1() const;
-   inline float getSigma2() const;
-   inline float getSigma3() const;
+   inline unsigned int getRestartIdx() const;
+   inline float getSigmaHe() const;
+   inline float getSigmaCe() const;
+   inline float getSigmaHi() const;
+   inline float getSigmaCi() const;
+   inline float getSigmaHePerp() const;
+   inline float getSigmaHiPerp() const;
+   inline float getSigmaCeSecondary() const;
+   inline double getPercentageSecondary() const;
    inline bool  getParticleBoundCheck() const;
-   void saveOptions(const char fileName[]) const;
+   inline float getB0() const;
+   inline double getP0() const;
+   inline bool getUniformP0() const;
+   inline unsigned int getInjectWidth() const;
+   inline std::string getOutputPath() const;
 
    private:
-   CommandlineOptions();
-   static CommandlineOptions *m_ref;
    po::options_description *m_description;
    po::variables_map *m_vm;
 
@@ -45,13 +51,22 @@ class CommandlineOptions
    int m_logInterval;
    int m_nx1;
    int m_ny1;
-   float m_sigma;
-   float m_sigma1;
-   float m_sigma2;
-   float m_sigma3;
-   unsigned int m_restartPoint;
+   float m_sigmaHe;
+   float m_sigmaHi;
+   float m_sigmaCe;
+   float m_sigmaCi;
+   float m_sigmaHePerp;
+   float m_sigmaHiPerp;
+   float m_sigmaCeSecondary;
+   double m_percentageSecondary;
+   float m_b0;
+   double m_p0;
+   bool m_uniformP0;
+   unsigned int m_injectWidth;
    std::string m_restartDir;
+   unsigned int m_restartIdx;
    bool m_particleBoundCheck;
+   std::string m_outputPath;
 };
 
 inline float CommandlineOptions::getMaxSimTime() const
@@ -84,29 +99,39 @@ inline const std::string& CommandlineOptions::getRestartDir() const
    return m_restartDir;
 }
 
-inline float CommandlineOptions::getSigma() const
+inline unsigned int CommandlineOptions::getRestartIdx() const
 {
-   return m_sigma;
+   return m_restartIdx;
 }
 
-inline float CommandlineOptions::getSigma1() const
+inline float CommandlineOptions::getSigmaHe() const
 {
-   return m_sigma1;
+   return m_sigmaHe;
 }
 
-inline float CommandlineOptions::getSigma2() const
+inline float CommandlineOptions::getSigmaCe() const
 {
-   return m_sigma2;
+   return m_sigmaCe;
 }
 
-inline float CommandlineOptions::getSigma3() const
+inline float CommandlineOptions::getSigmaHi() const
 {
-   return m_sigma3;
+   return m_sigmaHi;
 }
 
-inline unsigned int CommandlineOptions::getRestartPoint() const
+inline float CommandlineOptions::getSigmaCi() const
 {
-   return m_restartPoint;
+   return m_sigmaCi;
+}
+
+inline float CommandlineOptions::getSigmaCeSecondary() const
+{
+   return m_sigmaCeSecondary;
+}
+
+inline double CommandlineOptions::getPercentageSecondary() const
+{
+   return m_percentageSecondary;
 }
 
 inline bool CommandlineOptions::getParticleBoundCheck() const
@@ -114,5 +139,39 @@ inline bool CommandlineOptions::getParticleBoundCheck() const
    return m_particleBoundCheck;
 }
 
-#endif
+inline float CommandlineOptions::getB0() const
+{
+   return m_b0;
+}
 
+inline double CommandlineOptions::getP0() const
+{
+   return m_p0;
+}
+
+inline bool CommandlineOptions::getUniformP0() const
+{
+   return m_uniformP0;
+}
+
+inline unsigned int CommandlineOptions::getInjectWidth() const
+{
+   return m_injectWidth;
+}
+
+inline std::string CommandlineOptions::getOutputPath() const
+{
+   return m_outputPath;
+}
+
+inline float CommandlineOptions::getSigmaHePerp() const
+{
+   return m_sigmaHePerp;
+}
+
+inline float CommandlineOptions::getSigmaHiPerp() const
+{
+   return m_sigmaHiPerp;
+}
+
+#endif

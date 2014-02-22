@@ -1,5 +1,9 @@
 #include "logging_types.h"
 
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+
 #include "array2d.h"
 #include "global_variables.h"
 #include "pic_utils.h"
@@ -62,14 +66,15 @@ void LogParticlesAscii::logParticles(const char *fileName,
 
 void LogParticlesAscii::logData()
 {
-   char name[100];
    assert(m_index < 1000000);
 
-   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ele_", m_index);
-   logParticles(name, &m_eleHotLoc[0], &m_eleHotVel[0], &m_eleColdLoc[0], &m_eleColdVel[0], 
+   std::stringstream s;
+   s << outputPath << "/ele_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << m_index;
+   logParticles(s.str().c_str(), &m_eleHotLoc[0], &m_eleHotVel[0], &m_eleColdLoc[0], &m_eleColdVel[0], 
       m_numEleHot, m_numEleCold);
-   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ion_", m_index);
-   logParticles(name, &m_ionHotLoc[0], &m_ionHotVel[0], &m_ionColdLoc[0], &m_ionColdVel[0], 
+   s.str("");
+   s << outputPath << "/ion_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << m_index;
+   logParticles(s.str().c_str(), &m_ionHotLoc[0], &m_ionHotVel[0], &m_ionColdLoc[0], &m_ionColdVel[0], 
       m_numIonHot, m_numIonCold);
 }
 
@@ -122,42 +127,98 @@ LogParticlesBinary::LogParticlesBinary(const int i,
    }
 }
 
+// The file format here is as follows
+// 4 byte int - Total number of particles
+// 4 byte int - Number of hot particles
+// 4 byte int - Number of cold particles
+// The following sections repeat until all hot particles are written
+// 4 byte float - posX
+// 4 byte float - posY
+// 4 byte float - velX
+// 4 byte float - velY
+// 4 byte float - velZ
+// The following sections repeat until all cold particles are written
+// 4 byte float - posX
+// 4 byte float - posY
+// 4 byte float - velX
+// 4 byte float - velY
+// 4 byte float - velZ
 void LogParticlesBinary::logParticles(const char *fileName, 
                                       const float2 hotLoc[], const float3 hotVel[],
                                       const float2 coldLoc[], const float3 coldVel[],
-                                      const int numHot, const int numCold)
+                                      int maxSizeHot, int maxSizeCold)
 {
-   FILE *f = fopen(fileName, "wb");
-   int numPart = numHot + numCold;
-   const float hot = 1.0;
-   const float cold = 0.0;
+   std::fstream f;
+   // Create the file
+   f.open(fileName, std::ios::out | std::ios::binary);
+   f.close();
+   // Reopen the file for writing
+   f.open(fileName, std::ios::in | std::ios::out | std::ios::binary);
+   assert(f.good());
+   std::ios::streampos numPartLoc;
+   std::ios::streampos numHotLoc;
+   std::ios::streampos numColdLoc;
+   //FILE *f = fopen(fileName, "wb");
+   //int numPart = numHot + numCold;
+   unsigned int numPart = 0;
+   unsigned int numHot = 0;
+   unsigned int numCold = 0;
 
-   fwrite(&numPart, sizeof(int), 1, f);
-   for(int i = 0; i < numHot; i++)
+   //fwrite(&numPart, sizeof(int), 1, f);
+   //fwrite(&numHot, sizeof(int), 1, f);
+   //fwrite(&numCold, sizeof(int), 1, f);
+   numPartLoc = f.tellg();
+   f.write(reinterpret_cast<const char*>(&numPart), sizeof(numPart));
+   numHotLoc = f.tellg();
+   f.write(reinterpret_cast<const char*>(&numHot), sizeof(numHot));
+   numColdLoc = f.tellg();
+   f.write(reinterpret_cast<const char*>(&numCold), sizeof(numCold));
+   for(int i = 0; i < maxSizeHot; i++)
    {
-      fwrite(hotLoc + i, sizeof(float2), 1, f);
-      fwrite(hotVel + i, sizeof(float3), 1, f);
-      fwrite(&hot, sizeof(float), 1, f);
+      //fwrite(hotLoc + i, sizeof(float2), 1, f);
+      //fwrite(hotVel + i, sizeof(float3), 1, f);
+      if(hotLoc[i].y != OOB_PARTICLE)
+      {
+         f.write(reinterpret_cast<const char*>(hotLoc+i), sizeof(hotLoc[0]));
+         f.write(reinterpret_cast<const char*>(hotVel+i), sizeof(hotVel[0]));
+         numPart++;
+         numHot++;
+      }
    }
-   for(int i = 0; i < numCold; i++)
+   for(int i = 0; i < maxSizeCold; i++)
    {
-      fwrite(coldLoc + i, sizeof(float2), 1, f);
-      fwrite(coldVel + i, sizeof(float3), 1, f);
-      fwrite(&cold, sizeof(float), 1, f);
+      //fwrite(coldLoc + i, sizeof(float2), 1, f);
+      //fwrite(coldVel + i, sizeof(float3), 1, f);
+      if(coldLoc[i].y != OOB_PARTICLE)
+      {
+         f.write(reinterpret_cast<const char*>(coldLoc+i), sizeof(coldLoc[0]));
+         f.write(reinterpret_cast<const char*>(coldVel+i), sizeof(coldVel[0]));
+         numPart++;
+         numCold++;
+      }
    }
-   fclose(f);
+   f.seekg(numPartLoc);
+   f.write(reinterpret_cast<const char*>(&numPart), sizeof(numPart));
+   f.seekg(numHotLoc);
+   f.write(reinterpret_cast<const char*>(&numHot), sizeof(numHot));
+   f.seekg(numColdLoc);
+   f.write(reinterpret_cast<const char*>(&numCold), sizeof(numCold));
+   //fclose(f);
 }
 
 void LogParticlesBinary::logData()
 {
-   char name[100];
    assert(m_index < 1000000);
 
-   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ele_", m_index);
-   logParticles(name, &m_eleHotLoc[0], &m_eleHotVel[0], &m_eleColdLoc[0], &m_eleColdVel[0], 
+   std::stringstream s;
+   s << outputPath << "/ele_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << m_index;
+   logParticles(s.str().c_str(), &m_eleHotLoc[0], &m_eleHotVel[0], 
+      &m_eleColdLoc[0], &m_eleColdVel[0],
       m_numEleHot, m_numEleCold);
-   sprintf(name,"%s/%s_%04d",outputDir.c_str(), "ion_", m_index);
-   logParticles(name, &m_ionHotLoc[0], &m_ionHotVel[0], &m_ionColdLoc[0], &m_ionColdVel[0], 
+   s.str("");
+   s << outputPath << "/ion_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << m_index;
+   logParticles(s.str().c_str(), &m_ionHotLoc[0], &m_ionHotVel[0], 
+      &m_ionColdLoc[0], &m_ionColdVel[0],
       m_numIonHot, m_numIonCold);
 }
 
@@ -165,42 +226,79 @@ void LogRhoBinary::logData()
 {
     out2drBin("rhoi",m_index,NY,NX1,*m_rhoi, true);
     out2drBin("rhoe",m_index,NY,NX1,*m_rhoe, true);
-    out2drBin("rho_",m_index,NY,NX1,*m_rho, true);
+    out2drBin("rho",m_index,NY,NX1,*m_rho, true);
+}
+
+void LogFieldBinary::logData()
+{
+   out2drBin("ex", m_index, NY, NX1, *m_ex, true);
+   out2drBin("ey", m_index, NY, NX1, *m_ey, true);
 }
 
 void LogPhiBinary::logData()
 {
-    out2drBin("phi_",m_index,NY,NX1,*m_phi, true);
+    out2drBin("phi",m_index,NY,NX1,*m_phi, true);
 }
 
+bool LogInfo::first = true;
 void LogInfo::logData()
 {
-   outinfo("info", index, simTime, numElectrons, numIons);
+   outinfo("info", index, simTime, numElectrons, numIons, first);
+   first = false;
 }
 
+bool LogForPerformance::first = true;
 void LogForPerformance::logData()
 {
-   std::string fname = outputDir + "/performance.csv";
-   std::string keyFname = outputDir + "/performance_key.csv";
-   FILE *fp;
+   std::string fname = outputPath + "/performance.csv";
+   std::string keyFname = outputPath + "/performance_key.csv";
 
+   std::ofstream logFile;
    if(first)
    {
       first = false;
-      fp = fopen(keyFname.c_str(), "w");
-      fprintf(fp, "Iteration Number,Sim Time,Num Electrons Hot,"
-              "NumElectrons Cold,Num Ions Hot,Num IonsCold,"
-              "Iteration Time (ms)");
-      fclose(fp);
-      fp = fopen(fname.c_str(), "w");
+      std::ofstream keyFile(keyFname.c_str());
+      keyFile << "Iteration Number,Sim Time,Num Electrons Hot,"
+                 "NumElectrons Cold,Num Ions Hot,Num IonsCold,"
+                 "Iteration Time (ms),Inject Time (ms),Dens Time (ms),"
+                 "Potent2 Time (ms),Field Time(ms),Movep Time (ms)";
+
+      if(resume)
+      {
+         logFile.open(fname.c_str(), std::ios::out | std::ios::app);
+      }
+      else
+      {
+         logFile.open(fname.c_str(), std::ios::out);
+      }
    }
    else
    {
-      fp = fopen(fname.c_str(), "a");
+      logFile.open(fname.c_str(), std::ios::out | std::ios::app);
    }
-   fprintf(fp, "%u,%f,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n", iteration, simTime, numEleHot,
-      numEleCold, numIonHot, numIonCold, iterTimeInMs, injectTimeInMs, densTimeInMs,
-      potent2TimeInMs, fieldTimeInMs, movepTimeInMs);
-   fclose(fp);
+   logFile << iteration << "," << simTime << "," << numEleHot << "," << numEleCold << ","
+      << numIonHot << "," << numIonCold << "," << iterTimeInMs << "," << injectTimeInMs << ","
+      << densTimeInMs << "," << potent2TimeInMs << "," << fieldTimeInMs << "," << movepTimeInMs
+      << std::endl;
 }
 
+void LogAvgPhi::logData()
+{
+   std::stringstream s;
+   s << outputPath + "/phiAvg_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << idx;
+   std::ofstream f;
+   f.open(s.str().c_str(), std::ios::binary);
+   // Write number of rows
+   f.write(reinterpret_cast<char*>(&y), sizeof(y));
+   // Write number of columns
+   f.write(reinterpret_cast<char*>(&x), sizeof(x));
+   unsigned int columnOrder = 0; // We're writing row order
+   f.write(reinterpret_cast<char*>(&columnOrder), sizeof(columnOrder));
+   for(std::size_t c = 0; c < x; c++)
+   {
+      for(std::size_t r = 0; r < y; r++)
+      {
+         f.write(reinterpret_cast<char*>(&data[r*x+c]), sizeof(data[0]));
+      }
+   }
+}

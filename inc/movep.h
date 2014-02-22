@@ -2,11 +2,13 @@
 #define MOVEP_H
 
 #include "typedefs.h"
+#include "dev_stream.h"
+#include "pitched_ptr.h"
 
 void movep(DevMem<float2> &partLoc, DevMem<float3> &partVel,
            unsigned int &numParticles, float mass,
-           const DevMemF &ex, const DevMemF &ey,
-           cudaStream_t &stream);
+           const PitchedPtr<float> &ex, const PitchedPtr<float> &ey,
+           DevStream &stream, bool updateField);
 
 #endif
 

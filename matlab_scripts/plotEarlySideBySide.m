@@ -1,0 +1,46 @@
+function plotEarlySideBySide()
+    % Plot across many holes
+    plotRange(2953, 6174);
+end
+
+function plotRange(start, stop)
+    f = figure;
+    
+    logTime = '051400';
+    eleName = strcat('ele_', logTime);
+    ionName = strcat('ion_', logTime);
+    templatePlot(eleName, start, stop, 1, true, 'Ele Hot');
+    templatePlot(eleName, start, stop, 2, false, 'Ele Cold');
+    templatePlot(ionName, start, stop, 3, true, 'Ion Hot');
+    templatePlot(ionName, start, stop, 4, false, 'Ion Cold');
+    
+    annotation('textbox', [0 0.9 1 0.1], ...
+    'String',     strcat('Vy vs. Y Time=', logTime, ...
+    'Y=', num2str(start), '-', num2str(stop)), ...
+    'EdgeColor', 'none', ...
+    'HorizontalAlignment', 'center');
+    
+    print(f, '-dpng', strcat('sideBySideVyY_', logTime));
+end
+
+function templatePlot(fileName, start, stop, plotNum, isHot, subplotTitle)
+    width = 20;
+    subplotArgs = [1, 4, plotNum];
+    if isHot
+        selectorArg = 'hotOnly';
+    else
+        selectorArg = 'coldOnly';
+    end
+    plotVxVyRange(fileName, ...
+                  512/2-width, 512/2+width, ...
+                  start, stop, ...
+                  'noCull', ...
+                  'numBins', 50, ...
+                  'plotVyY', ...
+                  'noColorbar', ...
+                  selectorArg, ...
+                  'subplotArgs', subplotArgs, ...
+                  'subplotTitle', subplotTitle ...
+                  );
+    fclose('all');
+end

@@ -10,9 +10,6 @@
 	>
 	<Platforms>
 		<Platform
-			Name="Win32"
-		/>
-		<Platform
 			Name="x64"
 		/>
 	</Platforms>
@@ -22,89 +19,6 @@
 		/>
 	</ToolFiles>
 	<Configurations>
-		<Configuration
-			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(PlatformName)$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)$(ConfigurationName)"
-			ConfigurationType="1"
-			CharacterSet="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="Cudart Build Rule"
-				Include="$(CUDA_INC_PATH);$(NVSDKCOMPUTE_ROOT)\C\common\inc;$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST);"
-				Arch1="0"
-				ExtraNvccOptions="-g"
-				Runtime="3"
-				Defines="WIN32;DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST);"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				SuppressStartupBanner="false"
-				DebugInformationFormat="4"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt-gd-1_49.lib libboost_date_time-vc90-mt-gd-1_49.lib libboost_filesystem-vc90-mt-gd-1_49.lib libboost_program_options-vc90-mt-gd-1_49.lib libboost_system-vc90-mt-gd-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib"
-				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\Win32&quot;;&quot;$(CUDA_LIB_PATH)\..\lib\Win32&quot;;&quot;$(BOOST)\lib\win32&quot;"
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
 		<Configuration
 			Name="Debug|x64"
 			OutputDirectory="$(SolutionDir)$(PlatformName)$(ConfigurationName)"
@@ -120,6 +34,13 @@
 			/>
 			<Tool
 				Name="Cudart Build Rule"
+				AdditionalOptions="-G"
+				Include="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST);$(INTEL_TBB)/include"
+				Arch1="0"
+				TargetMachinePlatform="1"
+				ExtraNvccOptions="-g"
+				Runtime="3"
+				Defines="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -134,7 +55,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(NVSDKCOMPUTE_ROOT)\C\common\inc;$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(SolutionDir)\..\..\third_party;$(SolutionDir)\..\..\third_party\boost_1_43_0"
+				AdditionalIncludeDirectories="&quot;$(CUDA_PATH)\include&quot;;&quot;$(SolutionDir)\..\..\inc&quot;;&quot;$(BOOST)&quot;;&quot;$(INTEL_TBB)/include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -154,97 +75,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt-gd-1_49.lib libboost_date_time-vc90-mt-gd-1_49.lib libboost_filesystem-vc90-mt-gd-1_49.lib libboost_program_options-vc90-mt-gd-1_49.lib libboost_system-vc90-mt-gd-1_49.lib cuda.lib cudart.lib cufft.lib"
+				AdditionalDependencies="libboost_thread-vc90-mt-gd-1_49.lib libboost_date_time-vc90-mt-gd-1_49.lib libboost_filesystem-vc90-mt-gd-1_49.lib libboost_program_options-vc90-mt-gd-1_49.lib libboost_system-vc90-mt-gd-1_49.lib libboost_chrono-vc90-mt-gd-1_49.lib libboost_timer-vc90-mt-gd-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib tbb_debug.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(NVSDKCOMPUTE_ROOT)\C\common\lib;$(CUDA_LIB_PATH);$(SolutionDir)..\..\third_party\boost_1_43_0\lib\win64"
+				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\x64&quot;;&quot;$(BOOST)\lib\win64&quot;;&quot;$(INTEL_TBB)\lib\intel64\vc9&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(PlatformName)$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)$(ConfigurationName)"
-			ConfigurationType="1"
-			CharacterSet="1"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="Cudart Build Rule"
-				Include="$(CUDA_INC_PATH);$(NVSDKCOMPUTE_ROOT)\C\common\inc;$(SolutionDir)\..\..\inc;$(BOOST)"
-				Arch1="11"
-				ExtraNvccOptions="--optimize 2"
-				Runtime="2"
-				Defines="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="2"
-				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST)"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
-				RuntimeLibrary="2"
-				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt-1_49.lib libboost_date_time-vc90-mt-1_49.lib libboost_filesystem-vc90-mt-1_49.lib libboost_program_options-vc90-mt-1_49.lib libboost_system-vc90-mt-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\Win32&quot;;&quot;$(BOOST)\lib\win32&quot;"
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -284,6 +120,11 @@
 			/>
 			<Tool
 				Name="Cudart Build Rule"
+				Include="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST);$(INTEL_TBB)/include"
+				Arch1="0"
+				TargetMachinePlatform="1"
+				Runtime="2"
+				Defines="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -299,7 +140,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(SolutionDir)\..\..\third_party;$(SolutionDir)\..\..\third_party\boost_1_43_0"
+				AdditionalIncludeDirectories="&quot;$(CUDA_PATH)\include&quot;;&quot;$(SolutionDir)\..\..\inc&quot;;&quot;$(BOOST)&quot;;&quot;$(INTEL_TBB)/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -318,170 +159,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt-1_49.lib libboost_date_time-vc90-mt-1_49.lib libboost_filesystem-vc90-mt-1_49.lib libboost_program_options-vc90-mt-1_49.lib libboost_system-vc90-mt-1_49.lib cuda.lib cudart.lib cufft.lib cUtil64.lib"
+				AdditionalDependencies="libboost_thread-vc90-mt-1_49.lib libboost_date_time-vc90-mt-1_49.lib libboost_filesystem-vc90-mt-1_49.lib libboost_program_options-vc90-mt-1_49.lib libboost_system-vc90-mt-1_49.lib libboost_chrono-vc90-mt-1_49.lib libboost_timer-vc90-mt-1_49.lib cuda.lib cudart.lib cufft.lib curand.lib tbb.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH);$(SolutionDir)\..\..\third_party\boost_1_43_0\lib\win64;"
+				AdditionalLibraryDirectories="&quot;$(CUDA_PATH)\lib\x64&quot;;&quot;$(BOOST)\lib\win64&quot;;&quot;$(INTEL_TBB)\lib\intel64\vc9&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Emu Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
-			CharacterSet="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="Cudart Build Rule"
-				Include="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST)"
-				Defines="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST)"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				SuppressStartupBanner="false"
-				DebugInformationFormat="4"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions="/verbose"
-				LinkIncremental="2"
-				GenerateDebugInformation="true"
-				SubSystem="1"
-				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Emu Debug|x64"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="1"
-			CharacterSet="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="Cudart Build Rule"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(SolutionDir)\..\..\third_party;$(SolutionDir)\..\..\third_party\boost_1_43_0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="libboost_thread-vc90-mt-gd-1_49.lib libboost_date_time-vc90-mt-gd-1_49.lib libboost_filesystem-vc90-mt-gd-1_49.lib libboost_program_options-vc90-mt-gd-1_49.lib libboost_system-vc90-mt-gd-1_49.lib cuda.lib cudart.lib cufft.lib"
-				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(CUDA_LIB_PATH);$(SolutionDir)..\..\third_party\boost_1_43_0\lib\win64"
-				GenerateDebugInformation="true"
-				SubSystem="1"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -520,7 +204,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\cuda_allocator.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\dens.cu"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\dev_mem_reuse.cpp"
 				>
 			</File>
 			<File
@@ -560,11 +252,23 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\pic2d_turbo.cu"
+				RelativePath="..\..\src\particle_allocator.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\phi_avg.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\pic2d_turbo.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\src\pic_utils.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\pitched_ptr.cpp"
 				>
 			</File>
 			<File
@@ -594,6 +298,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\inc\cuda_allocator.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\inc\d_global_variables.h"
 				>
 			</File>
@@ -610,6 +318,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\inc\dev_mem_reuse.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\inc\dev_stream.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\inc\device_constants.h"
 				>
 			</File>
@@ -622,11 +338,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\inc\error_check.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\inc\field.h"
 				>
 			</File>
 			<File
 				RelativePath="..\..\inc\global_variables.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\inc\host_mem.h"
 				>
 			</File>
 			<File
@@ -646,7 +370,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\inc\particle_allocator.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\inc\phi_avg.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\inc\pic_utils.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\inc\pitched_ptr.h"
 				>
 			</File>
 			<File

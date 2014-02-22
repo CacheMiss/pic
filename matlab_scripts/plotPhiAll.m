@@ -1,5 +1,5 @@
 
-function ret = plotPhiAll(fName)
+function ret = plotPhiAll(fName, sliceX, sliceY)
 
    f = fopen(fName, 'rb');
 
@@ -13,12 +13,21 @@ function ret = plotPhiAll(fName)
    numColumns = fread(f, 1, 'int32');
    columnOrder = fread(f, 1, 'int32');
    phi = fread(f, [numRows,numColumns], 'float');
+   fclose(f);
 
    xValues = [0:numColumns-1];
    yValues = [0:numRows-1];
+
+   phi = phi(1:sliceY:end, 1:sliceX:end);
+   xValues = xValues(1:sliceX:end);
+   yValues = yValues(1:sliceY:end);
+
    figure;
    surf(xValues, yValues, phi);
-
-   fclose(f);
+   colorbar;
+   fields = strsplit(fName, '_');
+   title(strcat([fields{1} ' ' fields{2}]));
+   axis([0 max(xValues) 0 max(yValues)]);
+   print('-dpng', strcat(fields{1}, 'All_', fields{2}));
 
 end

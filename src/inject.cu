@@ -2,6 +2,9 @@
 #include <float.h>
 
 #include "d_global_variables.h"
+#include "device_utils.h"
+#include "global_variables.h"
+#include "inject.h"
 
 //*****************************************************************************
 //  Function: injectWriteBlock
@@ -87,19 +90,34 @@ void injectWriteBlock(float2 d_loc[], float3 d_vel[],
 //  randPoolSize - The number of elements in randPool
 //  NX1 - The width of the grid
 //  NY1 - The height of the grid
-//  NIJ - Avg num particles per cell
+//  numToInject - The number of particles to inject
+//  numSecondaryCold - The number of secondary cold particles. The number of
+//     primary cold particles is NIJ * NX1 = numSecondaryCold
+//  SIGMA_HE - Hot Electron Sigma
+//  SIGMA_HI - Hot Ion Sigma
+//  SIGMA_CE - Cold Electron Sigma
+//  SIGMA_CI - Cold Ion Sigma
+//  SIGMA_HE_PERP - The perpendicular sigma for hot electrons (vx & vz)
+//  SIGMA_HI_PERP - The perpendicular sigma for hot ions (vx & vz)
+//  SIGMA_CE_SECONDARY - The sigma for the secondary cold electrons
 //*****************************************************************************
 __global__
-void inject(float2 eleHotLoc[], float3 eleHotVel[], 
+void injectKernel(float2 eleHotLoc[], float3 eleHotVel[], 
             float2 eleColdLoc[], float3 eleColdVel[],
             float2 ionHotLoc[], float3 ionHotVel[], 
             float2 ionColdLoc[], float3 ionColdVel[],
+            const int botXStart, const int injectWidth,
             const float DX, const float DY,
-            const int numElectronsHot, const int numElectronsCold, 
-            const int numIonsHot, const int numIonsCold,
-            float randPool[], const int randPoolSize,
+            const unsigned int numElectronsHot, const unsigned int numElectronsCold, 
+            const unsigned int numIonsHot, const unsigned int numIonsCold,
+            const float randPool[], const int randPoolSize,
             const unsigned int NX1, const unsigned int NY1,
-            const unsigned int NIJ)
+            const unsigned int numToInject,
+            const unsigned int numSecondaryCold,
+            const float SIGMA_HE, const float SIGMA_HI,
+            const float SIGMA_CE, const float SIGMA_CI,
+            const float SIGMA_HE_PERP, const float SIGMA_HI_PERP,
+            const float SIGMA_CE_SECONDARY)
 {
    const int RANDS_PER_THREAD = 24;
    int randOffset = blockIdx.x * blockDim.x * RANDS_PER_THREAD +
@@ -113,7 +131,8 @@ void inject(float2 eleHotLoc[], float3 eleHotVel[],
    volatile float *velZ = velY + blockDim.x;
    // Check and make sure this thread has work, if it doesn't,
    // return here.
-   bool hasWork = (blockIdx.x*blockDim.x+threadIdx.x < NIJ*NX1) ? true : false;
+   bool hasWork = (blockIdx.x*blockDim.x+threadIdx.x < numToInject) ? true : false;
+   bool injectingSecondary = numToInject - (blockIdx.x*blockDim.x+threadIdx.x) <= numSecondaryCold;
    const float velmass = static_cast<float>(1./D_RATO);
    float vpar;
    float tpar; 
@@ -126,18 +145,23 @@ void inject(float2 eleHotLoc[], float3 eleHotVel[],
    //--------------------------------------------------------
    if(hasWork)
    {
+      // If SIGMA_HE_PERP is 0, use regular SIGMA_HE
+      const float SIGMA_PERP = SIGMA_HE_PERP == 0 ? SIGMA_HE : SIGMA_HE_PERP;
+      const float SIGMA_VERT = SIGMA_HE;
       posX[threadIdx.x] = (float)(DX*NX1*randPool[randOffset]);
       posY[threadIdx.x] = (float)(DY*(NY1-1)+DY*randPool[randOffset+1]);
-      vpar=(float)((1.414f*rsqrtf(D_SIGMA3))*
+      vpar=(float)((1.414f*rsqrtf(SIGMA_PERP))*
          sqrtf(-logf(1.0f-randPool[randOffset+2] + FLT_MIN)));
       tpar = (float)(D_TPI*randPool[randOffset+3] - D_PI);
-      // TODO - Figure out why vpar causes the "Double is not supported" warning
       velX[threadIdx.x] = (float)vpar*__sinf((float)tpar);
-      vpar=(float)((1.414f*rsqrtf(D_SIGMA3))*
-         sqrtf(-logf(1.0f-randPool[randOffset+4] + FLT_MIN)));
+      // For sincos I need a range of -pi to pi
       tpar=(float)(D_TPI*randPool[randOffset+5] - D_PI);
       __sincosf(tpar, &stpar, &ctpar);
-      velY[threadIdx.x] = vpar*stpar;
+      vpar=(float)((1.414f*rsqrtf(SIGMA_VERT))*
+         sqrtf(-logf(1.0f-randPool[randOffset+4] + FLT_MIN)));
+      velY[threadIdx.x] = vpar*stpar - (1.1f*rsqrtf(SIGMA_VERT));
+      vpar=(float)((1.414f*rsqrtf(SIGMA_PERP))*
+         sqrtf(-logf(1.0f-randPool[randOffset+4] + FLT_MIN)));
       velZ[threadIdx.x] = vpar*ctpar;
       posY[threadIdx.x] = posY[threadIdx.x]+D_DELT*velY[threadIdx.x];
 
@@ -151,22 +175,22 @@ void inject(float2 eleHotLoc[], float3 eleHotVel[],
    //---------------------------------------------------------
    if(hasWork)
    {
-      posX[threadIdx.x] = (float)(DX*NX1*randPool[randOffset+6]);
+      posX[threadIdx.x] = (float)(DX*injectWidth*randPool[randOffset+6]+botXStart);
       posY[threadIdx.x] = (float)(DY*randPool[randOffset+7]);
-      vpar = (float)((1.414f*rsqrtf(D_SIGMA))*
+      vpar = (float)((1.414f*rsqrtf(!injectingSecondary ? SIGMA_CE : SIGMA_CE_SECONDARY))*
          sqrtf(-logf(1-randPool[randOffset+8] + FLT_MIN)));
       tpar = (float)(D_TPI*randPool[randOffset+9] - D_PI);
       velX[threadIdx.x] = (float)(vpar*__sinf(tpar));
-      vpar = (float)((1.414f/sqrtf(D_SIGMA))*
+      vpar = (float)((1.414f*rsqrtf(!injectingSecondary ? SIGMA_CE : SIGMA_CE_SECONDARY))*
          sqrtf(-logf(1-randPool[randOffset+10] + FLT_MIN)));
+      // For sincos I need a range of -pi to pi
       tpar = (float)(D_TPI*randPool[randOffset+11] - D_PI);
       __sincosf(tpar, &stpar, &ctpar);
       velY[threadIdx.x] = (float)(vpar*stpar);
-      velY[threadIdx.x] = static_cast<float>(velY[threadIdx.x]+(1.1f*rsqrtf(D_SIGMA)));
       velZ[threadIdx.x] = vpar*ctpar;
       posY[threadIdx.x] = posY[threadIdx.x]+D_DELT*velY[threadIdx.x];
-
       posY[threadIdx.x] = max(posY[threadIdx.x], 0.0f);
+
       injectWriteBlock(eleColdLoc, eleColdVel, numElectronsCold, 
          posX, posY, velX, velY, velZ);
    }
@@ -177,18 +201,23 @@ void inject(float2 eleHotLoc[], float3 eleHotVel[],
    //---------------------------------------------------------
    if(hasWork)
    {
+      // If SIGMA_HI_PERP is 0, use regular SIGMA_HE
+      const float SIGMA_PERP = SIGMA_HI_PERP == 0 ? SIGMA_HI : SIGMA_HI_PERP;
+      const float SIGMA_VERT = SIGMA_HI;
       posX[threadIdx.x]= (float)(DX*NX1*randPool[randOffset+12]);
       posY[threadIdx.x]= (float)(DY*(NY1-1)+DY*randPool[randOffset+13]);
-      vpar = (float)((1.414f*rsqrtf(velmass*D_SIGMA2))*
+      vpar = (float)((1.414f*rsqrtf(velmass*SIGMA_PERP))*
          sqrtf(-logf(1.0f-randPool[randOffset+14] + FLT_MIN)));
       tpar = (float)(D_TPI*randPool[randOffset+15] - D_PI);
       velX[threadIdx.x] = (float)vpar*__sinf((float)tpar);
-      vpar = (float)((1.414f*rsqrtf(velmass*D_SIGMA2))*
-         sqrtf(-logf(1.0f-randPool[randOffset+16] + FLT_MIN)));
+      // For sincos I need a range of -pi to pi
       tpar = (float)(D_TPI*randPool[randOffset+17] - D_PI);
       __sincosf(tpar, &stpar, &ctpar);
+      vpar = (float)((1.414f*rsqrtf(velmass*SIGMA_VERT))*
+         sqrtf(-logf(1.0f-randPool[randOffset+16] + FLT_MIN)));
       velY[threadIdx.x] = vpar*stpar;
-      velY[threadIdx.x] = (float)(velY[threadIdx.x]-(1.5f*rsqrtf(D_SIGMA2*velmass)));
+      vpar = (float)((1.414f*rsqrtf(velmass*SIGMA_PERP))*
+         sqrtf(-logf(1.0f-randPool[randOffset+16] + FLT_MIN)));
       velZ[threadIdx.x] = vpar*ctpar;
       posY[threadIdx.x] = posY[threadIdx.x]+D_DELT*velY[threadIdx.x];
 
@@ -202,22 +231,75 @@ void inject(float2 eleHotLoc[], float3 eleHotVel[],
    //-------------------------------------------------------
    if(hasWork)
    {
-      posX[threadIdx.x] = (float)(DX*NX1*randPool[randOffset+18]);
+      posX[threadIdx.x] = (float)(DX*injectWidth*randPool[randOffset+6]+botXStart);
       posY[threadIdx.x] = (float)(DY*randPool[randOffset+19]);
-      vpar = (float)((1.414f*rsqrtf(D_SIGMA1*velmass))*
+      vpar = (float)((1.414f*rsqrtf(SIGMA_CI*velmass))*
          sqrtf(-logf(1.0f-randPool[randOffset+20] + FLT_MIN)));
       tpar = (float)(D_TPI*randPool[randOffset+21] - D_PI);
       velX[threadIdx.x] = (float)vpar*__sinf((float)tpar);
-      vpar = (float)((1.414f*rsqrtf(D_SIGMA1*velmass))*
+      vpar = (float)((1.414f*rsqrtf(SIGMA_CI*velmass))*
          sqrtf(-logf(1.0f-randPool[randOffset+22] + FLT_MIN)));
+      // For sincos I need a range of -pi to pi
       tpar = (float)(D_TPI*randPool[randOffset+23] - D_PI);
       __sincosf(tpar, &stpar, &ctpar);
-      velY[threadIdx.x] = vpar*stpar;
+      velY[threadIdx.x] = vpar*stpar + (1.1f*rsqrtf(SIGMA_CI*velmass));
       velZ[threadIdx.x] = vpar*ctpar;
       posY[threadIdx.x] = posY[threadIdx.x]+D_DELT*velY[threadIdx.x];
-
       posY[threadIdx.x] = max(posY[threadIdx.x], 0.0f);
+
       injectWriteBlock(ionColdLoc, ionColdVel, numIonsCold, 
          posX, posY, velX, velY, velZ);
    }
+}
+
+void inject(DevMem<float2>& eleHotLoc, DevMem<float3>& eleHotVel, 
+            DevMem<float2>& eleColdLoc, DevMem<float3>& eleColdVel,
+            DevMem<float2>& ionHotLoc, DevMem<float3>& ionHotVel, 
+            DevMem<float2>& ionColdLoc, DevMem<float3>& ionColdVel,
+            const float DX, const float DY,
+            unsigned int &numElectronsHot, unsigned int &numElectronsCold, 
+            unsigned int &numIonsHot, unsigned int &numIonsCold,
+				const unsigned int numToInject,
+            const unsigned int numSecondaryCold,
+            const DevMem<float>& randPool,
+            const unsigned int NX1, const unsigned int NY1,
+            const float SIGMA_HE, const float SIGMA_HI,
+            const float SIGMA_CE, const float SIGMA_CI,
+            const float SIGMA_HE_PERP, const float SIGMA_HI_PERP,
+            const float SIGMA_CE_SECONDARY,
+				const unsigned int injectWidth,
+				const unsigned int injectStartX,
+				DevStream &stream)
+{
+      const int injectThreadsPerBlock = MAX_THREADS_PER_BLOCK;
+      dim3 injectNumBlocks(static_cast<unsigned int>(calcNumBlocks(injectThreadsPerBlock, numToInject)));
+      dim3 injectBlockSize(injectThreadsPerBlock);
+      int sharedMemoryBytes = sizeof(float) * 5 * injectThreadsPerBlock;
+      stream.synchronize();
+      checkForCudaError("RandomGPU");
+
+      injectKernel<<<injectNumBlocks, injectBlockSize, sharedMemoryBytes, *stream>>>(
+         eleHotLoc.getPtr(), eleHotVel.getPtr(), 
+         eleColdLoc.getPtr(), eleColdVel.getPtr(), 
+         ionHotLoc.getPtr(), ionHotVel.getPtr(), 
+         ionColdLoc.getPtr(), ionColdVel.getPtr(), 
+         injectStartX, injectWidth,
+         DX, DY,
+         numElectronsHot, numElectronsCold,
+         numIonsHot, numIonsCold,
+         randPool.getPtr(),
+         static_cast<unsigned int>(randPool.size()),
+         NX1, NY1, 
+         numToInject, numSecondaryCold,
+         SIGMA_HE, SIGMA_HI,
+         SIGMA_CE, SIGMA_CI,
+         SIGMA_HE_PERP, SIGMA_HI_PERP,
+         SIGMA_CE_SECONDARY
+         );
+      checkForCudaError("Inject failed");
+
+      numElectronsHot += numToInject;
+      numElectronsCold += numToInject;
+      numIonsHot += numToInject;
+      numIonsCold += numToInject;
 }

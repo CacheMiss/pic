@@ -6,7 +6,7 @@
 namespace Field
 {
    __global__
-   void calcEy(float ey[], const float phi[],
+   void calcEy(PitchedPtr_t<float> ey, const float phi[],
                const unsigned int NX1, const unsigned int NY1,
                const float DY)
    {
@@ -25,12 +25,12 @@ namespace Field
       bottomPhi = phi[NX1 * threadY + threadX];
 
       // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
-      ey[NX1 * (threadY + 1) + threadX] = 
+      resolvePitchedPtr(ey, threadX, threadY + 1) =
          __fdividef(-(topPhi - bottomPhi), (float)2.0 * DY);
    }
 
    __global__
-   void calcEx(float ex[], const float phi[], const unsigned int NX1,
+   void calcEx(PitchedPtr_t<float> ex, const float phi[], const unsigned int NX1,
                const unsigned int NY, const float DX)
    {
       extern __shared__ float begShared[];
@@ -86,15 +86,16 @@ namespace Field
       }
       else
       {
+         // There is nothing to the left here. sharedPhi[1] is phi where x=0
          // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
          fieldVal = -__fdividef((sharedPhi[2] - sharedPhi[1]), DX);
       }
 
-      ex[gIndex] = fieldVal;
+      resolvePitchedPtr(ex, threadX, threadY) = fieldVal;
    }
 
    __global__
-   void fixEyBoundaries(float ey[], const float phi[], 
+   void fixEyBoundaries(PitchedPtr_t<float> ey, const float phi[], 
                         const unsigned int NX1, const unsigned int NY1, 
                         const float DY)
    {
@@ -106,13 +107,13 @@ namespace Field
       phiTop = phi[NX1 + threadX];
       phiBottom = phi[threadX];
       // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
-      ey[threadX] = __fdividef(-(phiTop - phiBottom), DY);
+      resolvePitchedPtr(ey, threadX, 0) = __fdividef(-(phiTop - phiBottom), DY);
 
       phiTop = phi[NX1 * NY1 + threadX];
       phiBottom = phi[NX1 * (NY1 - 1) + threadX];
 
       // for 2^126 <= y <= 2^128, __fdividef(x,y) delivers a result of zero,
-      ey[NX1 * NY1 + threadX] = __fdividef(-(phiTop - phiBottom), DY);
+      resolvePitchedPtr(ey, threadX, NY1) = __fdividef(-(phiTop - phiBottom), DY);
    }
 
 }
@@ -120,9 +121,11 @@ namespace Field
 /****************************************************************
          subroutine field
  ***************************************************************/
-void field(DevMemF &ex,
-           DevMemF &ey,
-           const DevMemF &phi)
+void field(PitchedPtr<float> &ex,
+           PitchedPtr<float> &ey,
+           const DevMemF &phi,
+           DevStream &stream1,
+           DevStream &stream2)
 {
    unsigned int numThreads;
    unsigned int sharedMemSizeBytes;
@@ -132,9 +135,10 @@ void field(DevMemF &ex,
    numThreads = MAX_THREADS_PER_BLOCK / 2;
    blockSize.x = numThreads;
    resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1), NY1-1);
-   cudaThreadSynchronize();
+   stream1.synchronize();
    checkForCudaError("Before calcEy");
-   Field::calcEy<<<numBlocks, blockSize>>>(ey.getPtr(), phi.getPtr(),
+   Field::calcEy<<<numBlocks, blockSize, 0, *stream1>>>(
+      ey.getPtr(), phi.getPtr(),
       NX1, NY1, DY);
    checkForCudaError("calcEy");
 
@@ -142,16 +146,17 @@ void field(DevMemF &ex,
    blockSize.x = numThreads;
    resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1), NY1);
    sharedMemSizeBytes = (numThreads + 2) * sizeof(float);
-   Field::calcEx<<<numBlocks, blockSize, sharedMemSizeBytes>>>(
+   Field::calcEx<<<numBlocks, blockSize, sharedMemSizeBytes, *stream2>>>(
       ex.getPtr(), phi.getPtr(), NX1, NY, DX);
    checkForCudaError("calcEx");
 
    numThreads = MAX_THREADS_PER_BLOCK / 2;
    blockSize.x = numThreads;
    resizeDim3(numBlocks, calcNumBlocks(numThreads, NX1));
-   cudaThreadSynchronize();
+   stream1.synchronize();
    checkForCudaError("Before fixEyBoundaries");
-   Field::fixEyBoundaries<<<numBlocks, blockSize>>>(ey.getPtr(), phi.getPtr(),
+   Field::fixEyBoundaries<<<numBlocks, blockSize, 0, *stream1>>>(
+      ey.getPtr(), phi.getPtr(),
       NX1, NY1, DY);
    checkForCudaError("fixEyBoundaries");
 }

@@ -3,9 +3,12 @@
 
 #include <assert.h>
 #include <driver_functions.h>
+#include <fstream>
+#include <iomanip>
 #include <string>
 
 #include "array2d.h"
+#include "commandline_options.h"
 #include "global_variables.h"
 
 //void checkForCudaError();
@@ -13,20 +16,33 @@ void checkForCudaError(const char *errorMsg);
 void checkForCudaErrorSync(const char *errorMsg);
 void checkForCudaError(const char *errorMsg, cudaError_t error);
 void errExit(const char *errorString);
-void outinfo(const std::string &fname,int idx_nm,float time,int need,int niid);
+void outinfo(const std::string &fname,
+             int idx_nm,
+             float time,
+             int need,
+             int niid, 
+             bool first);
 void createOutputDir(const char *);
 bool fileExists(const std::string &fileName);
-void resizeDim3(dim3 &rhs, int x, int y=1, int z=1);
-void loadPrevSimState(unsigned int loadIndex, const std::string &loadDir,
+void resizeDim3(dim3 &rhs, std::size_t x, std::size_t y=1, std::size_t z=1);
+void saveConfiguration(int argc, char* argv[], 
+                       const CommandlineOptions &options, 
+                       const std::string& fileName);
+bool checkConfiguration(const std::string& fileName,
+                        const CommandlineOptions &options);
+void loadPrevSimState(const CommandlineOptions &options,
                       DevMem<float2> &dev_eleHotLoc, DevMem<float3> &dev_eleHotVel, 
                       DevMem<float2> &dev_eleColdLoc, DevMem<float3> &dev_eleColdVel,
                       DevMem<float2> &dev_ionHotLoc, DevMem<float3> &dev_ionHotVel, 
                       DevMem<float2> &dev_ionColdLoc, DevMem<float3> &dev_ionColdVel,
                       unsigned int &numEleHot, unsigned int &numEleCold,
-                      unsigned int &numIonHot, unsigned int &numIonCold);
+                      unsigned int &numIonHot, unsigned int &numIonCold,
+                      const unsigned int allocIncrement);
+void getLastLine(const std::string fileName, std::string &lastLine);
+std::string getPrevLine(std::ifstream &f);
 
 inline unsigned int calcNumBlocks(const unsigned int numThreads, 
-                           const unsigned int numElements)
+                                  const unsigned int numElements)
 {
    unsigned int ret = (numElements + numThreads - 1) / numThreads;
    assert(ret > 0);
@@ -48,12 +64,12 @@ template<class ArrayType>
 void out2dr(const std::string &fname,int idx_nm,int numRows,int numColumns,
             const ArrayType &arry, bool printColumnOrder=false)
 {
-   char name[400];
    FILE *fp;
    int i,j;
-   sprintf(name,"%s/%s_%04d", outputDir.c_str(), fname.c_str(), idx_nm);
-   if((fp=fopen(name,"wt"))==NULL) {
-      printf("Cannot open '%s' file for writing\n",name);
+   std::stringstream s;
+   s << outputPath << "/" << fname << "_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << idx_nm;
+   if((fp=fopen(s.str().c_str(),"wt"))==NULL) {
+      printf("Cannot open '%s' file for writing\n",s.str().c_str());
       exit(1);
    }
    if(!printColumnOrder)
@@ -97,12 +113,12 @@ template<class ArrayType>
 void out2drBin(const std::string &fname,int idx_nm,int numRows,int numColumns,
             const ArrayType &arry, bool printColumnOrder=false)
 {
-   char name[400];
    FILE *fp;
    int i,j;
-   sprintf(name,"%s/%s_%04d", outputDir.c_str(), fname.c_str(), idx_nm);
-   if((fp=fopen(name,"wb"))==NULL) {
-      printf("Cannot open '%s' file for writing\n",name);
+   std::stringstream s;
+   s << outputPath << "/" << fname << "_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << idx_nm;
+   if((fp=fopen(s.str().c_str(),"wb"))==NULL) {
+      printf("Cannot open '%s' file for writing\n",s.str().c_str());
       exit(1);
    }
    fwrite(&numRows, sizeof(numRows), 1, fp);
@@ -154,12 +170,12 @@ template<class ArrayType>
 void outprt(const std::string &fname, int idx_nm, const ArrayType &hot,
             const ArrayType &cold, int numHot, int numCold)
 {
-   char name[100];
    FILE *fp;
    int i,j;
-   sprintf(name,"%s/%s_%04d", outputDir.c_str(), fname.c_str(), idx_nm);
-   if((fp=fopen(name,"wt"))==NULL) {
-      printf("Cannot open '%s' file for writing\n",name);
+   std::stringstream s;
+   s << outputPath << "/" << fname << "_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << idx_nm;
+   if((fp=fopen(s.str().c_str(),"wt"))==NULL) {
+      printf("Cannot open '%s' file for writing\n",s.str().c_str());
       exit(1);
    }
    for (i=0;i<numHot;i++) {
@@ -202,14 +218,14 @@ template<class ArrayType>
 void outprtBin(const std::string &fname, int idx_nm, const ArrayType &hot,
             const ArrayType &cold, int numHot, int numCold)
 {
-   char name[100];
    FILE *fp;
    int i,j;
    float one = 1;
    float zero = 0;
-   sprintf(name,"%s/%s_%04d", outputDir.c_str(), fname.c_str(), idx_nm);
-   if((fp=fopen(name,"wb"))==NULL) {
-      printf("Cannot open '%s' file for writing\n",name);
+   std::stringstream s;
+   s << outputPath << "/" << fname << "_" << std::setw(D_LOG_IDX_WIDTH) << std::setfill('0') << idx_nm;
+   if((fp=fopen(s.str().c_str(),"wb"))==NULL) {
+      printf("Cannot open '%s' file for writing\n",s.str().c_str());
       exit(1);
    }
    int totalPart = numHot + numCold;

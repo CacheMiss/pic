@@ -16,21 +16,30 @@ const float PI = static_cast<float>(D_PI);
 const float TPI = static_cast<float>(D_TPI);
 const unsigned int ISEED = static_cast<unsigned int>(D_ISEED);
 
-const float P0 = static_cast<float>(D_P0);
+extern float B0;
+extern double P0;
+extern bool UNIFORM_P0;
 const float SCALE = static_cast<float>(D_SCALE);
 const float RATO = static_cast<float>(D_RATO);
 const float DELT = static_cast<float>(D_DELT);
-const float BXM = static_cast<float>(D_BXM);
-const float BYM = static_cast<float>(D_BYM);
 const float BZM = static_cast<float>(D_BZM);
-extern float SIGMA; // sigma for cold electrons
-extern float SIGMA1; // sigma for cold ions
-extern float SIGMA2; // sigma for hot ions
-extern float SIGMA3; // sigma for hot electrons
+extern float SIGMA_CE; // sigma for cold electrons
+extern float SIGMA_CI; // sigma for cold ions
+extern float SIGMA_HI; // sigma for hot ions
+extern float SIGMA_HE; // sigma for hot electrons
+// The perpendicular sigma for hot electrons
+// If this is 0 the horizontal sigma is used
+extern float SIGMA_HE_PERP;
+// The perpendicular sigma for hot ions
+// If this is 0 the horizontal sigma is used
+extern float SIGMA_HI_PERP;
+extern float SIGMA_CE_SECONDARY; // sigma for secondary cold electrons
+// The percentage (0-1) of the injected particles which are secondary
+extern double PERCENT_SECONDARY;
 
 const float TSTART = static_cast<float>(D_TSTART);
-//float TMAX = static_cast<float>(D_TMAX);
 const int LF = D_LF; // number of iterations between info file outputs
+const unsigned int LOG_IDX_WIDTH = D_LOG_IDX_WIDTH;
 const float DX = static_cast<float>(D_DX);
 const float DX2 = static_cast<float>(D_DX2);
 const float DY = static_cast<float>(D_DY);
@@ -48,13 +57,17 @@ extern int NY12;
 // avg number of particles per cell?
 const int NIJ = D_NIJ; // avg number of particle per cell?
 
+extern float OOB_PARTICLE;
+
+const unsigned int SORT_INTERVAL = 140;
+
 // CUDA Globals
 const int MAX_THREADS_PER_BLOCK = D_MAX_THREADS_PER_BLOCK;
 const int SQUARE_BLOCK_MAX_THREADS_PER_DIM = 
   static_cast<int>(sqrt(static_cast<double>(MAX_THREADS_PER_BLOCK)));
 const int WARPSIZE = 32;
 
-const std::string outputDir = "run_output";
-const std::string errorLogName = outputDir + "/errorLog.txt";
+extern std::string outputPath;
+extern std::string errorLogName;
 
 #endif

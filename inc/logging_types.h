@@ -4,6 +4,7 @@
 #include "array2d.h"
 #include "dev_mem.h"
 #include "typedefs.h"
+#include "phi_avg.h"
 
 class LoggingBase
 {
@@ -72,7 +73,7 @@ class LogParticlesBinary : public LoggingBase
    void logParticles(const char *fileName, 
                      const float2 hotLoc[], const float3 hotVel[],
                      const float2 coldLoc[], const float3 coldVel[],
-                     const int numHot, const int numCold);
+                     int maxSizeHot, int maxSizeCold);
 
    public:
    LogParticlesBinary(const int i,
@@ -136,6 +137,30 @@ class LogRhoBinary : public LoggingBase
    virtual void logData();
 };
 
+class LogFieldBinary : public LoggingBase
+{
+   private:
+   int m_index;
+   const Array2dF *m_ex;
+   const Array2dF *m_ey;
+
+   public:
+   LogFieldBinary(const int idx,
+                  const Array2dF *ex,
+                  const Array2dF *ey)
+     :LoggingBase()
+     , m_index(idx)
+     , m_ex(ex)
+     , m_ey(ey)
+   {}
+   ~LogFieldBinary()
+   {
+      delete m_ex;
+      delete m_ey;
+   }
+   virtual void logData();
+};
+
 class LogPhiAscii : public LoggingBase
 {
    private:
@@ -179,13 +204,25 @@ class LogInfo : public LoggingBase
    float simTime;
    unsigned int numElectrons;
    unsigned int numIons;
+   bool resume;
+   static bool first;
 
    public:
    LogInfo(unsigned int idx, float sTime, 
-           unsigned int nmElectrons, unsigned int nmIons)
-     : LoggingBase(), index(idx), simTime(sTime), 
-       numElectrons(nmElectrons), numIons(nmIons)
-   {}
+           unsigned int nmElectrons, unsigned int nmIons,
+           bool resumeRun=false)
+     :LoggingBase()
+     ,index(idx)
+     ,simTime(sTime)
+     ,numElectrons(nmElectrons)
+     ,numIons(nmIons)
+     ,resume(resumeRun)
+   {
+      if(resumeRun)
+      {
+         first = false;
+      }
+   }
 
    virtual void logData();
 };
@@ -199,27 +236,59 @@ class LogForPerformance : public LoggingBase
    unsigned int numEleCold;
    unsigned int numIonHot;
    unsigned int numIonCold;
-   unsigned int iterTimeInMs;
-   unsigned int injectTimeInMs;
-   unsigned int densTimeInMs;
-   unsigned int potent2TimeInMs;
-   unsigned int fieldTimeInMs;
-   unsigned int movepTimeInMs;
+   double iterTimeInMs;
+   double injectTimeInMs;
+   double densTimeInMs;
+   double potent2TimeInMs;
+   double fieldTimeInMs;
+   double movepTimeInMs;
+   bool         resume;
    static bool first;
 
    public:
    LogForPerformance(unsigned int iter, float sTime,
       unsigned int nEleHot, unsigned int nEleCold,
       unsigned int nIonHot, unsigned int nIonCold,
-      unsigned int iterTInMs, unsigned int injectTInMs,
-      unsigned int densTInMs, unsigned int potent2TInMs,
-      unsigned int fieldTInMs, unsigned int movepTInMs)
-     :LoggingBase(), iteration(iter), simTime(sTime), numEleHot(nEleHot),
-      numEleCold(nEleCold), numIonHot(nIonHot), numIonCold(nIonCold),
-      iterTimeInMs(iterTInMs), injectTimeInMs(injectTInMs),
-      densTimeInMs(densTInMs), potent2TimeInMs(potent2TInMs),
-      fieldTimeInMs(fieldTInMs), movepTimeInMs(movepTInMs)
+      double iterTInMs, double injectTInMs,
+      double densTInMs, double potent2TInMs,
+      double fieldTInMs, double movepTInMs,
+      bool resumeRun=false)
+     :LoggingBase()
+     ,iteration(iter)
+     ,simTime(sTime)
+     ,numEleHot(nEleHot)
+     ,numEleCold(nEleCold)
+     ,numIonHot(nIonHot)
+     ,numIonCold(nIonCold)
+     ,iterTimeInMs(iterTInMs)
+     ,injectTimeInMs(injectTInMs)
+     ,densTimeInMs(densTInMs)
+     ,potent2TimeInMs(potent2TInMs)
+     ,fieldTimeInMs(fieldTInMs)
+     ,movepTimeInMs(movepTInMs)
+     ,resume(resumeRun)
    {
+   }
+
+   virtual void logData();
+};
+
+class LogAvgPhi : public LoggingBase
+{
+private:
+   unsigned int idx;
+   unsigned int x;
+   unsigned int y;
+   std::vector<float> data;
+
+public:
+   LogAvgPhi(unsigned int iter,
+      const PhiAvg& avgPhi)
+     : idx(iter)
+     , x(avgPhi.getXSize())
+     , y(avgPhi.getYSize())
+   {
+      avgPhi.saveToVector(data);
    }
 
    virtual void logData();

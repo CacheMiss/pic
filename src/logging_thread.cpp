@@ -98,23 +98,10 @@ void LoggingThread::logPhiBinary(const int index, const Array2dF *phi)
 }
 
 void LoggingThread::logInfo(unsigned int idx, float sTime, 
-                            unsigned int nmElectrons, unsigned int nmIons)
+                            unsigned int nmElectrons, unsigned int nmIons,
+                            bool resumeRun)
 {
-   LogInfo *tmp = new LogInfo(idx, sTime, nmElectrons, nmIons);
-   pushLogItem(tmp);
-}
-
-bool LogForPerformance::first = true;
-void LoggingThread::logForPerformance(unsigned int iter, float sTime,
-        unsigned int nEleHot, unsigned int nEleCold,
-        unsigned int nIonHot, unsigned int nIonCold,
-        unsigned int iterTInMs, unsigned int injectTInMs,
-        unsigned int densTInMs, unsigned int potent2TInMs,
-        unsigned int fieldTInMs, unsigned int movepTInMs)
-{
-   LogForPerformance *tmp = new LogForPerformance(iter, sTime, nEleHot,
-      nEleCold, nIonHot, nIonCold, iterTInMs, injectTInMs,
-      densTInMs, potent2TInMs, fieldTInMs, movepTInMs);
+   LogInfo *tmp = new LogInfo(idx, sTime, nmElectrons, nmIons, resumeRun);
    pushLogItem(tmp);
 }
 

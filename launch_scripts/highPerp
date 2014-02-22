@@ -1,0 +1,17 @@
+#!/bin/bash
+
+../bin/pic \
+   -x 512 -y 10000 \
+   -t 40000 -l 400 \
+   --inject-width 56 \
+   --b0 3 \
+   --sigma-he 1 \
+   --sigma-hi 0.5 \
+   --sigma-ce 100 \
+   --sigma-ci 100 \
+   --sigma-he-perp 0.25 \
+   --sigma-hi-perp 0.125 \
+   --sigma-ce-secondary 2 \
+   --percentage-secondary 0.05 \
+   -o ../output/highPerp \
+   --restart-dir ../output/highPerp \

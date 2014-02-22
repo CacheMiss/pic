@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#SBATCH -p gpu
+#SBATCH -J pic_highPerp
+#SBATCH -n 1 
+#SBATCH -t 24:00:00 
+#SBATCH --mail-user=stephen.sewell@gmail.com 
+#SBATCH -o /home1/02498/sewells/pic/highPerp.txt
+#SBATCH -e /home1/02498/sewells/pic/highPerp.txt
+./highPerp

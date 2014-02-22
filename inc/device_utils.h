@@ -10,6 +10,7 @@
 #include <thrust/device_vector.h>
 #endif
 
+#include "cuda_allocator.h"
 #include "pic_utils.h"
 #include "global_variables.h"
 
@@ -19,8 +20,8 @@
 #include <vector>
 #endif
 
-template<class KeyType>
-void picSort(DevMem<KeyType> &keys, int size=-1)
+template<class KeyType, class AllocatorType>
+void picSort(DevMem<KeyType, AllocatorType> &keys, int size=-1)
 {
    assert(size != 0);
    if(size == -1)
@@ -32,12 +33,12 @@ void picSort(DevMem<KeyType> &keys, int size=-1)
    checkForCudaError("Radix sort failed");
 }
 
-template<class KeyType, class ValType>
-void picSort(DevMem<KeyType> &keys, DevMem<ValType> &values, int size=0)
+template<class KeyType, class KeyAllocatorType, class ValType, class ValAllocatorType>
+void picSort(DevMem<KeyType, KeyAllocatorType> &keys, DevMem<ValType, ValAllocatorType> &values, int size=0)
 {
    if(size == 0)
    {
-      size = keys.size();
+      size = static_cast<unsigned int>(keys.size());
    }
 
    thrust::sort_by_key(keys.getThrustPtr(),
@@ -107,7 +108,7 @@ void divVectorKernel(Type *t, unsigned int size, const Type val)
 template<class Type>
 void divVector(Type *devArray, unsigned int size, const Type val)
 {
-   int numThreads = MAX_THREADS_PER_BLOCK / 2;
+   unsigned int numThreads = MAX_THREADS_PER_BLOCK / 2;
    dim3 blockSize(numThreads);
    dim3 numBlocks(calcNumBlocks(numThreads, size));
    divVectorKernel<Type> <<<numBlocks, numThreads>>>(devArray, size, val);
@@ -129,7 +130,9 @@ inline void divVector(DevMem<Type> &devArray,
                        const Type val)
 {
    divVector<Type>(devArray.getPtr(), 
-      devArray.size(), val);
+      static_cast<unsigned int>(devArray.size()), 
+      val);
+
 }
 
 template<class Type>
