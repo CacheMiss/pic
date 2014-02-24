@@ -19,41 +19,83 @@ function ret = plotPerformance(dir1, dir2, tag1, tag2, varargin)
    
    [d1Subset d2Subset] = perfIntersection(data1, data2);
    
-   figure;
+   f = figure;
    plot(d1Subset.simTime, d2Subset.iterationTime ./d1Subset.iterationTime);
    title(strcat([tag1 ' speedup over time']));
    xlabel('Sim Time');
    ylabel('Speedup Factor');
+   saveSameSize(f, 'format', '-dpdfwrite', 'file', 'totalSpeedup');
    
-%    figure;
-%    plot(d1Subset.simTime, d2Subset.injectTime ./d1Subset.injectTime);
+%    f = figure;
+%    plot(d1Subset.simTime, smoothLine(d2Subset.injectTime ./d1Subset.injectTime, 64));
 %    title(strcat([tag1 ' inject speedup over time']));
 %    xlabel('Sim Time');
 %    ylabel('Speedup Factor');
+%    saveSameSize(f, 'format', '-dpdfwrite', 'file', 'inject_speedup');
    
-   figure;
-   plot(d1Subset.simTime, d2Subset.densTime ./d1Subset.densTime);
+   f = figure;
+   plot(d1Subset.simTime, smoothLine(d2Subset.densTime ./d1Subset.densTime, 64));
    title(strcat([tag1 ' dens speedup over time']));
    xlabel('Sim Time');
    ylabel('Speedup Factor');
+   saveSameSize(f, 'format', '-dpdfwrite', 'file', 'densSpeedup');
    
-   figure;
-   plot(d1Subset.simTime, d2Subset.fieldTime ./d1Subset.fieldTime);
+   f = figure;
+   plot(d1Subset.simTime, smoothLine(d2Subset.fieldTime ./d1Subset.fieldTime, 64));
    title(strcat([tag1 ' field speedup over time']));
    xlabel('Sim Time');
    ylabel('Speedup Factor');
+   saveSameSize(f, 'format', '-dpdfwrite', 'file', 'fieldSpeedup');
    
-   figure;
-   plot(d1Subset.simTime, d2Subset.moveTime ./d1Subset.moveTime);
+   f = figure;
+   plot(d1Subset.simTime, smoothLine(d2Subset.potentTime ./d1Subset.potentTime, 64));
+   title(strcat([tag1 ' potent speedup over time']));
+   xlabel('Sim Time');
+   ylabel('Speedup Factor');
+   saveSameSize(f, 'format', '-dpdfwrite', 'file', 'potentSpeedup');
+   
+   f = figure;
+   plot(d1Subset.simTime, smoothLine(d2Subset.moveTime ./d1Subset.moveTime, 64));
    title(strcat([tag1 ' move speedup over time']));
    xlabel('Sim Time');
    ylabel('Speedup Factor');
+   saveSameSize(f, 'format', '-dpdfwrite', 'file', 'moveSpeedup');
    
-   plotRunHistograph(d1Subset, tag1);
-   plotRunHistograph(d2Subset, tag2);
+   f = compareDensMove(d1Subset, tag1);
+   saveSameSize(f, 'format', '-dpdfwrite', 'file', strcat(lower(tag1), 'DensMoveComparison'));
+   f = compareDensMove(d2Subset, tag2);
+   saveSameSize(f, 'format', '-dpdfwrite', 'file', strcat(lower(tag2), 'DensMoveComparison'));
+   
+   f = plotRunHistograph(d1Subset, tag1);
+   saveSameSize(f, 'format', '-dpdfwrite', 'file', strcat(lower(tag1), 'Histograph'));
+   f = plotRunHistograph(d2Subset, tag2);
+   saveSameSize(f, 'format', '-dpdfwrite', 'file', strcat(lower(tag2), 'Histograph'));
 end
 
-function plotRunHistograph(data, tag)
+function ret = normalizeVector(v)
+   m = min(v);
+   ret = v - m;
+   ret = ret / max(ret);
+end
+
+function ret = compareDensMove(data, tag)
+   ret = figure;
+   normDens = normalizeVector(smoothLine(data.densTime, 64));
+   normMove = normalizeVector(smoothLine(data.moveTime, 64));
+   normParticles = normalizeVector( ...
+       data.numEleHot + data.numEleCold + ...
+       data.numIonHot + data.numIonCold);
+   plot(data.simTime, normDens, ...
+        data.simTime, normMove, ...
+        data.simTime, normParticles);
+   title(strcat([tag ' complexity growth']));
+   xlabel('Sim Time');
+   ylabel('Normalized Execution Time');
+   legend('Dens', 'Move', 'Number of Particles', ...
+          'Location', 'SouthEast');
+end
+
+function ret = plotRunHistograph(data, tag)
    iterationTimes = ...
        data.injectTime + ...
        data.densTime + ...
@@ -72,7 +114,7 @@ function plotRunHistograph(data, tag)
    moveColor = [0.8, 0.8, 0.8];
    fieldColor = [0.2, 0.2, 0.2];
    
-   figure;
+   ret = figure;
    area(data.simTime, inject, 'FaceColor', injectColor);
    hold on;
    area(data.simTime, potent, 'FaceColor', potentColor);
