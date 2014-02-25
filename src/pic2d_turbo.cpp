@@ -727,7 +727,7 @@ int main(int argc, const char *argv[])
    {
       DeviceStats &ref(DeviceStats::getRef());
    }
-   catch(CudaRuntimeError e)
+   catch(CudaRuntimeError& e)
    {
       std::cout << e.what() << std::endl;
       throw;
@@ -739,7 +739,7 @@ int main(int argc, const char *argv[])
       executePic(argc, argv);
 #ifndef _DEBUG
    }
-   catch(CudaRuntimeError e)
+   catch(CudaRuntimeError& e)
    {
       std::cout << e.what() << std::endl;
       boost::filesystem::path fileName(outputPath);
