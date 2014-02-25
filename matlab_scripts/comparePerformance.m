@@ -1,5 +1,5 @@
 
-function ret = plotPerformance(dir1, dir2, tag1, tag2, varargin)
+function comparePerformance(dir1, dir2, tag1, tag2, varargin)
 
    file1 = strcat(dir1, '/performance.csv');
    file2 = strcat(dir2, '/performance.csv');
@@ -34,10 +34,13 @@ function ret = plotPerformance(dir1, dir2, tag1, tag2, varargin)
 %    saveSameSize(f, 'format', '-dpdfwrite', 'file', 'inject_speedup');
    
    f = figure;
-   plot(d1Subset.simTime, smoothLine(d2Subset.densTime ./d1Subset.densTime, 64));
+   smoothedLine = smoothLine(d2Subset.densTime ./d1Subset.densTime, 64);
+   plot(d1Subset.simTime, smoothedLine, '-', ...
+        d1Subset.simTime, normalizeToSpeedup(smoothedLine, countParticles(d1Subset)), '--');
    title(strcat([tag1 ' dens speedup over time']));
    xlabel('Sim Time');
    ylabel('Speedup Factor');
+   legend('Dens Speedup', 'Normalized Number of Particles', 'Location', 'East');
    saveSameSize(f, 'format', '-dpdfwrite', 'file', 'densSpeedup');
    
    f = figure;
@@ -72,6 +75,12 @@ function ret = plotPerformance(dir1, dir2, tag1, tag2, varargin)
    saveSameSize(f, 'format', '-dpdfwrite', 'file', strcat(lower(tag2), 'Histograph'));
 end
 
+function ret = normalizeToSpeedup(speedup, v)
+   normalV = normalizeVector(v);
+   m = min(speedup);
+   ret = normalV * (max(speedup) - m) + m;
+end
+
 function ret = normalizeVector(v)
    m = min(v);
    ret = v - m;
@@ -93,6 +102,10 @@ function ret = compareDensMove(data, tag)
    ylabel('Normalized Execution Time');
    legend('Dens', 'Move', 'Number of Particles', ...
           'Location', 'SouthEast');
+end
+
+function ret = countParticles(d)
+   ret = d.numEleCold + d.numEleHot + d.numIonCold + d.numIonHot;
 end
 
 function ret = plotRunHistograph(data, tag)
