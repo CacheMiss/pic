@@ -86,6 +86,7 @@ void generateAndParseFakeArgs(CommandlineOptions &options, const char* exeName, 
          args.push_back(line);
       }
    }
+   fakeArgv.push_back(exeNameStr.c_str());
    for(std::size_t i = 0; i < args.size(); i++)
    {
       fakeArgv.push_back(args[i].c_str());
