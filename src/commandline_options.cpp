@@ -55,6 +55,8 @@ bool CommandlineOptions::parseArguments(int argc, const char* argv[])
        ("output-path,o", po::value<std::string>(&m_outputPath)->default_value("run_output"), "The folder to write results to")
        ("disable-rand-restore", po::bool_switch(&m_disableRandRestore)->default_value(false),
         "Do not restore the random number state when loading a run")
+       ("profile", po::bool_switch(&m_profile)->default_value(false),
+        "Run one iteration then exit. Sets --disable-rand-restore")
    ;
    try
    {
@@ -92,6 +94,11 @@ bool CommandlineOptions::parseArguments(int argc, const char* argv[])
    if(m_injectWidth == 0)
    {
       m_injectWidth = getNx1();
+   }
+
+   if(m_profile)
+   {
+      m_disableRandRestore = true;
    }
 
    NX1 = getNx1();

@@ -42,6 +42,7 @@ class CommandlineOptions
    inline unsigned int getInjectWidth() const;
    inline std::string getOutputPath() const;
    inline bool getDisableRandRestore() const;
+   inline bool getProfile() const;
 
    private:
    po::options_description *m_description;
@@ -69,6 +70,7 @@ class CommandlineOptions
    bool m_particleBoundCheck;
    std::string m_outputPath;
    bool m_disableRandRestore;
+   bool m_profile;
 };
 
 inline float CommandlineOptions::getMaxSimTime() const
@@ -179,6 +181,11 @@ inline float CommandlineOptions::getSigmaHiPerp() const
 inline bool CommandlineOptions::getDisableRandRestore() const
 {
    return m_disableRandRestore;
+}
+
+inline bool CommandlineOptions::getProfile() const
+{
+   return m_profile;
 }
 
 #endif

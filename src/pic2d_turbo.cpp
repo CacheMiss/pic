@@ -29,6 +29,7 @@
 #include <driver_functions.h>
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
+#include <cuda_profiler_api.h>
 
 #include "array2d.h"
 #include "commandline_options.h"
@@ -195,7 +196,7 @@ void executePic(int argc, const char *argv[])
 #endif
 
    int percentComplete = 0; // Used to display progress to the user
-   int percentSize = 0;
+   int percentSize = 1;
 
 #ifdef DEBUG_TRACE
    std::cout << "Initializing random number generator" << std::endl;
@@ -205,14 +206,6 @@ void executePic(int argc, const char *argv[])
    curandGenerator_t randGenerator;
    curandCreateGenerator (&randGenerator, CURAND_RNG_PSEUDO_MTGP32);
    curandSetPseudoRandomGeneratorSeed(randGenerator, ISEED);
-
-   nit = static_cast<int>((maxSimTime-TSTART)/DELT + 1); // determine number of iterations
-
-   percentSize = nit / 100;
-   if(percentSize == 0)
-   {
-      percentSize = 1;
-   }
 
    simState.simTime = TSTART;
    lfd=LF-1;
@@ -268,6 +261,22 @@ void executePic(int argc, const char *argv[])
       fileName /= "configuration.txt";
       saveConfiguration(argc, argv, options, fileName.string());
    }
+
+   if(!options.getProfile())
+   {
+      nit = static_cast<int>((maxSimTime-TSTART)/DELT + 1); // determine number of iterations
+   }
+   else
+   {
+      nit = simState.iterationNum + 1;
+   }
+   percentSize = nit / 100;
+   if(percentSize == 0)
+   {
+      percentSize = 1;
+   }
+
+
    // DEBUG
    //   {
    //      Array2dF *eleHot = new Array2dF(simState.numEleHot, 5);
@@ -289,6 +298,11 @@ void executePic(int argc, const char *argv[])
    printFreeMem();
 
    printf("nit=%d\n",nit);
+
+   if(options.getProfile())
+   {
+      cudaProfilerStart();
+   }
    for (;simState.iterationNum<nit; simState.iterationNum++) 
    {
       if(percentComplete < 100 &&
@@ -706,6 +720,10 @@ void executePic(int argc, const char *argv[])
          lfd=0 ;
          ind=ind+1;
       }
+   }
+   if(options.getProfile())
+   {
+      cudaProfilerStop();
    }
 
    stopTime = time(0);
