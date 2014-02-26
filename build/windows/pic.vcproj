@@ -34,7 +34,7 @@
 			/>
 			<Tool
 				Name="Cudart Build Rule"
-				AdditionalOptions="-G"
+				AdditionalOptions="--keep --source-in-ptx"
 				Include="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST);$(INTEL_TBB)/include"
 				Arch1="0"
 				TargetMachinePlatform="1"
@@ -120,6 +120,7 @@
 			/>
 			<Tool
 				Name="Cudart Build Rule"
+				AdditionalOptions="--keep --source-in-ptx"
 				Include="$(CUDA_INC_PATH);$(SolutionDir)\..\..\inc;$(BOOST);$(INTEL_TBB)/include"
 				Arch1="0"
 				TargetMachinePlatform="1"
