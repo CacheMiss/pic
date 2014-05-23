@@ -16,21 +16,6 @@
 // specific language governing permissions and limitations
 // under the License.
 ////////////////////////////////////////////////////////////////////////////////
-//*******************************************************************
-// serial version of 2-d pic code 
-// last modified: 7/21/2004
-// comments: this version reflects changes made by  chakravaritty 
-//           deverapalli in the dens subroutine (alterations to
-//           rho() calcuation process)
-//*******************************************************************
-// cpotent2 k2----///nx-not-nx1///oct 1 02
-//*******************************************************************
-//       using one-dimensional fft and sm(k)
-//        theta=0.05 radian bm=0.3
-//       bzm = bm*cos(theta) ; bym = bm*sin(theta)   dx=dy=1  ; 
-//       o: 9  oxygen ions have no  drift; delt=0.1
-//       regular position distribution,   mass ratio =400  bx=1.2
-//*******************************************************************
 #include <assert.h>
 #include <boost/filesystem.hpp>
 #include <fstream>
