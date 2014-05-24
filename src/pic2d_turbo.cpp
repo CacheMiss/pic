@@ -424,7 +424,7 @@ void executePic(int argc, const char *argv[])
          DX, DY,
          simState.numEleHot, simState.numEleCold, 
          simState.numIonHot, simState.numIonCold,
-			neededParticles,
+         neededParticles,
          neededSecondaryParticles,
          dev_randTable,
          NX1, NY1,
@@ -432,9 +432,9 @@ void executePic(int argc, const char *argv[])
          SIGMA_CE, SIGMA_CI,
          SIGMA_HE_PERP, SIGMA_HI_PERP,
          SIGMA_CE_SECONDARY,
-			injectWidth,
-			injectStartX,
-			processingStream[0]
+         injectWidth,
+         injectStartX,
+         processingStream[0]
          );
 
 #ifdef ENABLE_TIMERS
@@ -718,14 +718,14 @@ void executePic(int argc, const char *argv[])
 
             lfdint = 0;
 
-				// Exit if we've been asked to
-				boost::filesystem::path stopFile(outputPath);
-				stopFile /= "stop";
-				if(boost::filesystem::exists(stopFile))
-				{
-					boost::filesystem::remove(stopFile);
-					break;
-				}
+            // Exit if we've been asked to
+            boost::filesystem::path stopFile(outputPath);
+            stopFile /= "stop";
+            if(boost::filesystem::exists(stopFile))
+            {
+               boost::filesystem::remove(stopFile);
+               break;
+            }
          }
          lfd=0 ;
          ind=ind+1;

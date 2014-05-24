@@ -139,15 +139,14 @@ void findQuadIndices(const unsigned int threadX,
 // Code Type: Device
 // Block Structure: 1 thread per element in rho to be considered
 //                  (Normally NY x NX1)
-// Purpose: Load the beginning and end particles for each grid square into
-//          shared memory
+// Purpose: Transfer area information from global memory to shared memory
 //
 // Input Parameters:
 // -------------------
-// bucketBeg - The global memory array storing the starting index in the array
-//             created by loadParticles associated with this grid square
-// bucketEnd - The global memory array storing the starting index in the array
-//             created by loadParticles associated with this grid square
+// area1 - Global memory to load a1 values from
+// area2 - Global memory to load a2 values from
+// area3 - Global memory to load a3 values from
+// area4 - Global memory to load a4 values from
 // gQuad1 - The index in the global beg and end array associated with this
 //          threads quadrant 1
 // gQuad2 - The index in the global beg and end array associated with this
@@ -167,10 +166,10 @@ void findQuadIndices(const unsigned int threadX,
 //
 // Output Parameters:
 // -------------------
-// sharedBeg - The shared memory array storing the starting index in the array
-//             created by loadParticles associated with this grid square
-// sharedEnd - The shared memory array storing the starting index in the array
-//             created by loadParticles associated with this grid square
+// a1 - The a1 value associated with this grid point
+// a2 - The a2 value associated with this grid point
+// a3 - The a3 value associated with this grid point
+// a4 - The a4 value associated with this grid point
 //******************************************************************************
 __device__
 void densGridPointsLoadShared(const float* __restrict area1, 
@@ -195,7 +194,7 @@ void densGridPointsLoadShared(const float* __restrict area1,
 {
    //////////////////////////////////////////////////////////////////////////
    // NOTE: Commented out assignments of a1-a4 are left for completeness.
-   //       They are not however, necessary because of the geometry involved
+   //       They are however, not necessary because of the geometry involved
    //////////////////////////////////////////////////////////////////////////
 
    // Values associated with quadrants around a grid point
@@ -250,11 +249,10 @@ void densGridPointsLoadShared(const float* __restrict area1,
 // -------------------
 // bucketWidth - The number of buckets wide the rho is
 // bucketHeight - The number of buckets high rho is
-// bucketBeg[] - Lists the starting element in bucktToParticleMap for every
-//             grid point
-// bucketEnd[] - Lists the last (exclusive) element in bucktToParticleMap for 
-//             every grid point
-// area[] - The array storing a1, a2, a3, and a4 for all the particles
+// area1 - Global memory containing the area1 data for each grid point in row order
+// area2 - Global memory containing the area2 data for each grid point in row order
+// area3 - Global memory containing the area3 data for each grid point in row order
+// area4 - Global memory containing the area4 data for each grid point in row order
 // cold - False if the particle array is composed of cold particles;
 //        True otherwise
 // particlesToBuffer - The number of particles per thread to buffer into shared
@@ -777,19 +775,17 @@ void findFirstOob(const float2* __restrict__ pos,
 ///    The index of the first particle which has a y value of oobValue
 /// @param[in] oobValue
 ///    The y value a location will have if it is out of bounds
+/// @param[in] numParticles
+///    The number of particles
 /// @param[in] NY
 ///    The height of the grid
 /// @param[in] DX
 ///    The horizontal grid spacing
 /// @param[in] DY
 ///    The vertical grid spacing
-/// @param[in] numParticles
-///    The number of particles
+/// @param[in] coldElectrons
+///    This should be set to true of the kernel is operating on cold electrons
 ///
-/// Output Parameters:
-/// ----------------
-/// area - A float4 array to store the area values in; a1 = area.x, a2 = area.y
-///        a3 = area.z, a4 = area.w
 ////////////////////////////////////////////////////////////////////////////////
 __global__
 void calcA(const float2* __restrict__ pos,
@@ -1318,30 +1314,14 @@ void calcIntermediateRho(DevMemF &dev_rho,
              0 <= x < NX and 0 <= y < NY
   dev_rhoi - The charge density of the ions at each grid point from 
              0 <= x < NX and 0 <= y < NY
-  dev_eleHot[][5] - The hot electron array, dimension 2 is defined as follows:
-                [x][0] = Position x
-                [x][1] = Position y
-                [x][2] = Velocity x
-                [x][3] = Velocity y
-                [x][4] = Velocity z
-  dev_eleCold[][5] - The cold electron array, dimension 2 is defined as follows:
-                [x][0] = Position x
-                [x][1] = Position y
-                [x][2] = Velocity x
-                [x][3] = Velocity y
-                [x][4] = Velocity z
-  dev_ionHot[][5] - The hot ion array, dimension 2 is defined as follows:
-                [x][0] = Position x
-                [x][1] = Position y
-                [x][2] = Velocity x
-                [x][3] = Velocity y
-                [x][4] = Velocity z
-  dev_ionCold[][5] - The cold ion array, dimension 2 is defined as follows:
-                [x][0] = Position x
-                [x][1] = Position y
-                [x][2] = Velocity x
-                [x][3] = Velocity y
-                [x][4] = Velocity z
+  d_eleHotLoc  - An array of the hot electron locations
+  d_eleHotVel  - An array of the hot electron velocities
+  d_eleColdLoc - An array of the cold electron locations
+  d_eleColdVel - An array of the cold electron velocities
+  d_ionHotLoc  - An array of the hot ion locations
+  d_ionHotVel  - An array of the hot ion velocities
+  d_ionColdLoc - An array of the cold ion locations
+  d_ionColdVel - An array of the cold ion velocities
   numHotElectrons - The number of particles in dev_eleHot
   numColdElectrons - The number of particles in dev_eleCold
   numHotIons - The number of particles in dev_ionHot
@@ -1403,24 +1383,7 @@ void dens(DevMemF &dev_rho,
 
    stream.synchronize();
    checkForCudaError("Before rhoi - rhoe");
-   //////////////////////////////////////////////////////
-   //
-   // On Linux systems this thrust call took 14 ms while
-   // the kernel call took less than one. I've left the
-   // thrust code here in case its ever any faster.
-   //
-   // Windows did not display these runtiem problems
-   //
-   /////////////////////////////////////////////////////
    // Set rho = rhoi - rhoe
-   //#ifndef NO_THRUST
-   //thrust::transform(dev_rhoi.getThrustPtr(),
-   //   dev_rhoi.getThrustPtr() + dev_rhoi.size(),
-   //   dev_rhoe.getThrustPtr(), 
-   //   dev_rho.getThrustPtr(),
-   //   thrust::minus<float>());
-   //#//else
    subVector(dev_rhoi.getPtr(), dev_rhoe.getPtr(), 
              dev_rho.getPtr(), static_cast<unsigned int>(dev_rhoi.size()));
-   //#endif
 }

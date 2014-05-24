@@ -641,7 +641,7 @@ void loadPrevSimState(const CommandlineOptions &options,
          }
          infoLine.clear();
          infoLine = getPrevLine(infoF);
-   		infoStream.clear();
+         infoStream.clear();
          infoStream << infoLine;
       }
 

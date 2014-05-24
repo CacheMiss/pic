@@ -126,14 +126,10 @@ void checkBoundaryConditions(float2 location[], int numParticles, int height, in
 //          outside of the top and bottom of the grid
 // Parameters:
 // -------------------
-// particles - The array of particles (This array has 5 elements per part)
-// ex - The electrical field in x
-// ey - The electircal field in y
+// d_partLoc - The array of particle locations
+// d_partVel - The array of particle velocities
 // numParticles - The number of particles in the particles array
 // mass - The mass of the type of particle being moved
-// oobIdx - The number of particles which are lower than NY or higher than
-//          DY * (NY - 1)
-// oobArry - Contains oobIdx entries of particles which need to be removed
 // NX1 - The width of the grid (A power of 2)
 // NY1 - The height of the grid (A power of 2)
 // MAX_OOB_BUFFER - The max number of particles that can be eliminated
