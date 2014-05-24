@@ -13,7 +13,6 @@ OBJ= \
    $(OBJDIR)/device_stats.o \
    $(OBJDIR)/dev_mem_reuse.o \
    $(OBJDIR)/error_check.o \
-   $(OBJDIR)/genmtrand.o \
    $(OBJDIR)/global_variables.o \
    $(OBJDIR)/logging_thread.o \
    $(OBJDIR)/logging_types.o \
